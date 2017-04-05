@@ -1,11 +1,11 @@
-package com.example.recycleradapter.adapter;
+package com.example.recycleradapter;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 
-import com.example.recycleradapter.adapter.holder.ItemViewHolder;
+import com.example.recycleradapter.holder.ItemViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;

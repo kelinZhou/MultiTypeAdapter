@@ -1,4 +1,4 @@
-package com.example.recycleradapter.adapter;
+package com.example.recycleradapter;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -7,8 +7,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
-import com.example.recycleradapter.adapter.holder.HeaderFooterViewHolder;
-import com.example.recycleradapter.adapter.holder.ItemViewHolder;
+import com.example.recycleradapter.holder.HeaderFooterViewHolder;
+import com.example.recycleradapter.holder.ItemViewHolder;
 
 import java.util.ArrayList;
 import java.util.Collection;

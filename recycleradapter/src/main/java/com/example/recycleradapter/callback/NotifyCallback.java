@@ -1,4 +1,4 @@
-package com.example.recycleradapter.adapter.callback;
+package com.example.recycleradapter.callback;
 
 import android.os.Bundle;
 

@@ -1,4 +1,4 @@
-package com.example.recycleradapter.adapter.holder;
+package com.example.recycleradapter.holder;
 
 import android.support.annotation.LayoutRes;
 

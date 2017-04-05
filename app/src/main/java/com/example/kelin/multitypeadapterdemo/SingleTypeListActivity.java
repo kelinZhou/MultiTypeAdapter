@@ -10,8 +10,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.kelin.multitypeadapterdemo.holder.MyHolder;
-import com.example.recycleradapter.adapter.SingleTypeAdapter;
-import com.example.recycleradapter.adapter.listener.OnItemEventListener;
+import com.example.recycleradapter.SingleTypeAdapter;
+import com.example.recycleradapter.listener.OnItemEventListener;
 
 import java.util.ArrayList;
 import java.util.List;

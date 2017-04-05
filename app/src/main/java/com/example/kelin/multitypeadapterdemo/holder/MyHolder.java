@@ -6,8 +6,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.kelin.multitypeadapterdemo.R;
-import com.example.recycleradapter.adapter.holder.ItemLayout;
-import com.example.recycleradapter.adapter.holder.ItemViewHolder;
+import com.example.recycleradapter.holder.ItemLayout;
+import com.example.recycleradapter.holder.ItemViewHolder;
 
 /**
  * 描述 我的Holder

@@ -1,4 +1,4 @@
-package com.example.recycleradapter.adapter;
+package com.example.recycleradapter;
 
 import android.database.Observable;
 import android.os.Bundle;
@@ -8,10 +8,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.recycleradapter.adapter.holder.HeaderFooterViewHolder;
-import com.example.recycleradapter.adapter.holder.ItemLayout;
-import com.example.recycleradapter.adapter.holder.ItemViewHolder;
-import com.example.recycleradapter.adapter.listener.OnItemEventListener;
+import com.example.recycleradapter.holder.HeaderFooterViewHolder;
+import com.example.recycleradapter.holder.ItemLayout;
+import com.example.recycleradapter.holder.ItemViewHolder;
+import com.example.recycleradapter.listener.OnItemEventListener;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

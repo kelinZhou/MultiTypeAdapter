@@ -12,9 +12,9 @@ import android.widget.Toast;
 
 import com.example.kelin.multitypeadapterdemo.holder.Type1Holder;
 import com.example.kelin.multitypeadapterdemo.holder.Type2Holder;
-import com.example.recycleradapter.adapter.ItemAdapter;
-import com.example.recycleradapter.adapter.MultiTypeAdapter;
-import com.example.recycleradapter.adapter.listener.OnItemEventListener;
+import com.example.recycleradapter.ItemAdapter;
+import com.example.recycleradapter.MultiTypeAdapter;
+import com.example.recycleradapter.listener.OnItemEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
