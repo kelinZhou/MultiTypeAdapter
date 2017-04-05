@@ -1,8 +1,10 @@
-package com.example.recycleradapter.holder;
+package com.kelin.recycleradapter.holder;
 
 import android.support.annotation.LayoutRes;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 /**
  * 描述 用来描述子适配器的页眉和页脚的ViewHolder的类。

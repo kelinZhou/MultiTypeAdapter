@@ -1,4 +1,4 @@
-package com.example.kelin.multitypeadapterdemo;
+package com.kelin.multitypeadapterdemo;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

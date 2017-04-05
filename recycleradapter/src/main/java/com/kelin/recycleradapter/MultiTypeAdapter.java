@@ -1,4 +1,4 @@
-package com.example.recycleradapter;
+package com.kelin.recycleradapter;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -7,8 +7,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
-import com.example.recycleradapter.holder.HeaderFooterViewHolder;
-import com.example.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
+import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +32,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
     /**
      * 用来存放所有的子条目对象。
      */
-    private List<ItemAdapter> mChildAdapters;
+    private List<com.kelin.recycleradapter.ItemAdapter> mChildAdapters;
     /**
      * 与当前适配器绑定的 {@link RecyclerView} 对象。
      */
@@ -135,8 +135,8 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
      * @see ItemAdapter#ItemAdapter(List, int, Class)
      * @see ItemAdapter#ItemAdapter(List, int, int, Class)
      */
-    public MultiTypeAdapter addAdapter(@NonNull ItemAdapter... adapters) {
-        for (ItemAdapter adapter : adapters) {
+    public MultiTypeAdapter addAdapter(@NonNull com.kelin.recycleradapter.ItemAdapter... adapters) {
+        for (com.kelin.recycleradapter.ItemAdapter adapter : adapters) {
             adapter.registerObserver(mAdapterDataObserver);
             adapter.firstItemPosition = addedItemCount;
             mChildAdapters.add(adapter);
@@ -159,7 +159,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
     @Override
     public ItemViewHolder<Object> onCreateViewHolder(ViewGroup parent, int viewType) {
         ItemViewHolder holder = null;
-        for (ItemAdapter adapter : mChildAdapters) {
+        for (com.kelin.recycleradapter.ItemAdapter adapter : mChildAdapters) {
             if (adapter.getItemViewType() == viewType) {
                 holder = adapter.onCreateViewHolder(parent, viewType);
                 Class itemModelClass = adapter.getItemModelClass();
@@ -185,7 +185,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
         if (holder instanceof HeaderFooterViewHolder) return;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
+            com.kelin.recycleradapter.ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 adapter.onBindViewHolder(holder, position - total, payloads);
@@ -199,7 +199,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
     @Override
     public int getItemViewType(int position) {
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
+            com.kelin.recycleradapter.ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 if (adapter.haveHeader() && position == adapter.firstItemPosition) {
@@ -234,12 +234,12 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
      * @return 返回当前条目的占屏值。
      */
     private int getItemSpanSize(int position) {
-        ItemAdapter adapter = getChildAdapterByPosition(position);
+        com.kelin.recycleradapter.ItemAdapter adapter = getChildAdapterByPosition(position);
 
         if (adapter == null) return getTotalSpanSize();
 
         int itemSpanSize = adapter.getItemSpanSize();
-        return itemSpanSize == ItemAdapter.SPAN_SIZE_FULL_SCREEN ? getTotalSpanSize() : itemSpanSize;
+        return itemSpanSize == com.kelin.recycleradapter.ItemAdapter.SPAN_SIZE_FULL_SCREEN ? getTotalSpanSize() : itemSpanSize;
     }
 
     /**
@@ -248,9 +248,9 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
      * @param position 当前的索引位置。
      * @return 返回对应的适配器。
      */
-    public ItemAdapter getChildAdapterByPosition(int position) {
+    public com.kelin.recycleradapter.ItemAdapter getChildAdapterByPosition(int position) {
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
+            com.kelin.recycleradapter.ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 return adapter;
@@ -267,7 +267,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
      */
     int getItemAdapterPosition(int position) {
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
+            com.kelin.recycleradapter.ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 return position - total;
@@ -316,11 +316,11 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         return mItemViewHolderMap.get(holderModelClazz);
     }
 
-    private class ItemAdapterDataObserver extends SingleTypeAdapter.AdapterDataObserver {
+    private class ItemAdapterDataObserver extends com.kelin.recycleradapter.SingleTypeAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, SingleTypeAdapter adapter) {
-            ItemAdapter itemAdapter = (ItemAdapter) adapter;
+        protected void add(int position, Object o, com.kelin.recycleradapter.SingleTypeAdapter adapter) {
+            com.kelin.recycleradapter.ItemAdapter itemAdapter = (com.kelin.recycleradapter.ItemAdapter) adapter;
             getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
             int index = mChildAdapters.indexOf(adapter) + 1;
             int size = 1;
@@ -332,13 +332,13 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection<Object> dataList, SingleTypeAdapter adapter) {
+        protected void addAll(int firstPosition, Collection<Object> dataList, com.kelin.recycleradapter.SingleTypeAdapter adapter) {
             // TODO: 2017/3/31 重新赋值以后所有的ItemAdapter的firstItemPosition字段就应该都变化了。
             // TODO: 2017/3/31 这里先将firstItemPosition重新赋值，先写在这里，后面优化。
-            ItemAdapter itemAdapter = (ItemAdapter) adapter;
+            com.kelin.recycleradapter.ItemAdapter itemAdapter = (com.kelin.recycleradapter.ItemAdapter) adapter;
             getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
             int size = dataList.size();
-            ((ItemAdapter) adapter).lastItemPosition += size;
+            ((com.kelin.recycleradapter.ItemAdapter) adapter).lastItemPosition += size;
             int index = mChildAdapters.indexOf(adapter) + 1;
             for (int i = index; i < mChildAdapters.size(); i++) {
                 itemAdapter = mChildAdapters.get(i);
@@ -348,12 +348,12 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         }
 
         @Override
-        protected void remove(Object o, SingleTypeAdapter adapter) {
+        protected void remove(Object o, com.kelin.recycleradapter.SingleTypeAdapter adapter) {
             getDataList().remove(o);
             int index = mChildAdapters.indexOf(adapter) + 1;
             int size = 1;
             for (int i = index; i < mChildAdapters.size(); i++) {
-                ItemAdapter itemAdapter = mChildAdapters.get(i);
+                com.kelin.recycleradapter.ItemAdapter itemAdapter = mChildAdapters.get(i);
                 itemAdapter.firstItemPosition -= size;
                 itemAdapter.lastItemPosition -= size;
             }
@@ -364,12 +364,12 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         }
 
         @Override
-        protected void removeAll(Collection<Object> dataList, SingleTypeAdapter adapter) {
+        protected void removeAll(Collection<Object> dataList, com.kelin.recycleradapter.SingleTypeAdapter adapter) {
             getDataList().removeAll(dataList);
             int index = mChildAdapters.indexOf(adapter) + 1;
             int size = dataList.size();
             for (int i = index; i < mChildAdapters.size(); i++) {
-                ItemAdapter itemAdapter = mChildAdapters.get(i);
+                com.kelin.recycleradapter.ItemAdapter itemAdapter = mChildAdapters.get(i);
                 itemAdapter.firstItemPosition -= size;
                 itemAdapter.lastItemPosition -= size;
             }

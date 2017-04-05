@@ -1,4 +1,4 @@
-package com.example.recycleradapter.holder;
+package com.kelin.recycleradapter.holder;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.recycleradapter.callback.NotifyCallback;
+import com.kelin.recycleradapter.callback.NotifyCallback;
 
 import java.util.List;
 
@@ -55,7 +55,7 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     /**
      * 绑定数据的时候调用。与 {@link #onBindData(int, Object)} 方法不用的是，这个方法可以用来局部绑定数据。
      * 就是说当一个条目中的数据模型发生变化以后但不是展示在UI上的每个字段都发生了变化的情况下就可以通过该方法只针对部分改动过的字段进行数据绑定。
-     * <p>但是该方法也不是必然就会被执行的，而是在 {@link com.example.recycleradapter.callback.NotifyCallback#getChangePayload(Object, Object, Bundle)} 方法中获得了不同之处后才会被执行。
+     * <p>但是该方法也不是必然就会被执行的，而是在 {@link NotifyCallback#getChangePayload(Object, Object, Bundle)} 方法中获得了不同之处后才会被执行。
      * <p>该方法的默认实现是调用 {@link #onBindData(int, Object)} 方法，如果你希望通过局部刷新来提高效率则重写该方法。
      * @param position 当前的Item索引。
      * @param d        当前索引对应的数据对象。

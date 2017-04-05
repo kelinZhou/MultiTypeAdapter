@@ -1,4 +1,4 @@
-package com.example.kelin.multitypeadapterdemo;
+package com.kelin.multitypeadapterdemo;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.example.kelin.multitypeadapterdemo", appContext.getPackageName());
+        assertEquals("com.kelin.multitypeadapterdemo", appContext.getPackageName());
     }
 }

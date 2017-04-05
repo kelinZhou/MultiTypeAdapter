@@ -1,4 +1,4 @@
-package com.example.kelin.multitypeadapterdemo;
+package com.kelin.multitypeadapterdemo;
 
 import org.junit.Test;
 

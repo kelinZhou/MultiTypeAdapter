@@ -1,11 +1,11 @@
-package com.example.recycleradapter.listener;
+package com.kelin.recycleradapter.listener;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import com.example.recycleradapter.ItemAdapter;
-import com.example.recycleradapter.MultiTypeAdapter;
-import com.example.recycleradapter.SingleTypeAdapter;
+import com.kelin.recycleradapter.ItemAdapter;
+import com.kelin.recycleradapter.MultiTypeAdapter;
+import com.kelin.recycleradapter.SingleTypeAdapter;
 
 /**
  * 描述 {@link RecyclerView} 的条目点击事件监听。

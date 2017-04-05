@@ -1,12 +1,12 @@
-package com.example.recycleradapter;
+package com.kelin.recycleradapter;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.view.ViewGroup;
 
-import com.example.recycleradapter.holder.HeaderFooterViewHolder;
-import com.example.recycleradapter.holder.ItemLayout;
-import com.example.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
+import com.kelin.recycleradapter.holder.ItemLayout;
+import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 import java.lang.reflect.Constructor;
 import java.util.List;

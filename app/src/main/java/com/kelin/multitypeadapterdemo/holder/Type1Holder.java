@@ -1,13 +1,13 @@
-package com.example.kelin.multitypeadapterdemo.holder;
+package com.kelin.multitypeadapterdemo.holder;
 
 import android.support.annotation.LayoutRes;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.kelin.multitypeadapterdemo.R;
-import com.example.recycleradapter.holder.ItemLayout;
-import com.example.recycleradapter.holder.ItemViewHolder;
+import com.kelin.multitypeadapterdemo.R;
+import com.kelin.recycleradapter.holder.ItemLayout;
+import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 /**
  * 创建人 kelin
@@ -15,12 +15,12 @@ import com.example.recycleradapter.holder.ItemViewHolder;
  * 版本 v 1.0.0
  */
 
-@ItemLayout(rootLayoutId = R.layout.item_type2)
-public class Type2Holder extends ItemViewHolder<String> {
+@ItemLayout(headerLayoutId = R.layout.item_type1_header, rootLayoutId = R.layout.item_type1, footerLayoutId = R.layout.item_type1_footer)
+public class Type1Holder extends ItemViewHolder<String> {
 
     private TextView mTvTitle;
 
-    public Type2Holder(ViewGroup parent, @LayoutRes int itemRootViewId) {
+    public Type1Holder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
     }
 
@@ -42,11 +42,5 @@ public class Type2Holder extends ItemViewHolder<String> {
     @Override
     public boolean areContentsTheSame(String oldItemData, String newItemDate) {
         return oldItemData.equals(newItemDate);
-    }
-
-    @Override
-    public boolean areItemsTheSame(String oldItemData, String newItemDate) {
-        boolean b = super.areItemsTheSame(oldItemData, newItemDate);
-        return b;
     }
 }

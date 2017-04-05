@@ -1,4 +1,4 @@
-package com.example.kelin.multitypeadapterdemo;
+package com.kelin.multitypeadapterdemo;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -9,9 +9,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.kelin.multitypeadapterdemo.holder.MyHolder;
-import com.example.recycleradapter.SingleTypeAdapter;
-import com.example.recycleradapter.listener.OnItemEventListener;
+import com.kelin.multitypeadapterdemo.holder.MyHolder;
+import com.kelin.recycleradapter.SingleTypeAdapter;
+import com.kelin.recycleradapter.listener.OnItemEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
