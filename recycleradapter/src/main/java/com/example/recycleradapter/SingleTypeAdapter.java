@@ -14,7 +14,6 @@ import com.example.recycleradapter.holder.ItemViewHolder;
 import com.example.recycleradapter.listener.OnItemEventListener;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -69,7 +68,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends RecyclerA
         if (holderClass == null) {
             throw new RuntimeException("you mast set holderClass and not null object");
         }
-        setDataList(list != null ? list : new ArrayList<D>());
+        setDataList(list);
         mHolderClass = holderClass;
     }
 
@@ -323,12 +322,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends RecyclerA
 
     @Override
     public H onCreateViewHolder(ViewGroup parent, int viewType) {
-        ItemLayout rootLayout = mHolderClass.getAnnotation(ItemLayout.class);
-        if (rootLayout != null) {
-            int rootLayoutId = rootLayout.rootLayoutId();
-            return createHolder(parent, rootLayoutId);
-        }
-        throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+        return createHolder(parent, viewType);
     }
 
     /**
@@ -351,6 +345,15 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends RecyclerA
         } else {
             throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
         }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        ItemLayout rootLayout = mHolderClass.getAnnotation(ItemLayout.class);
+        if (rootLayout != null) {
+            return rootLayout.rootLayoutId();
+        }
+        throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
     }
 
     /**

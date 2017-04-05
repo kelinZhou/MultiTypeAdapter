@@ -26,15 +26,11 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
 
     private final SparseArray<View> mViews;
 
-    public ItemViewHolder(View itemView) {
-        super(itemView);
+    public ItemViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
+        super(LayoutInflater.from(parent.getContext()).inflate(itemRootViewId, parent, false));
 
         mViews = new SparseArray<>();
         initHolder(itemView);
-    }
-
-    public ItemViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        this(LayoutInflater.from(parent.getContext()).inflate(itemRootViewId, parent, false));
     }
 
     public @IdRes int[] onGetNeedListenerChildViewIds(){

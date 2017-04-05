@@ -167,9 +167,9 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
                     mItemViewHolderMap.put(itemModelClass, holder);
                 }
             } else if (adapter.haveHeader() && adapter.getHeaderItemViewType() == viewType) {
-                holder = adapter.onCreateHeaderViewHolder(parent);
+                holder = adapter.onCreateHeaderViewHolder(parent, viewType);
             } else if (adapter.haveFooter() && adapter.getFooterItemViewType() == viewType) {
-                holder = adapter.onCreateFooterViewHolder(parent);
+                holder = adapter.onCreateFooterViewHolder(parent, viewType);
             }
             if (holder != null) {
                 return holder;

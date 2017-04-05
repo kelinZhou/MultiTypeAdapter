@@ -115,7 +115,7 @@ abstract class RecyclerAdapter<D, VH extends ItemViewHolder<D>> extends Recycler
      * @param list 数据集合。
      */
     public void setDataList(List<D> list) {
-        mDataList = list;
+        mDataList = list != null ? list : new ArrayList<D>();
         mTempList = new ArrayList<>(mDataList);
     }
 

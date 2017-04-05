@@ -23,7 +23,7 @@ public class ItemAdapter<D> extends SingleTypeAdapter<D, ItemViewHolder<D>> {
     /**
      * 用来从ViewHolder中获取数据模型的键。
      */
-    private static final int KEY_ITEM_MODEL = 0X0000_0010<<24;
+    private static final int KEY_ITEM_MODEL = 0X0000_0010 << 24;
     /**
      * 表示当前的条目是占满屏幕的。
      */
@@ -36,10 +36,6 @@ public class ItemAdapter<D> extends SingleTypeAdapter<D, ItemViewHolder<D>> {
      * 表示创建脚Holder。
      */
     private static final int FOOTER_HOLDER = 0X0000_0102;
-    /**
-     * 用来记录当前的条目类型。
-     */
-    private int mItemType;
     /**
      * 用来记录当前条目的占屏比。
      */
@@ -64,24 +60,25 @@ public class ItemAdapter<D> extends SingleTypeAdapter<D, ItemViewHolder<D>> {
      * 用来记录脚布局的资源文件ID。
      */
     private int mFooterLayoutId;
+    private int mRootLayoutId;
 
-    public ItemAdapter(@Size(min = 1) int itemType, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        this(itemType, SPAN_SIZE_FULL_SCREEN, holderClass);
+    public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
+        this(SPAN_SIZE_FULL_SCREEN, holderClass);
     }
 
-    public ItemAdapter(int itemType, @Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        this(null, itemType, spanSize, holderClass);
+    public ItemAdapter(@Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
+        this(null, spanSize, holderClass);
     }
 
-    public ItemAdapter(List<D> list, @Size(min = 0) int itemType, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        this(list, itemType, SPAN_SIZE_FULL_SCREEN, holderClass);
+    public ItemAdapter(List<D> list, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
+        this(list, SPAN_SIZE_FULL_SCREEN, holderClass);
     }
 
-    public ItemAdapter(List<D> list, @Size(min = 0) int itemType, @Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
+    public ItemAdapter(List<D> list, @Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         super(list, holderClass);
-        mItemType = itemType;
         mSpanSize = spanSize <= 0 ? SPAN_SIZE_FULL_SCREEN : spanSize;
         ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
+        mRootLayoutId = annotation.rootLayoutId();
         mHeaderLayoutId = annotation.headerLayoutId();
         mFooterLayoutId = annotation.footerLayoutId();
     }
@@ -101,7 +98,15 @@ public class ItemAdapter<D> extends SingleTypeAdapter<D, ItemViewHolder<D>> {
     }
 
     int getItemViewType() {
-        return mItemType;
+        return mRootLayoutId;
+    }
+
+    int getHeaderItemViewType() {
+        return mHeaderLayoutId;
+    }
+
+    int getFooterItemViewType() {
+        return mFooterLayoutId;
     }
 
     int getItemSpanSize() {
@@ -153,56 +158,38 @@ public class ItemAdapter<D> extends SingleTypeAdapter<D, ItemViewHolder<D>> {
         return getHeaderCount() + getFooterCount();
     }
 
-    int getHeaderItemViewType() {
-        return haveHeader() ? getItemViewType() + 1 << 18 : getItemViewType();
+    ItemViewHolder onCreateHeaderViewHolder(ViewGroup parent, int viewType) {
+        return createHolderForType(parent, viewType, HEADER_HOLDER);
     }
 
-    ItemViewHolder<D> onCreateHeaderViewHolder(ViewGroup parent) {
-        return createHolderForType(parent, HEADER_HOLDER);
+    ItemViewHolder onCreateFooterViewHolder(ViewGroup parent, int viewType) {
+        return createHolderForType(parent, viewType, FOOTER_HOLDER);
     }
 
-    ItemViewHolder<D> onCreateFooterViewHolder(ViewGroup parent) {
-        return createHolderForType(parent, FOOTER_HOLDER);
-    }
-
-    private ItemViewHolder<D> createHolderForType(ViewGroup parent, int type) {
-        ItemLayout annotation = mHolderClass.getAnnotation(ItemLayout.class);
-        if (annotation != null) {
-            ItemViewHolder viewHolder = null;
-            switch (type) {
-                case HEADER_HOLDER:
-                    try {
-                        Constructor<? extends ItemViewHolder> constructor = HeaderFooterViewHolder.class.getConstructor(ViewGroup.class, int.class);
-                        viewHolder = constructor.newInstance(parent, annotation.headerLayoutId());
-                        HeaderFooterViewHolder holder = (HeaderFooterViewHolder) viewHolder;
-                        holder.setHeaderType();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    break;
-                case FOOTER_HOLDER:
-                    try {
-                        Constructor<? extends ItemViewHolder> constructor = HeaderFooterViewHolder.class.getConstructor(ViewGroup.class, int.class);
-                        viewHolder = constructor.newInstance(parent, annotation.footerLayoutId());
-                        HeaderFooterViewHolder holder = (HeaderFooterViewHolder) viewHolder;
-                        holder.setFooterType();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-            }
-            if (viewHolder != null) {
-                bindItemClickEvent(viewHolder);
-                return viewHolder;
-
-            } else {
-                throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
-            }
+    private ItemViewHolder createHolderForType(ViewGroup parent, int viewType, int type) {
+        ItemViewHolder viewHolder;
+        HeaderFooterViewHolder holder;
+        try {
+            Constructor<? extends ItemViewHolder> constructor = HeaderFooterViewHolder.class.getConstructor(ViewGroup.class, int.class);
+            viewHolder = constructor.newInstance(parent, viewType);
+            holder = (HeaderFooterViewHolder) viewHolder;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return null;
-    }
+        switch (type) {
+            case HEADER_HOLDER:
+                holder.setHeaderType();
+                break;
+            case FOOTER_HOLDER:
+                holder.setFooterType();
+        }
+        if (viewHolder != null) {
+            bindItemClickEvent(viewHolder);
+            return viewHolder;
 
-    int getFooterItemViewType() {
-        return haveFooter() ? getItemViewType() + 1 << 18 - 1 : getItemViewType();
+        } else {
+            throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+        }
     }
 
     int getHeaderCount() {

@@ -71,7 +71,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
         for (int i = 0; i < 1000; i++) {
             ItemAdapter<String> adapter;
             if (i % 2 == 0) {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(0, Type1Holder.class);
+                ItemAdapter<String> itemAdapter = new ItemAdapter<>(Type1Holder.class);
                 itemAdapter.addItem("A类型条目" + i + "-0");
                 itemAdapter.addItem("A类型条目" + i + "-1");
                 itemAdapter.addItem("A类型条目" + i + "-2");
@@ -79,7 +79,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 itemAdapter.addItem("A类型条目" + i + "-4");
                 adapter = itemAdapter;
             } else {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(1, Type2Holder.class);
+                ItemAdapter<String> itemAdapter = new ItemAdapter<>(Type2Holder.class);
                 itemAdapter.addItem("B类型条目" + i + "-0");
                 itemAdapter.addItem("B类型条目" + i + "-1");
                 adapter = itemAdapter;
