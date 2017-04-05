@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MultiTypeAdapterDemo</string>
+    <string name="delete">删除</string>
+</resources>
