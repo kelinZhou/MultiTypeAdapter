@@ -7,12 +7,10 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.listener.OnItemEventListener;
-
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.List;
@@ -102,7 +100,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends RecyclerA
         mAdapterDataObservable.add(position, object);
         getDataList().add(position, object);
         if (refresh) {
-            notifyRefresh();
+            notifyRefresh();   // TODO: 2017/4/5 这里只是测试在这样使用，测试完成后要换成notifyItemxxxx()
         }
     }
 
