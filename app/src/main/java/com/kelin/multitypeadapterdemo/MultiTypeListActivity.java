@@ -14,7 +14,6 @@ import com.kelin.multitypeadapterdemo.holder.Type1Holder;
 import com.kelin.multitypeadapterdemo.holder.Type2Holder;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
-import com.kelin.recycleradapter.listener.OnItemEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,8 +83,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 itemAdapter.addItem("B类型条目" + i + "-1");
                 adapter = itemAdapter;
             }
-            adapter.setItemEventListener(new OnItemEventListener<String>() {
-
+            adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<String>() {
                 @Override
                 public void onItemHeaderClick(int position) {
                     Toast.makeText(getApplicationContext(), "头ViewHolder被点击！！！position：" + position, Toast.LENGTH_SHORT).show();
@@ -98,14 +96,14 @@ public class MultiTypeListActivity extends AppCompatActivity {
                     ls.add("新增条目1|" + position);
                     ls.add("新增条目2|" + position);
                     ls.add("新增条目3|" + position);
-                    mMultiTypeAdapter.getChildAdapterByPosition(position).addAll(1,ls);
+                    getAdapter().addAll(1,ls);
                     // TODO: 2017/4/5 优化回调这里考虑是否将Adapter从参数中传入，或者通过其他方式获取。
                 }
 
                 @Override
                 public void onItemChildClick(int position, String s, View view, int adapterPosition) {
                     Toast.makeText(getApplicationContext(), "子控件position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-                    mMultiTypeAdapter.getChildAdapterByPosition(position).removeItem(adapterPosition);
+                    getAdapter().removeItem(adapterPosition);
                 }
 
                 @Override

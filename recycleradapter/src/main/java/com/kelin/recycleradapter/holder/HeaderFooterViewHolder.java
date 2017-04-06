@@ -4,8 +4,6 @@ import android.support.annotation.LayoutRes;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.kelin.recycleradapter.holder.ItemViewHolder;
-
 /**
  * 描述 用来描述子适配器的页眉和页脚的ViewHolder的类。
  * 创建人 kelin
@@ -25,7 +23,7 @@ public class HeaderFooterViewHolder extends ItemViewHolder {
 
     private int curType;
 
-    public HeaderFooterViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
+    protected HeaderFooterViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
     }
 

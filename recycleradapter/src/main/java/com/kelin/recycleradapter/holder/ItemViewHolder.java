@@ -11,9 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.kelin.recycleradapter.callback.NotifyCallback;
-
 import java.util.List;
 
 /**
@@ -26,7 +24,7 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
 
     private final SparseArray<View> mViews;
 
-    public ItemViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
+    protected ItemViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(LayoutInflater.from(parent.getContext()).inflate(itemRootViewId, parent, false));
 
         mViews = new SparseArray<>();

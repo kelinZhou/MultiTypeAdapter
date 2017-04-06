@@ -21,7 +21,7 @@ import java.util.Map;
  * 版本 v 1.0.0
  */
 
-public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Object>> {
+public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Object>> {
 
     private static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
     private static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
@@ -251,7 +251,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
      * @param position 当前的索引位置。
      * @return 返回对应的适配器。
      */
-    public ItemAdapter getChildAdapterByPosition(int position) {
+    ItemAdapter getChildAdapterByPosition(int position) {
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
             ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
@@ -322,7 +322,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
     private class ItemAdapterDataObserver extends SingleTypeAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, SingleTypeAdapter adapter) {
+        protected void add(int position, Object o, EditableSupperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
             itemAdapter.lastItemPosition += 1;
@@ -330,7 +330,7 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection<Object> dataList, SingleTypeAdapter adapter) {
+        protected void addAll(int firstPosition, Collection<Object> dataList, EditableSupperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             boolean addAll = getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
             if (addAll) {
@@ -339,16 +339,15 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         }
 
         @Override
-        protected void remove(Object o, SingleTypeAdapter adapter) {
+        protected void remove(Object o, EditableSupperAdapter adapter) {
             boolean remove = getDataList().remove(o);
             if (remove) {
                 updateFirstAndLastPosition((ItemAdapter) adapter, 1, false);
             }
-            // TODO: 2017/4/6 解决删除条目后会造成数据错位的bug。
         }
 
         @Override
-        protected void removeAll(Collection<Object> dataList, SingleTypeAdapter adapter) {
+        protected void removeAll(Collection<Object> dataList, EditableSupperAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
             if (removeAll) {
                 updateFirstAndLastPosition((ItemAdapter) adapter, dataList.size(), false);
@@ -368,14 +367,15 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
                 int index = mChildAdapters.indexOf(adapter);
                 adapter.lastItemPosition -= updateSize;
                 if (adapter.isEmptyList()) {
-                    if (adapter.haveHeader()) {
-                        Object remove = getDataList().remove(adapter.firstItemPosition);
+                    //先删除Footer否则会角标错位。
+                    if (adapter.haveFooter()) {
+                        Object remove = getDataList().remove(adapter.lastItemPosition);
                         if (remove != null) {
                             updateSize += 1;
                         }
                     }
-                    if (adapter.haveFooter()) {
-                        Object remove = getDataList().remove(adapter.lastItemPosition);
+                    if (adapter.haveHeader()) {
+                        Object remove = getDataList().remove(adapter.firstItemPosition);
                         if (remove != null) {
                             updateSize += 1;
                         }

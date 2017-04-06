@@ -20,7 +20,7 @@ public class MyHolder extends ItemViewHolder<String> {
 
     private TextView mTvTitle;
 
-    public MyHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
+    protected MyHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
     }
 

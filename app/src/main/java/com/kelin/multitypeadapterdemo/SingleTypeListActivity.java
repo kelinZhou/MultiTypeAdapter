@@ -11,7 +11,6 @@ import android.widget.Toast;
 
 import com.kelin.multitypeadapterdemo.holder.MyHolder;
 import com.kelin.recycleradapter.SingleTypeAdapter;
-import com.kelin.recycleradapter.listener.OnItemEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,21 +38,22 @@ public class SingleTypeListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_single_type_list);
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-//        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
+        //        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         List<String> list = new ArrayList<>();
         for (int i = 0; i < 20000; i++) {
             list.add("测试条目" + i);
         }
-        final SingleTypeAdapter<String, MyHolder> adapter = new SingleTypeAdapter<>(list, MyHolder.class);
-        adapter.setItemEventListener(new OnItemEventListener<String>() {
+        SingleTypeAdapter<String, MyHolder> adapter = new SingleTypeAdapter<>(list, MyHolder.class);
+        adapter.setItemEventListener(new SingleTypeAdapter.OnItemEventListener<String, SingleTypeAdapter<String, MyHolder>>() {
             @Override
-            public void onItemClick(int position, String s, int adapterPosition) {
+            public void onItemClick(int position, String s) {
                 Toast.makeText(getApplicationContext(), "点击了条目：" + s, Toast.LENGTH_SHORT).show();
+                getAdapter().addItem(position + 1, "新增条目" + position);
             }
 
             @Override
-            public void onItemChildClick(int position, String s, View view, int adapterPosition) {
-                adapter.removeItem(s);
+            public void onItemChildClick(int position, String s, View view) {
+                getAdapter().removeItem(s);
                 Toast.makeText(getApplicationContext(), "删除了条目：" + s, Toast.LENGTH_SHORT).show();
             }
         });

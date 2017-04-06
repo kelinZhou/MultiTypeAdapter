@@ -17,7 +17,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-abstract class RecyclerAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
+abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
 
 
     /**
@@ -33,7 +33,7 @@ abstract class RecyclerAdapter<D, VH extends ItemViewHolder<D>> extends Recycler
      */
     private DiffUtil.Callback mDiffUtilCallback;
 
-    RecyclerAdapter() {
+    SupperAdapter() {
 
         mDiffUtilCallback = new DiffUtil.Callback() {
             @Override
@@ -51,7 +51,7 @@ abstract class RecyclerAdapter<D, VH extends ItemViewHolder<D>> extends Recycler
             public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
                 D oldObject = getOldObject(oldItemPosition);
                 D newObject = getObject(newItemPosition);
-                return oldObject == newObject || RecyclerAdapter.this.areItemsTheSame(oldObject, newObject);
+                return oldObject == newObject || SupperAdapter.this.areItemsTheSame(oldObject, newObject);
             }
 
             // 如果是同一个 item 判断内容是否相同
@@ -59,7 +59,7 @@ abstract class RecyclerAdapter<D, VH extends ItemViewHolder<D>> extends Recycler
             public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                 D oldObject = getOldObject(oldItemPosition);
                 D newObject = getObject(newItemPosition);
-                return oldObject == newObject || RecyclerAdapter.this.areContentsTheSame(oldObject, newObject);
+                return oldObject == newObject || SupperAdapter.this.areContentsTheSame(oldObject, newObject);
             }
 
             @Nullable
@@ -69,7 +69,7 @@ abstract class RecyclerAdapter<D, VH extends ItemViewHolder<D>> extends Recycler
                 D newObject = getObject(newItemPosition);
                 if (oldObject == newObject) return null;
                 Bundle bundle = new Bundle();
-                RecyclerAdapter.this.getChangePayload(oldObject, newObject, bundle);
+                SupperAdapter.this.getChangePayload(oldObject, newObject, bundle);
                 return bundle.size() == 0 ? null : bundle;
             }
         };
