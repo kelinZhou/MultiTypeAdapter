@@ -94,18 +94,18 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(int position, String s, int adapterPosition) {
                     Toast.makeText(getApplicationContext(), "条目点击position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-                    mMultiTypeAdapter.notifyDataSetChanged();
-                }
-
-                @Override
-                public void onItemChildClick(int position, String s, View view, int adapterPosition) {
-                    Toast.makeText(getApplicationContext(), "子控件position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
                     ArrayList<String> ls = new ArrayList<String>();
                     ls.add("新增条目1|" + position);
                     ls.add("新增条目2|" + position);
                     ls.add("新增条目3|" + position);
                     mMultiTypeAdapter.getChildAdapterByPosition(position).addAll(1,ls);
                     // TODO: 2017/4/5 优化回调这里考虑是否将Adapter从参数中传入，或者通过其他方式获取。
+                }
+
+                @Override
+                public void onItemChildClick(int position, String s, View view, int adapterPosition) {
+                    Toast.makeText(getApplicationContext(), "子控件position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
+                    mMultiTypeAdapter.getChildAdapterByPosition(position).removeItem(adapterPosition);
                 }
 
                 @Override

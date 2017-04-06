@@ -140,7 +140,7 @@ public class ItemAdapter<D> extends SingleTypeAdapter<D, ItemViewHolder<D>> {
 
     @Override
     protected int getAdapterPosition(ItemViewHolder<D> holder) {
-        return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition());
+        return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition()) - getHeaderCount();
     }
 
     void setParent(MultiTypeAdapter parent) {

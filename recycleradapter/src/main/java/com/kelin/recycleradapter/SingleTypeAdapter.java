@@ -39,7 +39,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends RecyclerA
     /**
      * 适配器数据的观察者对象。
      */
-    private AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable(this);
+    private AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable();
 
     /**
      * 设置条目的事件监听。
@@ -479,33 +479,27 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends RecyclerA
 
     private class AdapterDataObservable extends Observable<AdapterDataObserver> {
 
-        private final SingleTypeAdapter mAdapter;
-
-        AdapterDataObservable(SingleTypeAdapter singleTypeAdapter) {
-            mAdapter = singleTypeAdapter;
-        }
-
         public void add(int position, Object object) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).add(position, object, mAdapter);
+                mObservers.get(i).add(position, object, SingleTypeAdapter.this);
             }
         }
 
         void addAll(int firstPosition, Collection<D> dataList) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).addAll(firstPosition, (Collection<Object>) dataList, mAdapter);
+                mObservers.get(i).addAll(firstPosition, (Collection<Object>) dataList, SingleTypeAdapter.this);
             }
         }
 
         void remove(Object d) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).remove(d, mAdapter);
+                mObservers.get(i).remove(d, SingleTypeAdapter.this);
             }
         }
 
         void removeAll(Collection<D> dataList) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).removeAll((Collection<Object>) dataList, mAdapter);
+                mObservers.get(i).removeAll((Collection<Object>) dataList, SingleTypeAdapter.this);
             }
         }
     }

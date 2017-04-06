@@ -6,10 +6,8 @@ import android.support.annotation.Size;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
-
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +23,8 @@ import java.util.Map;
 
 public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Object>> {
 
+    private static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
+    private static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
     /**
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
      */
@@ -143,9 +143,12 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
             addedItemCount += adapter.getItemCount();
             adapter.lastItemPosition = addedItemCount - 1;
             if (adapter.haveHeader()) {
-                addData(adapter.getClass());
+                addData(HEADER_DATA_FLAG);
             }
             addDataList(adapter.getDataList());
+            if (adapter.haveFooter()) {
+                addData(FOOTER_DATA_FLAG);
+            }
             adapter.setParent(this);
         }
         return this;
@@ -322,60 +325,71 @@ public class MultiTypeAdapter extends RecyclerAdapter<Object, ItemViewHolder<Obj
         protected void add(int position, Object o, SingleTypeAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
-            int index = mChildAdapters.indexOf(adapter) + 1;
-            int size = 1;
-            for (int i = index; i < mChildAdapters.size(); i++) {
-                itemAdapter = mChildAdapters.get(i);
-                itemAdapter.firstItemPosition += size;
-                itemAdapter.lastItemPosition += size;
-            }
+            itemAdapter.lastItemPosition += 1;
+            updateFirstAndLastPosition(itemAdapter, 1, true);
         }
 
         @Override
         protected void addAll(int firstPosition, Collection<Object> dataList, SingleTypeAdapter adapter) {
-            // TODO: 2017/3/31 重新赋值以后所有的ItemAdapter的firstItemPosition字段就应该都变化了。
-            // TODO: 2017/3/31 这里先将firstItemPosition重新赋值，先写在这里，后面优化。
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
-            getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
-            int size = dataList.size();
-            ((ItemAdapter) adapter).lastItemPosition += size;
-            int index = mChildAdapters.indexOf(adapter) + 1;
-            for (int i = index; i < mChildAdapters.size(); i++) {
-                itemAdapter = mChildAdapters.get(i);
-                itemAdapter.firstItemPosition += size;
-                itemAdapter.lastItemPosition += size;
+            boolean addAll = getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
+            if (addAll) {
+                updateFirstAndLastPosition(itemAdapter, dataList.size(), true);
             }
         }
 
         @Override
         protected void remove(Object o, SingleTypeAdapter adapter) {
-            getDataList().remove(o);
-            int index = mChildAdapters.indexOf(adapter) + 1;
-            int size = 1;
-            for (int i = index; i < mChildAdapters.size(); i++) {
-                ItemAdapter itemAdapter = mChildAdapters.get(i);
-                itemAdapter.firstItemPosition -= size;
-                itemAdapter.lastItemPosition -= size;
+            boolean remove = getDataList().remove(o);
+            if (remove) {
+                updateFirstAndLastPosition((ItemAdapter) adapter, 1, false);
             }
-            if (adapter.isEmptyList()) {
-                adapter.unregisterAll();
-                mChildAdapters.remove(adapter);
-            }
+            // TODO: 2017/4/6 解决删除条目后会造成数据错位的bug。
         }
 
         @Override
         protected void removeAll(Collection<Object> dataList, SingleTypeAdapter adapter) {
-            getDataList().removeAll(dataList);
-            int index = mChildAdapters.indexOf(adapter) + 1;
-            int size = dataList.size();
-            for (int i = index; i < mChildAdapters.size(); i++) {
-                ItemAdapter itemAdapter = mChildAdapters.get(i);
-                itemAdapter.firstItemPosition -= size;
-                itemAdapter.lastItemPosition -= size;
+            boolean removeAll = getDataList().removeAll(dataList);
+            if (removeAll) {
+                updateFirstAndLastPosition((ItemAdapter) adapter, dataList.size(), false);
             }
-            if (adapter.isEmptyList()) {
-                adapter.unregisterAll();
-                mChildAdapters.remove(adapter);
+        }
+
+        private void updateFirstAndLastPosition(ItemAdapter adapter, int updateSize, boolean isAdd) {
+            if (isAdd) {
+                int index = mChildAdapters.indexOf(adapter) + 1;
+                adapter.lastItemPosition += updateSize;
+                for (int i = index; i < mChildAdapters.size(); i++) {
+                    adapter = mChildAdapters.get(i);
+                    adapter.firstItemPosition += updateSize;
+                    adapter.lastItemPosition += updateSize;
+                }
+            } else {
+                int index = mChildAdapters.indexOf(adapter);
+                adapter.lastItemPosition -= updateSize;
+                if (adapter.isEmptyList()) {
+                    if (adapter.haveHeader()) {
+                        Object remove = getDataList().remove(adapter.firstItemPosition);
+                        if (remove != null) {
+                            updateSize += 1;
+                        }
+                    }
+                    if (adapter.haveFooter()) {
+                        Object remove = getDataList().remove(adapter.lastItemPosition);
+                        if (remove != null) {
+                            updateSize += 1;
+                        }
+                    }
+                    adapter.unregisterAll();
+                    mChildAdapters.remove(adapter);
+                } else {
+                    index += 1;
+                }
+                for (int i = index; i < mChildAdapters.size(); i++) {
+                    adapter = mChildAdapters.get(i);
+                    adapter.firstItemPosition -= updateSize;
+                    adapter.lastItemPosition -= updateSize;
+                }
             }
         }
     }
