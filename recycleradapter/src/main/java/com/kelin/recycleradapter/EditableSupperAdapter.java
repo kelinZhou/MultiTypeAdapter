@@ -4,6 +4,7 @@ import android.database.Observable;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -11,11 +12,13 @@ import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
- * 描述 ${TODO}
+ * 描述 描述了可以编辑列表数据的适配器。
  * 创建人 kelin
  * 创建时间 2017/4/6  下午1:36
  * 版本 v 1.0.0
@@ -91,15 +94,6 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
     }
 
     @Override
-    public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
-        if (payloads.isEmpty()) {
-            onBindViewHolder(holder, position);
-        } else {
-            holder.onBindPartData(position, getObject(position), payloads);
-        }
-    }
-
-    @Override
     public void onBindViewHolder(VH holder, int position) {
         holder.onBindData(position, getItemObject(holder));
     }
@@ -154,7 +148,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      *
      * @param object 要添加的对象。
      */
-    public void addItem(D object) {
+    public void addItem(@NonNull D object) {
         addItem(getDataList().size(), object);
     }
 
@@ -164,7 +158,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param position 要添加的位置。
      * @param object   要添加的对象。
      */
-    public void addItem(int position, D object) {
+    public void addItem(int position, @NonNull D object) {
         addItem(position, object, true);
     }
 
@@ -175,11 +169,11 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param object   要添加的对象。
      * @param refresh  是否刷新列表。
      */
-    public void addItem(int position, D object, boolean refresh) {
-        mAdapterDataObservable.add(position, object);
+    public void addItem(int position, @NonNull D object, boolean refresh) {
         getDataList().add(position, object);
+        mAdapterDataObservable.add(position, object);
         if (refresh) {
-            notifyRefresh();   // TODO: 2017/4/5 这里只是测试在这样使用，测试完成后要换成notifyItemxxxx()
+            parentNotifyItemInserted(position);
         }
     }
 
@@ -188,7 +182,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      *
      * @param datum 要增加Item。
      */
-    public void addAll(Collection<D> datum) {
+    public void addAll(@NonNull Collection<D> datum) {
         addAll(datum, true);
     }
 
@@ -198,7 +192,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param positionStart 批量增加的其实位置。
      * @param datum         要增加Item。
      */
-    public void addAll(int positionStart, Collection<D> datum) {
+    public void addAll(@Size(min = 0) int positionStart, @NonNull Collection<D> datum) {
         addAll(positionStart, datum, true);
     }
 
@@ -208,7 +202,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param datum   要增加Item。
      * @param refresh 是否在增加完成后刷新条目。
      */
-    public void addAll(Collection<D> datum, boolean refresh) {
+    public void addAll(@NonNull Collection<D> datum, boolean refresh) {
         addAll(-1, datum, refresh);
     }
 
@@ -219,16 +213,17 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param datum         要增加Item。
      * @param refresh       是否在增加完成后刷新条目。
      */
-    public void addAll(int positionStart, Collection<D> datum, boolean refresh) {
+    public void addAll(@Size(min = 0) int positionStart, @NonNull Collection<D> datum, boolean refresh) {
+        if (datum.isEmpty()) return;
         if (positionStart < 0) {
             positionStart = getDataList().size();
         }
         boolean addAll = getDataList().addAll(positionStart, datum);
         if (addAll) {
             mAdapterDataObservable.addAll(positionStart, datum);
-        }
-        if (refresh) {
-            notifyRefresh();
+            if (refresh) {
+                parentNotifyItemRangeInserted(positionStart, datum.size());
+            }
         }
     }
 
@@ -238,7 +233,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param position 要移除的条目的位置。
      * @return 返回被移除的对象。
      */
-    public D removeItem(int position) {
+    public D removeItem(@Size(min = 0) int position) {
         return removeItem(position, true);
     }
 
@@ -249,14 +244,15 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param refresh  是否在移除完成后刷新列表。
      * @return 返回被移除的对象。
      */
-    public D removeItem(int position, boolean refresh) {
+    public D removeItem(@Size(min = 0) int position, boolean refresh) {
+        if (position < 0) return null;
         if (!isEmptyList()) {
             D d = getDataList().remove(position);
             if (d != null) {
                 mAdapterDataObservable.remove(d);
-            }
-            if (refresh) {
-                notifyRefresh();
+                if (refresh) {
+                    parentNotifyItemRemoved(position);
+                }
             }
             return d;
         } else {
@@ -270,7 +266,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param object 要移除的对象。
      * @return 移除成功返回改对象所在的位置，移除失败返回-1。
      */
-    public int removeItem(D object) {
+    public int removeItem(@NonNull D object) {
         return removeItem(object, true);
     }
 
@@ -281,7 +277,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param refresh 是否在移除完成后刷新列表。
      * @return 移除成功返回改对象所在的位置，移除失败返回-1。
      */
-    public int removeItem(D object, boolean refresh) {
+    public int removeItem(@NonNull D object, boolean refresh) {
         if (!isEmptyList()) {
             int position;
             List<D> dataList = getDataList();
@@ -290,9 +286,9 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
                 boolean remove = dataList.remove(object);
                 if (remove) {
                     mAdapterDataObservable.remove(object);
-                }
-                if (refresh) {
-                    notifyRefresh();
+                    if (refresh) {
+                        parentNotifyItemRemoved(position);
+                    }
                 }
             }
             return position;
@@ -307,7 +303,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param positionStart 开始移除的位置。
      * @param itemCount     要移除的条目数。
      */
-    public void removeAll(int positionStart, int itemCount) {
+    public void removeAll(@Size(min = 0) int positionStart, int itemCount) {
         removeAll(positionStart, itemCount, true);
     }
 
@@ -318,18 +314,21 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param itemCount     要移除的条目数。
      * @param refresh       是否在移除成功后刷新列表。
      */
-    public void removeAll(int positionStart, int itemCount, boolean refresh) {
+    public void removeAll(@Size(min = 0) int positionStart, @Size(min = 0) int itemCount, boolean refresh) {
+        if (positionStart < 0 || itemCount < 0) throw new IllegalArgumentException("the positionStart Arguments or itemCount Arguments must is greater than 0 integer");
         if (!isEmptyList()) {
             List<D> dataList = getDataList();
-            int positionEnd = positionStart + itemCount > dataList.size() ? dataList.size() : positionStart + itemCount;
+            int positionEnd = positionStart + (itemCount = itemCount > dataList.size() ? dataList.size() : itemCount);
+            List<D> temp = new ArrayList<>();
             for (int i = positionStart; i < positionEnd; i++) {
-                D d = dataList.remove(positionStart);
-                if (d != null) {
-                    mAdapterDataObservable.remove(d);
-                }
+                temp.add(dataList.get(i));
             }
-            if (refresh) {
-                notifyRefresh();
+            boolean removeAll = dataList.removeAll(temp);
+            if (removeAll) {
+                mAdapterDataObservable.removeAll(temp);
+                if (refresh) {
+                    parentNotifyItemRangeRemoved(positionStart, itemCount);
+                }
             }
         }
     }
@@ -339,7 +338,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      *
      * @param datum 要移除的条目的数据模型对象。
      */
-    public void removeAll(Collection<D> datum) {
+    public void removeAll(@NonNull Collection<D> datum) {
         removeAll(datum, true);
     }
 
@@ -352,11 +351,14 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
     public void removeAll(@NonNull Collection<D> datum, boolean refresh) {
         if (!isEmptyList() && !datum.isEmpty()) {
             List<D> dataList = getDataList();
+            Iterator<D> iterator = datum.iterator();
+            D d = iterator.next();
+            int positionStart = dataList.indexOf(d);
             boolean removeAll = dataList.removeAll(datum);
             if (removeAll) {
                 mAdapterDataObservable.removeAll(datum);
                 if (refresh) {
-                    notifyRefresh();
+                    parentNotifyItemRangeRemoved(positionStart, datum.size());
                 }
             }
         }
@@ -376,15 +378,30 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      */
     public void clear(boolean refresh) {
         if (!isEmptyList()) {
-            getDataList().clear();
-            mAdapterDataObservable.removeAll(getDataList());
+            List<D> dataList = getDataList();
+            dataList.clear();
+            mAdapterDataObservable.removeAll(dataList);
             if (refresh) {
-                notifyRefresh();
+                parentNotifyItemRangeRemoved(0, dataList.size());
             }
         }
     }
 
+    protected void parentNotifyItemInserted(int position) {
+        notifyItemInserted(position);
+    }
 
+    protected void parentNotifyItemRangeInserted(int positionStart, int itemCount) {
+        notifyItemRangeInserted(positionStart, itemCount);
+    }
+
+    protected void parentNotifyItemRemoved(int position) {
+        notifyItemRemoved(position);
+    }
+
+    protected void parentNotifyItemRangeRemoved(int positionStart, int itemCount) {
+        notifyItemRangeRemoved(positionStart, itemCount);
+    }
 
     /**
      * 注册数据观察者。

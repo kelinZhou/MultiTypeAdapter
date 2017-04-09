@@ -75,6 +75,15 @@ abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVi
         };
     }
 
+    @Override
+    public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            onBindViewHolder(holder, position);
+        } else {
+            holder.onBindPartData(position, getObject(position), payloads);
+        }
+    }
+
     /**
      * 判断两个位置的Item是否相同。
      * @param oldItemData 旧的Item数据。

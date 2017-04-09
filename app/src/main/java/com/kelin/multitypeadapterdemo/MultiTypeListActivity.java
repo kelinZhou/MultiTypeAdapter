@@ -97,7 +97,6 @@ public class MultiTypeListActivity extends AppCompatActivity {
                     ls.add("新增条目2|" + position);
                     ls.add("新增条目3|" + position);
                     getAdapter().addAll(1,ls);
-                    // TODO: 2017/4/5 优化回调这里考虑是否将Adapter从参数中传入，或者通过其他方式获取。
                 }
 
                 @Override

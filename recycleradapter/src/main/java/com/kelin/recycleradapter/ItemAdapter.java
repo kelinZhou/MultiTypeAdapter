@@ -238,10 +238,35 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
         return haveHeader() ? 1 : 0;
     }
 
-    int getFooterCount() {
+    private int getFooterCount() {
         return haveFooter() ? 1 : 0;
     }
 
+    @Override
+    protected void parentNotifyItemInserted(int position) {
+        if (mParentAdapter != null)
+            mParentAdapter.notifyItemInserted(position);
+    }
+
+    @Override
+    protected void parentNotifyItemRangeInserted(int positionStart, int itemCount) {
+        if (mParentAdapter != null)
+            mParentAdapter.notifyItemRangeInserted(positionStart, itemCount);
+    }
+
+    @Override
+    protected void parentNotifyItemRemoved(int position) {
+        // TODO: 2017/4/10 解决刷新是条目错位，和header也会刷新的问题。
+        if (mParentAdapter != null)
+            mParentAdapter.notifyItemRemoved(position);
+    }
+
+    @Override
+    protected void parentNotifyItemRangeRemoved(int positionStart, int itemCount) {
+        // TODO: 2017/4/10 解决刷新条目效果诡异的问题，可能是两个参数不对导致的。
+        if (mParentAdapter != null)
+            mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
+    }
 
     /**
      * 描述 {@link RecyclerView} 的条目点击事件监听。
