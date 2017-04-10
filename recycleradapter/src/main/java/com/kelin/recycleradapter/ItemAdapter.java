@@ -3,6 +3,7 @@ package com.kelin.recycleradapter;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -256,14 +257,24 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
 
     @Override
     protected void parentNotifyItemRemoved(int position) {
-        // TODO: 2017/4/10 解决刷新是条目错位，和header也会刷新的问题。
-        if (mParentAdapter != null)
-            mParentAdapter.notifyItemRemoved(position);
+        Log.i("ItemAdapter", "parentNotifyItemRemoved/position=" + position);
+        if (mParentAdapter != null) {
+            if (!isEmptyList()) {
+                mParentAdapter.notifyItemRemoved(position + firstItemPosition + getHeaderCount());
+            } else {
+                if (haveHeader() || haveFooter()) {
+                   mParentAdapter.notifyItemRangeRemoved(firstItemPosition, getHeaderCount() + getFooterCount() + 1);
+                } else {
+                    mParentAdapter.notifyItemRemoved(position + firstItemPosition);
+                }
+            }
+        }
     }
 
     @Override
     protected void parentNotifyItemRangeRemoved(int positionStart, int itemCount) {
         // TODO: 2017/4/10 解决刷新条目效果诡异的问题，可能是两个参数不对导致的。
+        Log.i("ItemAdapter", "parentNotifyItemRangeRemoved/positionStart=" + positionStart + " | itemCount=" + itemCount);
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
     }
@@ -278,10 +289,6 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
      */
     public static abstract class OnItemEventListener<D> {
         private ItemAdapter<D> adapter;
-
-        protected void setAdapter(ItemAdapter<D> adapter) {
-            this.adapter = adapter;
-        }
 
         protected ItemAdapter<D> getAdapter() {
             return adapter;
