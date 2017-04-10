@@ -245,14 +245,16 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
 
     @Override
     protected void parentNotifyItemInserted(int position) {
+        Log.i("ItemAdapter", "parentNotifyItemInserted/position=" + position);
         if (mParentAdapter != null)
-            mParentAdapter.notifyItemInserted(position);
+            mParentAdapter.notifyItemInserted(position + firstItemPosition + getHeaderCount());
     }
 
     @Override
     protected void parentNotifyItemRangeInserted(int positionStart, int itemCount) {
+        Log.i("ItemAdapter", "parentNotifyItemRangeInserted/positionStart=" + positionStart + " | itemCount=" + itemCount);
         if (mParentAdapter != null)
-            mParentAdapter.notifyItemRangeInserted(positionStart, itemCount);
+            mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition + getHeaderCount(), itemCount);
     }
 
     @Override

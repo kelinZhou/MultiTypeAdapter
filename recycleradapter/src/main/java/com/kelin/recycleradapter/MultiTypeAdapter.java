@@ -325,7 +325,6 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
         protected void add(int position, Object o, EditableSupperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
-            itemAdapter.lastItemPosition += 1;
             updateFirstAndLastPosition(itemAdapter, 1, true);
         }
 
