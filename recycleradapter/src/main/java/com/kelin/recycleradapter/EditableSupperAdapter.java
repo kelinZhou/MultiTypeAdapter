@@ -173,7 +173,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
         getDataList().add(position, object);
         mAdapterDataObservable.add(position, object);
         if (refresh) {
-            parentNotifyItemInserted(position);
+            mapNotifyItemInserted(position);
         }
     }
 
@@ -222,7 +222,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
         if (addAll) {
             mAdapterDataObservable.addAll(positionStart, datum);
             if (refresh) {
-                parentNotifyItemRangeInserted(positionStart, datum.size());
+                mapNotifyItemRangeInserted(positionStart, datum.size());
             }
         }
     }
@@ -251,7 +251,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
             if (d != null) {
                 mAdapterDataObservable.remove(d);
                 if (refresh) {
-                    parentNotifyItemRemoved(position);
+                    mapNotifyItemRemoved(position);
                 }
             }
             return d;
@@ -287,7 +287,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
                 if (remove) {
                     mAdapterDataObservable.remove(object);
                     if (refresh) {
-                        parentNotifyItemRemoved(position);
+                        mapNotifyItemRemoved(position);
                     }
                 }
             }
@@ -327,7 +327,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
             if (removeAll) {
                 mAdapterDataObservable.removeAll(temp);
                 if (refresh) {
-                    parentNotifyItemRangeRemoved(positionStart, itemCount);
+                    mapNotifyItemRangeRemoved(positionStart, itemCount);
                 }
             }
         }
@@ -358,7 +358,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
             if (removeAll) {
                 mAdapterDataObservable.removeAll(datum);
                 if (refresh) {
-                    parentNotifyItemRangeRemoved(positionStart, datum.size());
+                    mapNotifyItemRangeRemoved(positionStart, datum.size());
                 }
             }
         }
@@ -382,24 +382,24 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
             dataList.clear();
             mAdapterDataObservable.removeAll(dataList);
             if (refresh) {
-                parentNotifyItemRangeRemoved(0, dataList.size());
+                mapNotifyItemRangeRemoved(0, dataList.size());
             }
         }
     }
 
-    protected void parentNotifyItemInserted(int position) {
+    protected void mapNotifyItemInserted(int position) {
         notifyItemInserted(position);
     }
 
-    protected void parentNotifyItemRangeInserted(int positionStart, int itemCount) {
+    protected void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
         notifyItemRangeInserted(positionStart, itemCount);
     }
 
-    protected void parentNotifyItemRemoved(int position) {
+    protected void mapNotifyItemRemoved(int position) {
         notifyItemRemoved(position);
     }
 
-    protected void parentNotifyItemRangeRemoved(int positionStart, int itemCount) {
+    protected void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
         notifyItemRangeRemoved(positionStart, itemCount);
     }
 

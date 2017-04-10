@@ -244,22 +244,22 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
     }
 
     @Override
-    protected void parentNotifyItemInserted(int position) {
-        Log.i("ItemAdapter", "parentNotifyItemInserted/position=" + position);
+    protected void mapNotifyItemInserted(int position) {
+        Log.i("ItemAdapter", "mapNotifyItemInserted/position=" + position);
         if (mParentAdapter != null)
             mParentAdapter.notifyItemInserted(position + firstItemPosition + getHeaderCount());
     }
 
     @Override
-    protected void parentNotifyItemRangeInserted(int positionStart, int itemCount) {
-        Log.i("ItemAdapter", "parentNotifyItemRangeInserted/positionStart=" + positionStart + " | itemCount=" + itemCount);
+    protected void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
+        Log.i("ItemAdapter", "mapNotifyItemRangeInserted/positionStart=" + positionStart + " | itemCount=" + itemCount);
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition + getHeaderCount(), itemCount);
     }
 
     @Override
-    protected void parentNotifyItemRemoved(int position) {
-        Log.i("ItemAdapter", "parentNotifyItemRemoved/position=" + position);
+    protected void mapNotifyItemRemoved(int position) {
+        Log.i("ItemAdapter", "mapNotifyItemRemoved/position=" + position);
         if (mParentAdapter != null) {
             if (!isEmptyList()) {
                 mParentAdapter.notifyItemRemoved(position + firstItemPosition + getHeaderCount());
@@ -274,8 +274,8 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
     }
 
     @Override
-    protected void parentNotifyItemRangeRemoved(int positionStart, int itemCount) {
-        Log.i("ItemAdapter", "parentNotifyItemRangeRemoved/positionStart=" + positionStart + " | itemCount=" + itemCount);
+    protected void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
+        Log.i("ItemAdapter", "mapNotifyItemRangeRemoved/positionStart=" + positionStart + " | itemCount=" + itemCount);
         if (isEmptyList()) {
             positionStart = firstItemPosition;
             if (haveHeader()) {
