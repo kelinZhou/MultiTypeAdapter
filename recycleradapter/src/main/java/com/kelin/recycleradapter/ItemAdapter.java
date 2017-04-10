@@ -273,8 +273,18 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
 
     @Override
     protected void parentNotifyItemRangeRemoved(int positionStart, int itemCount) {
-        // TODO: 2017/4/10 解决刷新条目效果诡异的问题，可能是两个参数不对导致的。
         Log.i("ItemAdapter", "parentNotifyItemRangeRemoved/positionStart=" + positionStart + " | itemCount=" + itemCount);
+        if (isEmptyList()) {
+            positionStart = firstItemPosition;
+            if (haveHeader()) {
+                itemCount++;
+            }
+            if (haveFooter()) {
+                itemCount++;
+            }
+        } else {
+            positionStart += firstItemPosition + getHeaderCount();
+        }
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
     }
