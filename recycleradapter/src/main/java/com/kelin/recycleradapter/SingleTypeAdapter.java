@@ -90,6 +90,19 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditableS
         };
     }
 
+    @Override
+    protected View.OnLongClickListener onGetLongClickListener(final H viewHolder) {
+        return new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (mItemEventListener != null) {
+                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder));
+                }
+                return true;
+            }
+        };
+    }
+
     public static abstract class OnItemEventListener<D, A extends SingleTypeAdapter> {
 
         private A adapter;
@@ -105,6 +118,14 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditableS
          * @param d        被点击的条目的条目信息对象。
          */
         public abstract void onItemClick(int position, D d);
+
+        /**
+         * 当条目被长时点击的时候调用。
+         *
+         * @param position 当前被点击的条目在 {@link RecyclerView} 中的索引。
+         * @param d        被点击的条目的条目信息对象。
+         */
+        public void onItemLongClick(int position, D d){}
 
         /**
          * 当条目中的子控件被点击的时候调用。

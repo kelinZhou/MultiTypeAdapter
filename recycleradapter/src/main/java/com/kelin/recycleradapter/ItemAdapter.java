@@ -181,6 +181,19 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
         };
     }
 
+    @Override
+    protected View.OnLongClickListener onGetLongClickListener(final ItemViewHolder<D> viewHolder) {
+        return new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (mItemEventListener != null) {
+                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder), getAdapterPosition(viewHolder));
+                }
+                return true;
+            }
+        };
+    }
+
     protected int getAdapterPosition(ItemViewHolder<D> holder) {
         return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition()) - getHeaderCount();
     }
@@ -317,6 +330,18 @@ public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> 
          *                        这时该参数的值将会与 position 参数的值不同，该参数的值将表示当前点击的条目在当前子 Adapter 中的位置。
          */
         public abstract void onItemClick(int position, D d, int adapterPosition);
+
+        /**
+         * 当条目被长时点击的时候调用。
+         *
+         * @param position        当前被点击的条目在 {@link RecyclerView} 中的索引。
+         * @param d               被点击的条目的条目信息对象。
+         * @param adapterPosition 当前被点击的条目在 {@link android.support.v7.widget.RecyclerView.Adapter} 中的索引,
+         *                        一般情况下该参数的值会和 position 参数的值一致。只有当使用 {@link ItemAdapter}
+         *                        作为 {@link MultiTypeAdapter} 的子条目并使用该监听时这个值才有意义，
+         *                        这时该参数的值将会与 position 参数的值不同，该参数的值将表示当前点击的条目在当前子 Adapter 中的位置。
+         */
+        public void onItemLongClick(int position, D d, int adapterPosition) {}
 
         /**
          * 当条目中的子控件被点击的时候调用。

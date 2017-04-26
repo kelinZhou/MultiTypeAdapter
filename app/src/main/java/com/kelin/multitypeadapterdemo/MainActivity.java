@@ -1,6 +1,7 @@
 package com.kelin.multitypeadapterdemo;
 
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -15,13 +16,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        View singleType = findViewById(R.id.singleType);
-        View multiType = findViewById(R.id.multiType);
-        if (singleType != null) {
-            singleType.setOnClickListener(this);
-        }
-        if (multiType != null) {
-            multiType.setOnClickListener(this);
+        bindClickListener(R.id.singleType, R.id.multiType, R.id.single_ype_model, R.id.multi_type_model);
+    }
+
+    private void bindClickListener(@IdRes int... viewIds) {
+        if (viewIds != null && viewIds.length > 0) {
+            for (int viewId : viewIds) {
+                findViewById(viewId).setOnClickListener(this);
+            }
         }
     }
 
@@ -34,6 +36,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.multiType:
                 MultiTypeListActivity.startAction(this);
+                break;
+
+            case R.id.single_ype_model:
+                break;
+
+            case R.id.multi_type_model:
                 break;
         }
     }

@@ -17,6 +17,18 @@
         android:id="@+id/multiType"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="多条目列表"/>
+        android:text="多条目列表（文本）"/>
+
+    <Button
+        android:id="@+id/single_ype_model"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="多条目列表（对象）"/>
+
+    <Button
+        android:id="@+id/multi_type_model"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="多条目列表（仿淘宝）"/>
 
 </LinearLayout>

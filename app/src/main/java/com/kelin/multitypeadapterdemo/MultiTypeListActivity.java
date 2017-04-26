@@ -7,6 +7,7 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -70,7 +71,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
         for (int i = 0; i < 1000; i++) {
             ItemAdapter<String> adapter;
             if (i % 2 == 0) {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(Type1Holder.class);
+                ItemAdapter<String> itemAdapter = new ItemAdapter<>(3,Type1Holder.class);
                 itemAdapter.addItem("A类型条目" + i + "-0");
                 itemAdapter.addItem("A类型条目" + i + "-1");
                 itemAdapter.addItem("A类型条目" + i + "-2");
@@ -98,6 +99,11 @@ public class MultiTypeListActivity extends AppCompatActivity {
 //                    ls.add("新增条目3|" + position);
 //                    getAdapter().addAll(1,ls);
                     getAdapter().addItem(adapterPosition, "我是新增条目");
+                }
+
+                @Override
+                public void onItemLongClick(int position, String s, int adapterPosition) {
+                    Log.i("onItemLongClick", "position=" + position + " | s=" + s + " | adapterPosition=" + adapterPosition);
                 }
 
                 @Override

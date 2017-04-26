@@ -82,6 +82,7 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
             clickView = viewHolder.itemView;
         }
         clickView.setOnClickListener(onClickListener);
+        clickView.setOnLongClickListener(onGetLongClickListener(viewHolder));
         int[] childViewIds = viewHolder.onGetNeedListenerChildViewIds();
         if (childViewIds != null && childViewIds.length > 0) {
             for (int viewId : childViewIds) {
@@ -126,6 +127,8 @@ public abstract class EditableSupperAdapter<D, VH extends ItemViewHolder<D>> ext
      * @param viewHolder 当前要绑定事件的ViewHolder对象。
      */
     protected abstract View.OnClickListener onGetClickListener(VH viewHolder);
+
+    protected abstract View.OnLongClickListener onGetLongClickListener(VH viewHolder);
 
 
     @Override
