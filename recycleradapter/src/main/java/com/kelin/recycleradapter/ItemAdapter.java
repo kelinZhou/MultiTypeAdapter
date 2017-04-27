@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
-import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 import java.lang.reflect.Constructor;
@@ -55,15 +54,6 @@ public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
      * 用来记录当前Adapter在RecyclerView列表中的结束位置。
      */
     int lastItemPosition;
-    /**
-     * 用来记录头布局的资源文件ID。
-     */
-    private int mHeaderLayoutId;
-    /**
-     * 用来记录脚布局的资源文件ID。
-     */
-    private int mFooterLayoutId;
-    private int mRootLayoutId;
     private OnItemEventListener<D> mItemEventListener;
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
@@ -81,10 +71,6 @@ public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
     public ItemAdapter(List<D> list, @Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         super(list, holderClass);
         mSpanSize = spanSize <= 0 ? SPAN_SIZE_FULL_SCREEN : spanSize;
-        ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
-        mRootLayoutId = annotation.rootLayoutId();
-        mHeaderLayoutId = annotation.headerLayoutId();
-        mFooterLayoutId = annotation.footerLayoutId();
     }
 
 
@@ -95,32 +81,6 @@ public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
      */
     public void setItemEventListener(@NonNull OnItemEventListener<D> listener) {
         mItemEventListener = listener;
-    }
-
-    /**
-     * 是否拥有Header。
-     */
-    boolean haveHeader() {
-        return mHeaderLayoutId != ItemLayout.NOT_HEADER_FOOTER;
-    }
-
-    /**
-     * 是否拥有Footer。
-     */
-    boolean haveFooter() {
-        return mFooterLayoutId != ItemLayout.NOT_HEADER_FOOTER;
-    }
-
-    int getItemViewType() {
-        return mRootLayoutId;
-    }
-
-    int getHeaderItemViewType() {
-        return mHeaderLayoutId;
-    }
-
-    int getFooterItemViewType() {
-        return mFooterLayoutId;
     }
 
     int getItemSpanSize() {
@@ -206,13 +166,6 @@ public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
         return isEmptyList() ? null : getObject(0).getClass();
     }
 
-    /**
-     * 获取头和脚的数量。
-     */
-    private int getHeaderAndFooterCount() {
-        return getHeaderCount() + getFooterCount();
-    }
-
     ItemViewHolder onCreateHeaderViewHolder(ViewGroup parent, int viewType) {
         return createHolderForType(parent, viewType, HEADER_HOLDER);
     }
@@ -246,14 +199,6 @@ public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
         } else {
             throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
         }
-    }
-
-    int getHeaderCount() {
-        return haveHeader() ? 1 : 0;
-    }
-
-    private int getFooterCount() {
-        return haveFooter() ? 1 : 0;
     }
 
     @Override

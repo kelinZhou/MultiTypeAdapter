@@ -46,9 +46,6 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuppe
      */
     public SingleTypeAdapter(List<D> list, Class<? extends H> holderClass) {
         super(list, holderClass);
-        if (holderClass == null) {
-            throw new RuntimeException("you mast set holderClass and not null object");
-        }
     }
 
     /**

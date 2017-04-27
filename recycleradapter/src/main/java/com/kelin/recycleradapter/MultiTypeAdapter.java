@@ -5,6 +5,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ViewGroup;
@@ -26,8 +27,6 @@ import java.util.Map;
 
 public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Object>> {
 
-    private static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
-    private static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
     /**
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
      */
@@ -53,7 +52,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      */
     private int mLoadMoreViewId;
     private LoadMoreCallback mLoadMoreCallback;
-    private GridLayoutManager mLm;
+    private LinearLayoutManager mLm;
     private boolean mIsInTheLoadMore;
     private boolean mNoMoreData;
 
@@ -90,7 +89,10 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
          * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。改值的范围是1~100之间的数(包含)。
          * @return 返回绑定成功的 {@link MultiTypeAdapter} 对象。
          */
-        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 10000) int totalSpanSize) {
+        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 1000) int totalSpanSize) {
+            if (totalSpanSize < 1 || totalSpanSize > 1000) {
+                throw new RuntimeException("the totalSpanSize argument must be an integer greater than zero and less than 1000");
+            }
             return new MultiTypeAdapter(recyclerView, totalSpanSize);
         }
     }
@@ -102,7 +104,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。
      */
     private MultiTypeAdapter(@NonNull RecyclerView recyclerView, int totalSpanSize) {
-        mTotalSpanSize = totalSpanSize < 1 ? 1 : totalSpanSize;
+        mTotalSpanSize = totalSpanSize;
         mRecyclerView = recyclerView;
         mChildAdapters = new ArrayList<>();
         initLayoutManager();
@@ -113,23 +115,28 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      */
     private void initLayoutManager() {
         RecyclerView recyclerView = mRecyclerView;
-        mLm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize()) {
-            @Override
-            public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-                try {
-                    super.onLayoutChildren(recycler, state);
-                } catch (Exception e) {
-                    e.printStackTrace();
+        if (mTotalSpanSize > 1) {
+            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize()) {
+                @Override
+                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+                    try {
+                        super.onLayoutChildren(recycler, state);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        };
-        mLm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            };
+            lm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
 
-            @Override
-            public int getSpanSize(int position) {
-                return getItemSpanSize(position);
-            }
-        });
+                @Override
+                public int getSpanSize(int position) {
+                    return getItemSpanSize(position);
+                }
+            });
+            mLm = lm;
+        } else {
+            mLm = new LinearLayoutManager(recyclerView.getContext());
+        }
         recyclerView.setLayoutManager(mLm);
     }
 

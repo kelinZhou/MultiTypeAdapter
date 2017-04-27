@@ -40,7 +40,7 @@ public class SingleTypeListActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         //        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         List<String> list = new ArrayList<>();
-        for (int i = 0; i < 20000; i++) {
+        for (int i = 0; i < 30; i++) {
             list.add("测试条目" + i);
         }
         SingleTypeAdapter<String, MyHolder> adapter = new SingleTypeAdapter<>(list, MyHolder.class);

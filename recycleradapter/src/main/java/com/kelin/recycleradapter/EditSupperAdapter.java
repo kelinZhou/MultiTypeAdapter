@@ -40,10 +40,82 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
      * 用来存放ViewHolder的字节码对象。
      */
     Class<? extends VH> mHolderClass;
+    /**
+     * 用来记录头布局的资源文件ID。
+     */
+    private int mHeaderLayoutId;
+    /**
+     * 用来记录脚布局的资源文件ID。
+     */
+    private int mFooterLayoutId;
+    /**
+     * 用来记录当前适配器中的布局资源ID。
+     */
+    private int mRootLayoutId;
 
     EditSupperAdapter(List<D> list, Class<? extends VH> holderClass) {
-        setDataList(list);
+        if (holderClass == null) {
+            throw new RuntimeException("you mast set holderClass and not null object");
+        }
         mHolderClass = holderClass;
+        ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
+        if (annotation != null) {
+            mRootLayoutId = annotation.rootLayoutId();
+            mHeaderLayoutId = annotation.headerLayoutId();
+            mFooterLayoutId = annotation.footerLayoutId();
+        } else {
+            throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+        }
+
+        setDataList(list);
+        List dataList = getDataList();
+        if (haveHeader()) {
+            dataList.add(0, HEADER_DATA_FLAG);
+        }
+        if (haveFooter()) {
+            dataList.add(FOOTER_DATA_FLAG);
+        }
+    }
+
+    /**
+     * 是否拥有Header。
+     */
+    boolean haveHeader() {
+        return mHeaderLayoutId != ItemLayout.NOT_HEADER_FOOTER;
+    }
+
+    /**
+     * 是否拥有Footer。
+     */
+    boolean haveFooter() {
+        return mFooterLayoutId != ItemLayout.NOT_HEADER_FOOTER;
+    }
+
+    int getItemViewType() {
+        return mRootLayoutId;
+    }
+
+    int getHeaderItemViewType() {
+        return mHeaderLayoutId;
+    }
+
+    int getFooterItemViewType() {
+        return mFooterLayoutId;
+    }
+
+    int getHeaderCount() {
+        return haveHeader() ? 1 : 0;
+    }
+
+    int getFooterCount() {
+        return haveFooter() ? 1 : 0;
+    }
+
+    /**
+     * 获取头和脚的数量。
+     */
+    int getHeaderAndFooterCount() {
+        return getHeaderCount() + getFooterCount();
     }
 
     @Override
@@ -101,11 +173,13 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
 
     @Override
     public int getItemViewType(int position) {
-        ItemLayout rootLayout = mHolderClass.getAnnotation(ItemLayout.class);
-        if (rootLayout != null) {
-            return rootLayout.rootLayoutId();
+        if (haveHeader() && position == 0) {
+            return getHeaderItemViewType();
+        } else if (haveFooter() && position == getItemCount() - 1) {
+            return getFooterItemViewType();
+        } else {
+            return getItemViewType();
         }
-        throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
     }
 
     @Override
@@ -152,6 +226,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
      * @param object 要添加的对象。
      */
     public void addItem(@NonNull D object) {
+        // TODO: 2017/4/27 解决有头或者脚时position位置计算偏差的问题。
         addItem(getDataList().size(), object);
     }
 

@@ -19,7 +19,8 @@ import java.util.List;
 
 abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
 
-
+    protected static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
+    protected static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
     /**
      * 当前页面的数据集。
      */
