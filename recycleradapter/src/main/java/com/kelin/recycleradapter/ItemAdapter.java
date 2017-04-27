@@ -21,7 +21,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public class ItemAdapter<D> extends EditableSupperAdapter<D, ItemViewHolder<D>> {
+public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
 
     /**
      * 用来从ViewHolder中获取数据模型的键。

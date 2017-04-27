@@ -41,10 +41,6 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      */
     private RecyclerView mRecyclerView;
     /**
-     * 用来记录当前的总条目数。
-     */
-    private int addedItemCount;
-    /**
      * 当前 {@link RecyclerView} 的宽度被均分成的份数。
      */
     private int mTotalSpanSize;
@@ -149,10 +145,8 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
     public MultiTypeAdapter addAdapter(@NonNull ItemAdapter... adapters) {
         for (ItemAdapter adapter : adapters) {
             adapter.registerObserver(mAdapterDataObserver);
-            adapter.firstItemPosition = addedItemCount;
             mChildAdapters.add(adapter);
-            addedItemCount += adapter.getItemCount();
-            adapter.lastItemPosition = addedItemCount - 1;
+            adapter.firstItemPosition = getDataList().size();
             if (adapter.haveHeader()) {
                 addData(HEADER_DATA_FLAG);
             }
@@ -160,6 +154,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
             if (adapter.haveFooter()) {
                 addData(FOOTER_DATA_FLAG);
             }
+            adapter.lastItemPosition = getDataList().size() - 1;
             adapter.setParent(this);
         }
         return this;
@@ -192,9 +187,6 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
         }
         throw new RuntimeException("viewType not found !");
     }
-
-    @Override
-    public void onBindViewHolder(ItemViewHolder<Object> holder, int position) {}
 
     @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
@@ -289,7 +281,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * @return 返回当前条目的占屏值。
      */
     private int getItemSpanSize(int position) {
-        if (mLoadMoreViewId != 0) return getTotalSpanSize();
+        if (mLoadMoreViewId != 0 && position == getItemCount() - 1) return getTotalSpanSize();
         ItemAdapter adapter = getChildAdapterByPosition(position);
 
         if (adapter == null) return getTotalSpanSize();
@@ -375,14 +367,14 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
     private class ItemAdapterDataObserver extends SingleTypeAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, EditableSupperAdapter adapter) {
+        protected void add(int position, Object o, EditSupperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
             updateFirstAndLastPosition(itemAdapter, 1, true);
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection<Object> dataList, EditableSupperAdapter adapter) {
+        protected void addAll(int firstPosition, Collection<Object> dataList, EditSupperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             boolean addAll = getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
             if (addAll) {
@@ -391,7 +383,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
         }
 
         @Override
-        protected void remove(Object o, EditableSupperAdapter adapter) {
+        protected void remove(Object o, EditSupperAdapter adapter) {
             boolean remove = getDataList().remove(o);
             if (remove) {
                 updateFirstAndLastPosition((ItemAdapter) adapter, 1, false);
@@ -399,7 +391,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
         }
 
         @Override
-        protected void removeAll(Collection<Object> dataList, EditableSupperAdapter adapter) {
+        protected void removeAll(Collection<Object> dataList, EditSupperAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
             if (removeAll) {
                 updateFirstAndLastPosition((ItemAdapter) adapter, dataList.size(), false);

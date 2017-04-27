@@ -76,12 +76,11 @@ abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVi
     }
 
     @Override
+    public final void onBindViewHolder(VH holder, int position) {}
+
+    @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
-        if (payloads.isEmpty()) {
-            onBindViewHolder(holder, position);
-        } else {
-            holder.onBindPartData(position, getObject(position), payloads);
-        }
+        holder.onBindPartData(position, getObject(position), payloads);
     }
 
     /**
