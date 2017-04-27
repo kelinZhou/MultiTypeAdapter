@@ -1,13 +1,16 @@
 package com.kelin.recycleradapter;
 
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.ViewGroup;
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,6 +52,14 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * 子条目数据变化的观察者。
      */
     private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();;
+    /**
+     * 加载更多时显示的布局文件ID。
+     */
+    private int mLoadMoreViewId;
+    private LoadMoreCallback mLoadMoreCallback;
+    private GridLayoutManager mLm;
+    private boolean mIsInTheLoadMore;
+    private boolean mNoMoreData;
 
     /**
      * 构建 {@link MultiTypeAdapter} 的工厂类。
@@ -106,7 +117,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      */
     private void initLayoutManager() {
         RecyclerView recyclerView = mRecyclerView;
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize()) {
+        mLm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize()) {
             @Override
             public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
                 try {
@@ -116,14 +127,14 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
                 }
             }
         };
-        gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+        mLm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
 
             @Override
             public int getSpanSize(int position) {
                 return getItemSpanSize(position);
             }
         });
-        recyclerView.setLayoutManager(gridLayoutManager);
+        recyclerView.setLayoutManager(mLm);
     }
 
     /**
@@ -156,11 +167,12 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
 
     @Override
     public int getItemCount() {
-        return getDataList().size();
+        return getDataList().size() + (mLoadMoreViewId == 0 ? 0 : 1);
     }
 
     @Override
     public ItemViewHolder<Object> onCreateViewHolder(ViewGroup parent, int viewType) {
+        if (viewType == mLoadMoreViewId) return new LoadMoreViewHolder(parent, viewType);
         ItemViewHolder holder = null;
         for (ItemAdapter adapter : mChildAdapters) {
             if (adapter.getItemViewType() == viewType) {
@@ -186,7 +198,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
 
     @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
-        if (holder instanceof HeaderFooterViewHolder) return;
+        if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder) return;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
             ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
@@ -201,6 +213,8 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
 
     @Override
     public int getItemViewType(int position) {
+        if (mLoadMoreViewId != 0 && position == getItemCount() - 1) return mLoadMoreViewId;
+
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
             ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();
@@ -217,6 +231,44 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
             }
         }
         throw new RuntimeException("not find item type");
+    }
+
+    /**
+     * 设置加载更多时显示的布局。
+     * @param loadMoreViewId 加载更多时显示的布局的资源ID。
+     * @param callback 加载更多的回调。
+     */
+    public void setLoadMoreViewId(@LayoutRes int loadMoreViewId, @NonNull LoadMoreCallback callback) {
+        mLoadMoreViewId = loadMoreViewId;
+        mLoadMoreCallback = callback;
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (mIsInTheLoadMore || mNoMoreData) return;
+                int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
+                if (lastVisibleItemPosition == getDataList().size()) {
+                    Log.i("MultiTypeAdapter", "开始加载更多");
+                    mLoadMoreCallback.OnLoadMore();
+                    mIsInTheLoadMore = true;
+                }
+            }
+        });
+    }
+
+    /**
+     * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
+     */
+    public void setLoadMoreFinished() {
+        mIsInTheLoadMore = false;
+        Log.i("MultiTypeAdapter", "加载完成");
+    }
+
+    /**
+     * 如果你的页面已经没有更多数据可以加载了的话，应当调用此方法。调用了此方法后就不会再触发LoadMore事件，否则还会触发。
+     */
+    public void setNoMoreData() {
+        mNoMoreData = true;
+        mLoadMoreViewId = 0;
     }
 
     /**
@@ -237,6 +289,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * @return 返回当前条目的占屏值。
      */
     private int getItemSpanSize(int position) {
+        if (mLoadMoreViewId != 0) return getTotalSpanSize();
         ItemAdapter adapter = getChildAdapterByPosition(position);
 
         if (adapter == null) return getTotalSpanSize();
@@ -391,5 +444,13 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
                 }
             }
         }
+    }
+
+    public abstract static class LoadMoreCallback{
+
+        /**
+         * 加载更多时的回调。
+         */
+        public abstract void OnLoadMore();
     }
 }

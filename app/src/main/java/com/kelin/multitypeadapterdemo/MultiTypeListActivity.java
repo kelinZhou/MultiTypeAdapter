@@ -28,6 +28,7 @@ import java.util.List;
 public class MultiTypeListActivity extends AppCompatActivity {
 
     private MultiTypeAdapter mMultiTypeAdapter;
+    private int mStartPage;
 
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
@@ -43,7 +44,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multi_type_list);
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mMultiTypeAdapter = MultiTypeAdapter.Factory.create(recyclerView, 3);
 //        Type1Adapter type1Adapter = new Type1Adapter(getList("A类型条目", 5), 0, 2);
 //        multiTypeAdapter.addAdapter(type1Adapter);
@@ -67,11 +68,39 @@ public class MultiTypeListActivity extends AppCompatActivity {
 //                Toast.makeText(getApplicationContext(), "条目点击position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
 //            }
 //        };
+        mStartPage = 0;
+        loadData();
+        recyclerView.setAdapter(mMultiTypeAdapter);
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                loadData();
+                mMultiTypeAdapter.notifyDataSetChanged();
+                mMultiTypeAdapter.setLoadMoreFinished();
 
-        for (int i = 0; i < 1000; i++) {
+                if (mStartPage == 3) {
+                    mMultiTypeAdapter.setNoMoreData();
+                }
+            }
+        };
+
+        mMultiTypeAdapter.setLoadMoreViewId(R.layout.layout_load_more, new MultiTypeAdapter.LoadMoreCallback() {
+            @Override
+            public void OnLoadMore() {
+                //                Snackbar.make(recyclerView, "加载更多", Snackbar.LENGTH_SHORT).setAction("Action", null).show();
+                recyclerView.postDelayed(runnable, 3000);
+            }
+        });
+    }
+
+    private void loadData() {
+        int start = mStartPage * 10;
+        int end = (mStartPage + 1) * 10;
+        mStartPage++;
+        for (int i = start; i < end; i++) {
             ItemAdapter<String> adapter;
             if (i % 2 == 0) {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(3,Type1Holder.class);
+                ItemAdapter<String> itemAdapter = new ItemAdapter<>(3, Type1Holder.class);
                 itemAdapter.addItem("A类型条目" + i + "-0");
                 itemAdapter.addItem("A类型条目" + i + "-1");
                 itemAdapter.addItem("A类型条目" + i + "-2");
@@ -93,11 +122,6 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(int position, String s, int adapterPosition) {
                     Toast.makeText(getApplicationContext(), "条目点击position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-//                    ArrayList<String> ls = new ArrayList<String>();
-//                    ls.add("新增条目1|" + position);
-//                    ls.add("新增条目2|" + position);
-//                    ls.add("新增条目3|" + position);
-//                    getAdapter().addAll(1,ls);
                     getAdapter().addItem(adapterPosition, "我是新增条目");
                 }
 
@@ -119,7 +143,6 @@ public class MultiTypeListActivity extends AppCompatActivity {
             });
             mMultiTypeAdapter.addAdapter(adapter);
         }
-        recyclerView.setAdapter(mMultiTypeAdapter);
     }
 
     private List<String> getList(@NonNull String text, @IntRange(from = 5, to = 100) int size) {
