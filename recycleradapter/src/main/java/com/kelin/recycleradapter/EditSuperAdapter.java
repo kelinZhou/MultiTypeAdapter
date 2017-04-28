@@ -24,7 +24,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends SupperAdapter<D, VH> {
+public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> {
 
     /**
      * 适配器数据的观察者对象。
@@ -53,7 +53,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
      */
     private int mRootLayoutId;
 
-    EditSupperAdapter(List<D> list, Class<? extends VH> holderClass) {
+    EditSuperAdapter(List<D> list, Class<? extends VH> holderClass) {
         if (holderClass == null) {
             throw new RuntimeException("you mast set holderClass and not null object");
         }
@@ -518,25 +518,25 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
 
         public void add(int position, Object object) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).add(position, object, EditSupperAdapter.this);
+                mObservers.get(i).add(position, object, EditSuperAdapter.this);
             }
         }
 
         void addAll(int firstPosition, Collection<D> dataList) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).addAll(firstPosition, (Collection<Object>) dataList, EditSupperAdapter.this);
+                mObservers.get(i).addAll(firstPosition, (Collection<Object>) dataList, EditSuperAdapter.this);
             }
         }
 
         void remove(Object d) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).remove(d, EditSupperAdapter.this);
+                mObservers.get(i).remove(d, EditSuperAdapter.this);
             }
         }
 
         void removeAll(Collection<D> dataList) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).removeAll((Collection<Object>) dataList, EditSupperAdapter.this);
+                mObservers.get(i).removeAll((Collection<Object>) dataList, EditSuperAdapter.this);
             }
         }
     }
@@ -549,7 +549,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
          * @param object   新增的数据。
          * @param adapter  当前被观察的Adapter对象。
          */
-        protected abstract void add(int position, Object object, EditSupperAdapter adapter);
+        protected abstract void add(int position, Object object, EditSuperAdapter adapter);
 
         /**
          * 列表中批量新增了数据。
@@ -558,7 +558,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
          * @param dataList      新增的数据集合。
          * @param adapter       当前被观察的Adapter对象。
          */
-        protected abstract void addAll(int firstPosition, Collection<Object> dataList, EditSupperAdapter adapter);
+        protected abstract void addAll(int firstPosition, Collection<Object> dataList, EditSuperAdapter adapter);
 
         /**
          * 删除了列表中的数据。
@@ -566,7 +566,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
          * @param object  被删除的数据。
          * @param adapter 当前被观察的Adapter对象。
          */
-        protected abstract void remove(Object object, EditSupperAdapter adapter);
+        protected abstract void remove(Object object, EditSuperAdapter adapter);
 
         /**
          * 批量删除了列表中的数据。
@@ -574,6 +574,6 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
          * @param dataList 被删除的数据集合。
          * @param adapter  当前被观察的Adapter对象。
          */
-        protected abstract void removeAll(Collection<Object> dataList, EditSupperAdapter adapter);
+        protected abstract void removeAll(Collection<Object> dataList, EditSuperAdapter adapter);
     }
 }

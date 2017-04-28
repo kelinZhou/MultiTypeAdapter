@@ -27,7 +27,7 @@ import java.util.Map;
  * 版本 v 1.0.0
  */
 
-public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Object>> {
+public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object>> {
 
     /**
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
@@ -128,6 +128,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * 初始化布局管理器。并设置给 {@link RecyclerView}。
      */
     private void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
+        // TODO: 2017/4/28 给SingleTypeAdapter增加上拉加载的功能。 考虑把这个方法移动到SupperAdapter中来解决。
         if (totalSpanSize > 1) {
             GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize(), orientation, false) {
                 @Override
@@ -389,14 +390,14 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
     private class ItemAdapterDataObserver extends SingleTypeAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, EditSupperAdapter adapter) {
+        protected void add(int position, Object o, EditSuperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
             updateFirstAndLastPosition(itemAdapter, 1, true);
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection<Object> dataList, EditSupperAdapter adapter) {
+        protected void addAll(int firstPosition, Collection<Object> dataList, EditSuperAdapter adapter) {
             ItemAdapter itemAdapter = (ItemAdapter) adapter;
             boolean addAll = getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
             if (addAll) {
@@ -405,7 +406,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
         }
 
         @Override
-        protected void remove(Object o, EditSupperAdapter adapter) {
+        protected void remove(Object o, EditSuperAdapter adapter) {
             boolean remove = getDataList().remove(o);
             if (remove) {
                 updateFirstAndLastPosition((ItemAdapter) adapter, 1, false);
@@ -413,7 +414,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
         }
 
         @Override
-        protected void removeAll(Collection<Object> dataList, EditSupperAdapter adapter) {
+        protected void removeAll(Collection<Object> dataList, EditSuperAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
             if (removeAll) {
                 updateFirstAndLastPosition((ItemAdapter) adapter, dataList.size(), false);

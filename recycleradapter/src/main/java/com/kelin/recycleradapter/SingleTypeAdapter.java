@@ -15,7 +15,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSupperAdapter<D, H> {
+public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuperAdapter<D, H> {
 
     /**
      * 当前的条目点击监听对象。

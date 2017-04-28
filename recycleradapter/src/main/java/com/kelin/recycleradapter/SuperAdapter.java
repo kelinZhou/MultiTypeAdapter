@@ -17,7 +17,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
+abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
 
     protected static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
     protected static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
@@ -34,7 +34,7 @@ abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVi
      */
     private DiffUtil.Callback mDiffUtilCallback;
 
-    SupperAdapter() {
+    SuperAdapter() {
 
         mDiffUtilCallback = new DiffUtil.Callback() {
             @Override
@@ -52,7 +52,7 @@ abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVi
             public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
                 D oldObject = getOldObject(oldItemPosition);
                 D newObject = getObject(newItemPosition);
-                return oldObject == newObject || SupperAdapter.this.areItemsTheSame(oldObject, newObject);
+                return oldObject == newObject || SuperAdapter.this.areItemsTheSame(oldObject, newObject);
             }
 
             // 如果是同一个 item 判断内容是否相同
@@ -60,7 +60,7 @@ abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVi
             public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                 D oldObject = getOldObject(oldItemPosition);
                 D newObject = getObject(newItemPosition);
-                return oldObject == newObject || SupperAdapter.this.areContentsTheSame(oldObject, newObject);
+                return oldObject == newObject || SuperAdapter.this.areContentsTheSame(oldObject, newObject);
             }
 
             @Nullable
@@ -70,7 +70,7 @@ abstract class SupperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVi
                 D newObject = getObject(newItemPosition);
                 if (oldObject == newObject) return null;
                 Bundle bundle = new Bundle();
-                SupperAdapter.this.getChangePayload(oldObject, newObject, bundle);
+                SuperAdapter.this.getChangePayload(oldObject, newObject, bundle);
                 return bundle.size() == 0 ? null : bundle;
             }
         };
