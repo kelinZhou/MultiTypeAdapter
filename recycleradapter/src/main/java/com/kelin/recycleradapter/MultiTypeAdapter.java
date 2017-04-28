@@ -1,19 +1,17 @@
 package com.kelin.recycleradapter;
 
 import android.os.Bundle;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,120 +36,46 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      */
     private List<ItemAdapter> mChildAdapters;
     /**
-     * 与当前适配器绑定的 {@link RecyclerView} 对象。
-     */
-    private RecyclerView mRecyclerView;
-    /**
-     * 当前 {@link RecyclerView} 的宽度被均分成的份数。
-     */
-    private int mTotalSpanSize;
-    /**
      * 子条目数据变化的观察者。
      */
-    private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();;
-    /**
-     * 加载更多时显示的布局文件ID。
-     */
-    private int mLoadMoreViewId;
-    private LoadMoreCallback mLoadMoreCallback;
-    private LinearLayoutManager mLm;
-    private boolean mIsInTheLoadMore;
-    private boolean mNoMoreData;
+    private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();
 
     /**
-     * 构建 {@link MultiTypeAdapter} 的工厂类。
+     * 构造方法。
+     * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+     * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
+     *
+     * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
      */
-    public final static class Factory {
-
-        /**
-         * 因为该类是静态工厂类，类中的方法也都是静态的。所以不需要实例化该类。
-         */
-        private Factory() {
-            throw new RuntimeException("MultiTypeAdapter.Factory class Cannot be instantiated");
-        }
-
-        /**
-         * 绑定 {@link RecyclerView}。
-         * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
-         * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
-         *
-         * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
-         * @return 返回绑定成功的 {@link MultiTypeAdapter} 对象。
-         */
-        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView) {
-            return create(recyclerView, 1);
-        }
-
-        /**
-         * 绑定 {@link RecyclerView}。
-         * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
-         * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
-         *
-         * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
-         * @return 返回绑定成功的 {@link MultiTypeAdapter} 对象。
-         */
-        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 1000) int totalSpanSize) {
-            return create(recyclerView, totalSpanSize, LinearLayout.VERTICAL);
-        }
-
-        /**
-         * 绑定 {@link RecyclerView}。
-         * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
-         * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
-         *
-         * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
-         * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。改值的范围是1~100之间的数(包含)。
-         * @return 返回绑定成功的 {@link MultiTypeAdapter} 对象。
-         */
-        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 1000) int totalSpanSize, @Orientation int orientation) {
-            if (totalSpanSize < 1 || totalSpanSize > 1000) {
-                throw new RuntimeException("the totalSpanSize argument must be an integer greater than zero and less than 1000");
-            }
-            return new MultiTypeAdapter(recyclerView, totalSpanSize, orientation);
-        }
+    public MultiTypeAdapter(@NonNull RecyclerView recyclerView) {
+        this(recyclerView, 1);
     }
 
     /**
      * 构造方法。
+     * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+     * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
      *
-     * @param recyclerView  需要 {@link RecyclerView} 对象。
-     * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。
+     * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
+     * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
+     *
      */
-    private MultiTypeAdapter(@NonNull RecyclerView recyclerView, int totalSpanSize, @Orientation int orientation) {
-        mTotalSpanSize = totalSpanSize;
-        mRecyclerView = recyclerView;
-        mChildAdapters = new ArrayList<>();
-        initLayoutManager(recyclerView, orientation, mTotalSpanSize);
+    public MultiTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize) {
+        this(recyclerView, totalSpanSize, LinearLayout.VERTICAL);
     }
 
     /**
-     * 初始化布局管理器。并设置给 {@link RecyclerView}。
+     * 构造方法。
+     * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+     * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
+     *
+     * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
+     * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
+     * @param orientation 列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
      */
-    private void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
-        // TODO: 2017/4/28 给SingleTypeAdapter增加上拉加载的功能。 考虑把这个方法移动到SupperAdapter中来解决。
-        if (totalSpanSize > 1) {
-            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize(), orientation, false) {
-                @Override
-                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-                    try {
-                        super.onLayoutChildren(recycler, state);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-            lm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-
-                @Override
-                public int getSpanSize(int position) {
-                    return getItemSpanSize(position);
-                }
-            });
-            mLm = lm;
-        } else {
-            mLm = new LinearLayoutManager(recyclerView.getContext(), orientation, false);
-        }
-        recyclerView.setLayoutManager(mLm);
+    public MultiTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
+        super(recyclerView, totalSpanSize, orientation);
+        mChildAdapters = new ArrayList<>();
     }
 
     /**
@@ -179,11 +103,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             adapter.setParent(this);
         }
         return this;
-    }
-
-    @Override
-    public int getItemCount() {
-        return getDataList().size() + (mLoadMoreViewId == 0 ? 0 : 1);
     }
 
     @Override
@@ -246,71 +165,14 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         throw new RuntimeException("not find item type");
     }
 
-    /**
-     * 设置加载更多时显示的布局。
-     * @param loadMoreViewId 加载更多时显示的布局的资源ID。
-     * @param callback 加载更多的回调。
-     */
-    public void setLoadMoreViewId(@LayoutRes int loadMoreViewId, @NonNull LoadMoreCallback callback) {
-        mLoadMoreViewId = loadMoreViewId;
-        mLoadMoreCallback = callback;
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (mIsInTheLoadMore || mNoMoreData) return;
-                int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
-                if (lastVisibleItemPosition == getDataList().size()) {
-                    Log.i("MultiTypeAdapter", "开始加载更多");
-                    mLoadMoreCallback.OnLoadMore();
-                    mIsInTheLoadMore = true;
-                }
-            }
-        });
-    }
-
-    /**
-     * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
-     */
-    public void setLoadMoreFinished() {
-        mIsInTheLoadMore = false;
-        Log.i("MultiTypeAdapter", "加载完成");
-    }
-
-    /**
-     * 如果你的页面已经没有更多数据可以加载了的话，应当调用此方法。调用了此方法后就不会再触发LoadMore事件，否则还会触发。
-     */
-    public void setNoMoreData() {
-        mNoMoreData = true;
-        mLoadMoreViewId = 0;
-    }
-
-    /**
-     * 获取总的占屏比，通俗来讲就是获取 {@link RecyclerView} 的宽度被均分成了多少份。
-     * <P>该方法的返回值取决于 {@link Factory#create(RecyclerView, int)} 方法中的第二个参数。
-     *
-     * @return 总的份数。
-     * @see Factory#create(RecyclerView, int);
-     */
-    private int getTotalSpanSize() {
-        return mTotalSpanSize;
-    }
-
-    /**
-     * 根据位置获取条目的占屏值。
-     *
-     * @param position 当前的位置。
-     * @return 返回当前条目的占屏值。
-     */
-    private int getItemSpanSize(int position) {
-        if ((mLoadMoreViewId != 0 && position == getItemCount() - 1)
-                || getObject(position).equals(HEADER_DATA_FLAG)
-                || getObject(position).equals(FOOTER_DATA_FLAG)) return getTotalSpanSize();
+    @Override
+    protected int getItemSpanSize(int position) {
         ItemAdapter adapter = getChildAdapterByPosition(position);
 
         if (adapter == null) return getTotalSpanSize();
 
-        int itemSpanSize = adapter.getItemSpanSize();
-        return itemSpanSize == ItemAdapter.SPAN_SIZE_FULL_SCREEN ? getTotalSpanSize() : itemSpanSize;
+        int itemSpanSize = adapter.getItemSpanSize(position);
+        return itemSpanSize == ItemAdapter.SPAN_SIZE_FULL_SCREEN || itemSpanSize > getTotalSpanSize() ? getTotalSpanSize() : itemSpanSize;
     }
 
     /**

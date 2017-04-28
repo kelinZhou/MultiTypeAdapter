@@ -27,10 +27,6 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
      */
     private static final int KEY_ITEM_MODEL = 0X0000_0010 << 24;
     /**
-     * 表示当前的条目是占满屏幕的。
-     */
-    static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
-    /**
      * 表示创建头Holder。
      */
     private static final int HEADER_HOLDER = 0X0000_0101;
@@ -41,7 +37,7 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
     /**
      * 用来记录当前条目的占屏比。
      */
-    private int mSpanSize;
+    private int mItemSpanSize;
     /**
      * {@link MultiTypeAdapter} 对象。也是当前Adapter的父级Adapter，是输入RecyclerView的Adapter。
      */
@@ -60,7 +56,7 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         this(SPAN_SIZE_FULL_SCREEN, holderClass);
     }
 
-    public ItemAdapter(@Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
+    public ItemAdapter(@Size(min = 1, max = 100) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(null, spanSize, holderClass);
     }
 
@@ -68,9 +64,8 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         this(list, SPAN_SIZE_FULL_SCREEN, holderClass);
     }
 
-    public ItemAdapter(List<D> list, @Size(min = 1) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        super(list, holderClass);
-        mSpanSize = spanSize <= 0 ? SPAN_SIZE_FULL_SCREEN : spanSize;
+    public ItemAdapter(List<D> list, @Size(min = 1, max = 100) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
+        super(null, spanSize, spanSize, list, holderClass);
     }
 
 
@@ -81,10 +76,6 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
      */
     public void setItemEventListener(@NonNull OnItemEventListener<D> listener) {
         mItemEventListener = listener;
-    }
-
-    int getItemSpanSize() {
-        return mSpanSize;
     }
 
     @Override

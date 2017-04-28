@@ -5,11 +5,14 @@ import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -26,6 +29,10 @@ import java.util.List;
 
 public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> {
 
+    /**
+     * 表示当前的条目是占满屏幕的。
+     */
+    static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
     /**
      * 适配器数据的观察者对象。
      */
@@ -52,11 +59,22 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * 用来记录当前适配器中的布局资源ID。
      */
     private int mRootLayoutId;
+    private int mItemSpanSize;
 
-    EditSuperAdapter(List<D> list, Class<? extends VH> holderClass) {
+    public EditSuperAdapter(@NonNull RecyclerView recyclerView, List<D> list, Class<? extends VH> holderClass) {
+        this(recyclerView, 1, 1, list, holderClass);
+    }
+
+    public EditSuperAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Size(min = 1, max = 100) int spanSize, List<D> list, Class<? extends VH> holderClass) {
+        this(recyclerView, totalSpanSize, spanSize, LinearLayout.VERTICAL, list, holderClass);
+    }
+
+    public EditSuperAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Size(min = 1, max = 100) int spanSize, @Orientation int orientation, List<D> list, Class<? extends VH> holderClass) {
+        super(recyclerView, totalSpanSize, orientation);
         if (holderClass == null) {
             throw new RuntimeException("you mast set holderClass and not null object");
         }
+        mItemSpanSize = spanSize <= 0 ? SPAN_SIZE_FULL_SCREEN : spanSize;
         mHolderClass = holderClass;
         ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
         if (annotation != null) {
@@ -107,7 +125,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     /**
      * 获取头和脚的数量。
      */
-    int getHeaderAndFooterCount() {
+    private int getHeaderAndFooterCount() {
         return getHeaderCount() + getFooterCount();
     }
 
@@ -194,6 +212,19 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     @Override
     public int getItemCount() {
         return isEmptyList() ? 0 : getDataList().size() + getHeaderAndFooterCount();
+    }
+
+    @Override
+    protected int getItemSpan(int position) {
+        if ((mLoadMoreViewId != 0 && position == getItemCount() - 1)
+                || isHeader(position)
+                || isFooter(position)) return getTotalSpanSize();
+        return getItemSpanSize(position);
+    }
+
+    @Override
+    protected final int getItemSpanSize(int position) {
+        return mItemSpanSize;
     }
 
     /**

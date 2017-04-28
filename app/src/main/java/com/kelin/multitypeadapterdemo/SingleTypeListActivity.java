@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Toast;
@@ -43,7 +42,7 @@ public class SingleTypeListActivity extends AppCompatActivity {
         for (int i = 0; i < 30; i++) {
             list.add("测试条目" + i);
         }
-        SingleTypeAdapter<String, MyHolder> adapter = new SingleTypeAdapter<>(list, MyHolder.class);
+        SingleTypeAdapter<String, MyHolder> adapter = new SingleTypeAdapter<>(recyclerView, 2, 1, list, MyHolder.class);
         adapter.setItemEventListener(new SingleTypeAdapter.OnItemEventListener<String, SingleTypeAdapter<String, MyHolder>>() {
             @Override
             public void onItemClick(int position, String s) {
@@ -57,10 +56,6 @@ public class SingleTypeListActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "删除了条目：" + s, Toast.LENGTH_SHORT).show();
             }
         });
-
-        if (recyclerView != null) {
-            recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-            recyclerView.setAdapter(adapter);
-        }
+        recyclerView.setAdapter(adapter);
     }
 }

@@ -1,11 +1,19 @@
 package com.kelin.recycleradapter;
 
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
 import android.support.v7.util.DiffUtil;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +41,65 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 当需要刷新列表时，用来比较两此数据不同的回调。
      */
     private DiffUtil.Callback mDiffUtilCallback;
+    /**
+     * 与当前适配器绑定的 {@link RecyclerView} 对象。
+     */
+    private RecyclerView mRecyclerView;
+    /**
+     * 当前 {@link RecyclerView} 的宽度被均分成的份数。
+     */
+    private int mTotalSpanSize;
+    private LinearLayoutManager mLm;
+    /**
+     * 加载更多时显示的布局文件ID。
+     */
+    int mLoadMoreViewId;
+    private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
+    private boolean mIsInTheLoadMore;
+    private boolean mNoMoreData;
 
-    SuperAdapter() {
+    /**
+     * 构造方法。
+     * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+     * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
+     *
+     * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
+     */
+    public SuperAdapter(@NonNull RecyclerView recyclerView) {
+        this(recyclerView, 1);
+    }
 
+    /**
+     * 构造方法。
+     * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+     * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
+     *
+     * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
+     * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
+     *
+     */
+    public SuperAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize) {
+        this(recyclerView, totalSpanSize, LinearLayout.VERTICAL);
+    }
+
+    /**
+     * 构造方法。
+     * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+     * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
+     *
+     * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
+     * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
+     * @param orientation 列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
+     */
+    public SuperAdapter(RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
+        if (totalSpanSize < 1 || totalSpanSize > 100) {
+            throw new RuntimeException("the totalSpanSize argument must be an integer greater than zero and less than 1000");
+        }
+        mTotalSpanSize = totalSpanSize;
+        if (recyclerView != null) {
+            mRecyclerView = recyclerView;
+            initLayoutManager(recyclerView, orientation, mTotalSpanSize);
+        }
         mDiffUtilCallback = new DiffUtil.Callback() {
             @Override
             public int getOldListSize() {
@@ -74,6 +138,102 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
                 return bundle.size() == 0 ? null : bundle;
             }
         };
+    }
+
+    /**
+     * 初始化布局管理器。并设置给 {@link RecyclerView}。
+     */
+    protected void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
+        if (totalSpanSize > 1) {
+            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), totalSpanSize, orientation, false);
+//            {
+//                @Override
+//                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+//                    try {
+//                        super.onLayoutChildren(recycler, state);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            };
+            lm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    return getItemSpan(position);
+                }
+            });
+            mLm = lm;
+        } else {
+            mLm = new LinearLayoutManager(recyclerView.getContext(), orientation, false);
+        }
+        recyclerView.setLayoutManager(mLm);
+    }
+
+    /**
+     * 获取总的占屏比，通俗来讲就是获取 {@link RecyclerView} 的宽度被均分成了多少份。
+     *
+     * @return 总的份数。
+     */
+    int getTotalSpanSize() {
+        return mTotalSpanSize;
+    }
+
+    /**
+     * 根据位置获取条目的占屏值。
+     *
+     * @param position 当前的位置。
+     * @return 返回当前条目的占屏值。
+     */
+    protected int getItemSpan(int position) {
+        if ((mLoadMoreViewId != 0 && position == getItemCount() - 1)
+                || HEADER_DATA_FLAG.equals(getObject(position))
+                || FOOTER_DATA_FLAG.equals(getObject(position))) return getTotalSpanSize();
+        return getItemSpanSize(position);
+    }
+
+    protected abstract int getItemSpanSize(int position);
+
+    /**
+     * 设置加载更多时显示的布局。
+     * @param loadMoreViewId 加载更多时显示的布局的资源ID。
+     * @param callback 加载更多的回调。
+     */
+    public void setLoadMoreViewId(@LayoutRes int loadMoreViewId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        mLoadMoreViewId = loadMoreViewId;
+        mLoadMoreCallback = callback;
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (mIsInTheLoadMore || mNoMoreData) return;
+                int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
+                if (lastVisibleItemPosition == getDataList().size()) {
+                    Log.i("MultiTypeAdapter", "开始加载更多");
+                    mLoadMoreCallback.OnLoadMore();
+                    mIsInTheLoadMore = true;
+                }
+            }
+        });
+    }
+
+    /**
+     * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
+     */
+    public void setLoadMoreFinished() {
+        mIsInTheLoadMore = false;
+        Log.i("MultiTypeAdapter", "加载完成");
+    }
+
+    /**
+     * 如果你的页面已经没有更多数据可以加载了的话，应当调用此方法。调用了此方法后就不会再触发LoadMore事件，否则还会触发。
+     */
+    public void setNoMoreData() {
+        mNoMoreData = true;
+        mLoadMoreViewId = 0;
+    }
+
+    @Override
+    public int getItemCount() {
+        return getDataList().size() + (mLoadMoreViewId == 0 ? 0 : 1);
     }
 
     @Override

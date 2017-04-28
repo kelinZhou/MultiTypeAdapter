@@ -1,10 +1,13 @@
 package com.kelin.recycleradapter;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.util.List;
 
@@ -22,30 +25,20 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
      */
     private OnItemEventListener<D, SingleTypeAdapter<D, H>> mItemEventListener;
 
-    /**
-     * 设置条目的事件监听。
-     *
-     * @param listener {@link OnItemEventListener} 对象。
-     */
-    public void setItemEventListener(@NonNull OnItemEventListener<D, SingleTypeAdapter<D, H>> listener) {
-        mItemEventListener = listener;
-        mItemEventListener.adapter = SingleTypeAdapter.this;
+    public SingleTypeAdapter(@NonNull RecyclerView recyclerView, Class<? extends H> holderClass) {
+        this(recyclerView, null, holderClass);
     }
 
-    /**
-     * 构建一个空的适配器
-     */
-    public SingleTypeAdapter(Class<H> holderClass) {
-        this(null, holderClass);
+    public SingleTypeAdapter(@NonNull RecyclerView recyclerView, List<D> list, Class<? extends H> holderClass) {
+        this(recyclerView, 1, 1, list, holderClass);
     }
 
-    /**
-     * 构建一个拥有初始数据模型的适配器。
-     *
-     * @param list 数据模型的集合。
-     */
-    public SingleTypeAdapter(List<D> list, Class<? extends H> holderClass) {
-        super(list, holderClass);
+    public SingleTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Size(min = 1, max = 100) int spanSize, List<D> list, Class<? extends H> holderClass) {
+        this(recyclerView, totalSpanSize, spanSize, LinearLayout.VERTICAL, list, holderClass);
+    }
+
+    public SingleTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize,  @Size(min = 1, max = 100) int spanSize, @Orientation int orientation, List<D> list, Class<? extends H> holderClass) {
+        super(recyclerView, totalSpanSize, spanSize, orientation, list, holderClass);
     }
 
     /**
@@ -68,6 +61,16 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
      */
     protected int getAdapterPosition(H holder) {
         return holder.getLayoutPosition();
+    }
+
+    /**
+     * 设置条目的事件监听。
+     *
+     * @param listener {@link OnItemEventListener} 对象。
+     */
+    public void setItemEventListener(@NonNull OnItemEventListener<D, SingleTypeAdapter<D, H>> listener) {
+        mItemEventListener = listener;
+        mItemEventListener.adapter = SingleTypeAdapter.this;
     }
 
     @Override

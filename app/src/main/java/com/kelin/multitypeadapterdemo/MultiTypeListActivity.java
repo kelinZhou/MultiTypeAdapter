@@ -45,7 +45,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_multi_type_list);
 
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mMultiTypeAdapter = MultiTypeAdapter.Factory.create(recyclerView, 2);
+        mMultiTypeAdapter = new MultiTypeAdapter(recyclerView, 2);
 //        Type1Adapter type1Adapter = new Type1Adapter(getList("A类型条目", 5), 0, 2);
 //        multiTypeAdapter.addAdapter(type1Adapter);
 //
