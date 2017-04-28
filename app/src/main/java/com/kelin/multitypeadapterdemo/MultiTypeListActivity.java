@@ -45,7 +45,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_multi_type_list);
 
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mMultiTypeAdapter = MultiTypeAdapter.Factory.create(recyclerView, 3);
+        mMultiTypeAdapter = MultiTypeAdapter.Factory.create(recyclerView, 2);
 //        Type1Adapter type1Adapter = new Type1Adapter(getList("A类型条目", 5), 0, 2);
 //        multiTypeAdapter.addAdapter(type1Adapter);
 //
@@ -100,7 +100,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
         for (int i = start; i < end; i++) {
             ItemAdapter<String> adapter;
             if (i % 2 == 0) {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(3, Type1Holder.class);
+                ItemAdapter<String> itemAdapter = new ItemAdapter<>(1, Type1Holder.class);
                 itemAdapter.addItem("A类型条目" + i + "-0");
                 itemAdapter.addItem("A类型条目" + i + "-1");
                 itemAdapter.addItem("A类型条目" + i + "-2");

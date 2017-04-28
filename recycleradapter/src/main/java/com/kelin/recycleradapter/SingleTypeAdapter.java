@@ -78,10 +78,14 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuppe
                 if (mItemEventListener == null) return;
                 int position = viewHolder.getLayoutPosition();
                 D object = getItemObject(viewHolder);
-                if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
-                    mItemEventListener.onItemClick(position, object);
+                if (isHeader(position)) {
+                    mItemEventListener.onItemHeaderClick();
+                } else if (isFooter(position)) {
+                    mItemEventListener.onItemFooterClick();
+                }else if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
+                    mItemEventListener.onItemClick(position - getHeaderCount(), object);
                 } else {
-                    mItemEventListener.onItemChildClick(position, object, v);
+                    mItemEventListener.onItemChildClick(position - getHeaderCount(), object, v);
                 }
             }
         };
@@ -132,5 +136,15 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuppe
          * @param view 被点击的{@link View}。
          */
         public abstract void onItemChildClick(int position, D d, View view);
+
+        /**
+         * 当头ViewHolder被点击的时候调用。
+         */
+        public void onItemHeaderClick() {}
+
+        /**
+         * 当脚ViewHolder被点击的时候调用。
+         */
+        public void onItemFooterClick() {}
     }
 }

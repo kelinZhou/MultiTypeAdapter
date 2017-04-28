@@ -9,9 +9,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
+import com.kelin.recycleradapter.interfaces.Orientation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -85,15 +87,27 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
          * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
          * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
          *
+         * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
+         * @return 返回绑定成功的 {@link MultiTypeAdapter} 对象。
+         */
+        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 1000) int totalSpanSize) {
+            return create(recyclerView, totalSpanSize, LinearLayout.VERTICAL);
+        }
+
+        /**
+         * 绑定 {@link RecyclerView}。
+         * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
+         * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
+         *
          * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
          * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。改值的范围是1~100之间的数(包含)。
          * @return 返回绑定成功的 {@link MultiTypeAdapter} 对象。
          */
-        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 1000) int totalSpanSize) {
+        public static MultiTypeAdapter create(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 1000) int totalSpanSize, @Orientation int orientation) {
             if (totalSpanSize < 1 || totalSpanSize > 1000) {
                 throw new RuntimeException("the totalSpanSize argument must be an integer greater than zero and less than 1000");
             }
-            return new MultiTypeAdapter(recyclerView, totalSpanSize);
+            return new MultiTypeAdapter(recyclerView, totalSpanSize, orientation);
         }
     }
 
@@ -103,20 +117,19 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * @param recyclerView  需要 {@link RecyclerView} 对象。
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。
      */
-    private MultiTypeAdapter(@NonNull RecyclerView recyclerView, int totalSpanSize) {
+    private MultiTypeAdapter(@NonNull RecyclerView recyclerView, int totalSpanSize, @Orientation int orientation) {
         mTotalSpanSize = totalSpanSize;
         mRecyclerView = recyclerView;
         mChildAdapters = new ArrayList<>();
-        initLayoutManager();
+        initLayoutManager(recyclerView, orientation, mTotalSpanSize);
     }
 
     /**
      * 初始化布局管理器。并设置给 {@link RecyclerView}。
      */
-    private void initLayoutManager() {
-        RecyclerView recyclerView = mRecyclerView;
-        if (mTotalSpanSize > 1) {
-            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize()) {
+    private void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
+        if (totalSpanSize > 1) {
+            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), getTotalSpanSize(), orientation, false) {
                 @Override
                 public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
                     try {
@@ -135,7 +148,7 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
             });
             mLm = lm;
         } else {
-            mLm = new LinearLayoutManager(recyclerView.getContext());
+            mLm = new LinearLayoutManager(recyclerView.getContext(), orientation, false);
         }
         recyclerView.setLayoutManager(mLm);
     }
@@ -288,7 +301,9 @@ public class MultiTypeAdapter extends SupperAdapter<Object, ItemViewHolder<Objec
      * @return 返回当前条目的占屏值。
      */
     private int getItemSpanSize(int position) {
-        if (mLoadMoreViewId != 0 && position == getItemCount() - 1) return getTotalSpanSize();
+        if ((mLoadMoreViewId != 0 && position == getItemCount() - 1)
+                || getObject(position).equals(HEADER_DATA_FLAG)
+                || getObject(position).equals(FOOTER_DATA_FLAG)) return getTotalSpanSize();
         ItemAdapter adapter = getChildAdapterByPosition(position);
 
         if (adapter == null) return getTotalSpanSize();

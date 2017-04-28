@@ -88,11 +88,6 @@ public class ItemAdapter<D> extends EditSupperAdapter<D, ItemViewHolder<D>> {
     }
 
     @Override
-    public int getItemCount() {
-        return super.getItemCount() + getHeaderAndFooterCount();
-    }
-
-    @Override
     public void notifyRefresh() {
         //因为子Adapter不是RecyclerView的Adapter，所以这里是调用父级Adapter的刷新。
         if (mParentAdapter != null) {

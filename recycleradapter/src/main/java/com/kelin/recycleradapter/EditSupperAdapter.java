@@ -68,13 +68,6 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
         }
 
         setDataList(list);
-        List dataList = getDataList();
-        if (haveHeader()) {
-            dataList.add(0, HEADER_DATA_FLAG);
-        }
-        if (haveFooter()) {
-            dataList.add(FOOTER_DATA_FLAG);
-        }
     }
 
     /**
@@ -116,6 +109,22 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
      */
     int getHeaderAndFooterCount() {
         return getHeaderCount() + getFooterCount();
+    }
+
+    /**
+     * 判断当前Position是否是头。
+     * @param position 要判断的position。
+     */
+    boolean isHeader(int position) {
+        return position == 0 && haveHeader();
+    }
+
+    /**
+     * 判断当前Position是否是脚。
+     * @param position 要判断的position。
+     */
+    boolean isFooter(int position) {
+        return position == getItemCount() - 1 && haveFooter();
     }
 
     @Override
@@ -173,9 +182,9 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
 
     @Override
     public int getItemViewType(int position) {
-        if (haveHeader() && position == 0) {
+        if (isHeader(position)) {
             return getHeaderItemViewType();
-        } else if (haveFooter() && position == getItemCount() - 1) {
+        } else if (isFooter(position)) {
             return getFooterItemViewType();
         } else {
             return getItemViewType();
@@ -184,7 +193,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
 
     @Override
     public int getItemCount() {
-        return isEmptyList() ? 0 : getDataList().size();
+        return isEmptyList() ? 0 : getDataList().size() + getHeaderAndFooterCount();
     }
 
     /**
@@ -193,7 +202,7 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
      * @param holder 当前的ViewHolder对象。
      */
     protected D getItemObject(VH holder) {
-        return getObject(holder.getLayoutPosition());
+        return getObject(holder.getLayoutPosition() - getHeaderCount());
     }
 
     /**
@@ -226,7 +235,6 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
      * @param object 要添加的对象。
      */
     public void addItem(@NonNull D object) {
-        // TODO: 2017/4/27 解决有头或者脚时position位置计算偏差的问题。
         addItem(getDataList().size(), object);
     }
 
@@ -466,19 +474,19 @@ public abstract class EditSupperAdapter<D, VH extends ItemViewHolder<D>> extends
     }
 
     protected void mapNotifyItemInserted(int position) {
-        notifyItemInserted(position);
+        notifyItemInserted(position + getHeaderCount());
     }
 
     protected void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
-        notifyItemRangeInserted(positionStart, itemCount);
+        notifyItemRangeInserted(positionStart + getHeaderCount(), itemCount);
     }
 
     protected void mapNotifyItemRemoved(int position) {
-        notifyItemRemoved(position);
+        notifyItemRemoved(position + getHeaderCount());
     }
 
     protected void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
-        notifyItemRangeRemoved(positionStart, itemCount);
+        notifyItemRangeRemoved(positionStart + getHeaderCount(), itemCount);
     }
 
     /**
