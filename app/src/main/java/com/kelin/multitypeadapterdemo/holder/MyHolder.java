@@ -15,7 +15,7 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
  * 创建时间 2016/12/2  下午5:42
  * 版本 v 1.0.0
  */
-@ItemLayout(rootLayoutId = R.layout.item_my, headerLayoutId = R.layout.item_type1_header, footerLayoutId = R.layout.item_type1_footer)
+@ItemLayout(rootLayoutId = R.layout.item_my, headerLayoutId = R.layout.item_type1_header)
 public class MyHolder extends ItemViewHolder<String> {
 
     private TextView mTvTitle;

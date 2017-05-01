@@ -5,10 +5,8 @@ import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.LinearLayout;
-
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
-
 import java.util.List;
 
 /**

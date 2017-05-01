@@ -6,12 +6,10 @@ import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -144,9 +142,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     @Override
-    public int getItemViewType(int position) {
-        if (mLoadMoreViewId != 0 && position == getItemCount() - 1) return mLoadMoreViewId;
-
+    public int getItemType(int position) {
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
             ItemAdapter adapter = mChildAdapters.get(i);
             int itemCount = adapter.getItemCount();

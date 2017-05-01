@@ -54,9 +54,14 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 加载更多时显示的布局文件ID。
      */
     int mLoadMoreViewId;
+    /**
+     * 加载更多的回调。
+     */
     private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
+    /**
+     * 是否正在加载更多，通过此变量做判断，防止LoadMore重复触发。
+     */
     private boolean mIsInTheLoadMore;
-    private boolean mNoMoreData;
 
     /**
      * 构造方法。
@@ -145,17 +150,15 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     protected void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
         if (totalSpanSize > 1) {
-            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), totalSpanSize, orientation, false);
-//            {
-//                @Override
-//                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-//                    try {
-//                        super.onLayoutChildren(recycler, state);
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            };
+            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), totalSpanSize, orientation, false)
+            {
+                @Override
+                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+                    try {
+                        super.onLayoutChildren(recycler, state);
+                    } catch (Exception ignored) {}
+                }
+            };
             lm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
@@ -164,7 +167,14 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
             });
             mLm = lm;
         } else {
-            mLm = new LinearLayoutManager(recyclerView.getContext(), orientation, false);
+            mLm = new LinearLayoutManager(recyclerView.getContext(), orientation, false) {
+                @Override
+                public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+                    try {
+                        super.onLayoutChildren(recycler, state);
+                    } catch (Exception ignored) {}
+                }
+            };
         }
         recyclerView.setLayoutManager(mLm);
     }
@@ -204,7 +214,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (mIsInTheLoadMore || mNoMoreData) return;
+                if (mIsInTheLoadMore || mLoadMoreViewId == 0) return;
                 int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
                 if (lastVisibleItemPosition == getDataList().size()) {
                     Log.i("MultiTypeAdapter", "开始加载更多");
@@ -227,7 +237,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 如果你的页面已经没有更多数据可以加载了的话，应当调用此方法。调用了此方法后就不会再触发LoadMore事件，否则还会触发。
      */
     public void setNoMoreData() {
-        mNoMoreData = true;
         mLoadMoreViewId = 0;
     }
 
@@ -235,6 +244,14 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     public int getItemCount() {
         return getDataList().size() + (mLoadMoreViewId == 0 ? 0 : 1);
     }
+
+    @Override
+    public final int getItemViewType(int position) {
+        if (mLoadMoreViewId != 0 && position == getItemCount() - 1) return mLoadMoreViewId;
+        return getItemType(position);
+    }
+
+    protected abstract int getItemType(int position);
 
     @Override
     public final void onBindViewHolder(VH holder, int position) {}
