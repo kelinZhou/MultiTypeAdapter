@@ -55,6 +55,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     int mLoadMoreViewId;
     /**
+     * 没有更多数据时显示的布局文件ID。
+     */
+    private int mNoMoreDataViewId;
+    /**
      * 加载更多的回调。
      */
     private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
@@ -62,8 +66,14 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 是否正在加载更多，通过此变量做判断，防止LoadMore重复触发。
      */
     private boolean mIsInTheLoadMore;
-    private int mNoMoreDataViewId;
+    /**
+     * 用来记录是否已经没有更多数据了。
+     */
     private boolean mNoMoreData;
+    /**
+     * 触发加载更多的偏移值，如果改值为0，则LoadMoreView显示的时候开始加载，否则就是在LoadMoreView的mLoadMoreOffset个item的时候开始触发LoadMore事件。
+     */
+    private int mLoadMoreOffset;
 
     /**
      * 构造方法。
@@ -211,15 +221,26 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param callback 加载更多的回调。
      */
     public void setLoadMoreView(@LayoutRes int loadMoreViewId, @LayoutRes int noMoreDataViewId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        setLoadMoreView(loadMoreViewId, noMoreDataViewId, 0, callback);
+    }
+
+    /**
+     * 设置加载更多时显示的布局。
+     * @param loadMoreViewId 加载更多时显示的布局的资源ID。
+     * @param callback 加载更多的回调。
+     */
+    public void setLoadMoreView(@LayoutRes int loadMoreViewId, @LayoutRes int noMoreDataViewId, @Size(min = 1, max = 10) int loadMoreOffset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
         mLoadMoreViewId = loadMoreViewId;
         mNoMoreDataViewId = noMoreDataViewId;
+        mLoadMoreOffset = loadMoreOffset < 0 ? 0 : loadMoreOffset > 10 ? 10 : loadMoreOffset;
         mLoadMoreCallback = callback;
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 if (mIsInTheLoadMore || mNoMoreData) return;
                 int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
-                if (lastVisibleItemPosition == getDataList().size()) {
+                int targetPosition = getDataList().size() - mLoadMoreOffset;
+                if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
                     Log.i("MultiTypeAdapter", "开始加载更多");
                     mLoadMoreCallback.OnLoadMore();
                     mIsInTheLoadMore = true;
@@ -241,7 +262,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     public void setNoMoreData() {
         mNoMoreData = true;
-        mLoadMoreViewId = mNoMoreDataViewId == 0 ? 0 : mNoMoreDataViewId;
+        mLoadMoreViewId = mNoMoreDataViewId == 0 ? 0 : mNoMoreDataViewId; // TODO: 2017/5/1 单纯的这样替换并不好，会创建一个ViewHolder. 后面再解决。
     }
 
     @Override

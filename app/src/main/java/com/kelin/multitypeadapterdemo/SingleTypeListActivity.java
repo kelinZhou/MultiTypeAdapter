@@ -57,10 +57,10 @@ public class SingleTypeListActivity extends AppCompatActivity {
             }
         };
 
-        mAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_no_more_data, new MultiTypeAdapter.LoadMoreCallback() {
+        mAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_no_more_data, 1, new MultiTypeAdapter.LoadMoreCallback() {
             @Override
             public void OnLoadMore() {
-                recyclerView.postDelayed(runnable, 3000);
+                recyclerView.postDelayed(runnable, 500);
             }
         });
         mAdapter.setItemEventListener(new SingleTypeAdapter.OnItemEventListener<String, SingleTypeAdapter<String, MyHolder>>() {

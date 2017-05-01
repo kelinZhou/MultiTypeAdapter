@@ -129,9 +129,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
         if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder) return;
+        ItemAdapter adapter;
+        int itemCount;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
-            int itemCount = adapter.getItemCount();
+            adapter = mChildAdapters.get(i);
+            itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 adapter.onBindViewHolder(holder, position - total, payloads);
                 return;
@@ -143,9 +145,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     public int getItemType(int position) {
+        ItemAdapter adapter;
+        int itemCount;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
-            int itemCount = adapter.getItemCount();
+            adapter = mChildAdapters.get(i);
+            itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 if (adapter.haveHeader() && position == adapter.firstItemPosition) {
                     return adapter.getHeaderItemViewType();
@@ -178,9 +182,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @return 返回对应的适配器。
      */
     ItemAdapter getChildAdapterByPosition(int position) {
+        ItemAdapter adapter;
+        int itemCount;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
-            int itemCount = adapter.getItemCount();
+            adapter = mChildAdapters.get(i);
+            itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 return adapter;
             } else {
@@ -195,9 +201,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param position 当前 {@link RecyclerView} 的position。
      */
     int getItemAdapterPosition(int position) {
+        ItemAdapter adapter;
+        int itemCount;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
-            ItemAdapter adapter = mChildAdapters.get(i);
-            int itemCount = adapter.getItemCount();
+            adapter = mChildAdapters.get(i);
+            itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 return position - total;
             } else {

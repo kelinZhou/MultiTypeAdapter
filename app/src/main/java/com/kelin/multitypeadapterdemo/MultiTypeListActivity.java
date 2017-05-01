@@ -88,7 +88,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
             @Override
             public void OnLoadMore() {
                 //                Snackbar.make(recyclerView, "加载更多", Snackbar.LENGTH_SHORT).setAction("Action", null).show();
-                recyclerView.postDelayed(runnable, 3000);
+                recyclerView.postDelayed(runnable, 500);
             }
         });
     }
