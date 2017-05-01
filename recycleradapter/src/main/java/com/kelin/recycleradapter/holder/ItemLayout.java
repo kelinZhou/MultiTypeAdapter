@@ -20,7 +20,7 @@ public @interface ItemLayout {
     /**
      * 表示没有指定Header或则Footer布局。
      */
-    int NOT_HEADER_FOOTER = 0XFFFF_FFFF;
+    int NOT_HEADER_FOOTER = 0X0000_0000;
 
     /**
      * 条目的布局文件。

@@ -57,7 +57,7 @@ public class SingleTypeListActivity extends AppCompatActivity {
             }
         };
 
-        mAdapter.setLoadMoreViewId(R.layout.layout_load_more, new MultiTypeAdapter.LoadMoreCallback() {
+        mAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_no_more_data, new MultiTypeAdapter.LoadMoreCallback() {
             @Override
             public void OnLoadMore() {
                 recyclerView.postDelayed(runnable, 3000);

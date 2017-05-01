@@ -84,7 +84,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
             }
         };
 
-        mMultiTypeAdapter.setLoadMoreViewId(R.layout.layout_load_more, new MultiTypeAdapter.LoadMoreCallback() {
+        mMultiTypeAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_no_more_data, new MultiTypeAdapter.LoadMoreCallback() {
             @Override
             public void OnLoadMore() {
                 //                Snackbar.make(recyclerView, "加载更多", Snackbar.LENGTH_SHORT).setAction("Action", null).show();

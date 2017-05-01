@@ -62,6 +62,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 是否正在加载更多，通过此变量做判断，防止LoadMore重复触发。
      */
     private boolean mIsInTheLoadMore;
+    private int mNoMoreDataViewId;
+    private boolean mNoMoreData;
 
     /**
      * 构造方法。
@@ -208,13 +210,14 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param loadMoreViewId 加载更多时显示的布局的资源ID。
      * @param callback 加载更多的回调。
      */
-    public void setLoadMoreViewId(@LayoutRes int loadMoreViewId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+    public void setLoadMoreView(@LayoutRes int loadMoreViewId, @LayoutRes int noMoreDataViewId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
         mLoadMoreViewId = loadMoreViewId;
+        mNoMoreDataViewId = noMoreDataViewId;
         mLoadMoreCallback = callback;
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (mIsInTheLoadMore || mLoadMoreViewId == 0) return;
+                if (mIsInTheLoadMore || mNoMoreData) return;
                 int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
                 if (lastVisibleItemPosition == getDataList().size()) {
                     Log.i("MultiTypeAdapter", "开始加载更多");
@@ -237,7 +240,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 如果你的页面已经没有更多数据可以加载了的话，应当调用此方法。调用了此方法后就不会再触发LoadMore事件，否则还会触发。
      */
     public void setNoMoreData() {
-        mLoadMoreViewId = 0;
+        mNoMoreData = true;
+        mLoadMoreViewId = mNoMoreDataViewId == 0 ? 0 : mNoMoreDataViewId;
     }
 
     @Override
