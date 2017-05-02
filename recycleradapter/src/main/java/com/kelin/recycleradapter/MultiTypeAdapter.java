@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
+import com.kelin.recycleradapter.interfaces.AdapterEdit;
 import com.kelin.recycleradapter.interfaces.Orientation;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -327,11 +328,14 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
     }
 
+    /**
+     * 加载更多的回调对象。
+     */
     public abstract static class LoadMoreCallback{
 
         /**
          * 加载更多时的回调。
          */
-        public abstract void OnLoadMore();
+        public abstract void onLoadMore();
     }
 }

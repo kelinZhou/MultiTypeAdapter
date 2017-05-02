@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.interfaces.AdapterEdit;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.lang.reflect.Constructor;
@@ -27,7 +28,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> {
+public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> implements AdapterEdit<D> {
 
     /**
      * 表示当前的条目是占满屏幕的。
@@ -265,6 +266,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      *
      * @param object 要添加的对象。
      */
+    @Override
     public void addItem(@NonNull D object) {
         addItem(getDataList().size(), object);
     }
@@ -275,6 +277,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param position 要添加的位置。
      * @param object   要添加的对象。
      */
+    @Override
     public void addItem(int position, @NonNull D object) {
         addItem(position, object, true);
     }
@@ -286,6 +289,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param object   要添加的对象。
      * @param refresh  是否刷新列表。
      */
+    @Override
     public void addItem(int position, @NonNull D object, boolean refresh) {
         getDataList().add(position, object);
         mAdapterDataObservable.add(position, object);
@@ -299,6 +303,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      *
      * @param datum 要增加Item。
      */
+    @Override
     public void addAll(@NonNull Collection<D> datum) {
         addAll(datum, true);
     }
@@ -309,6 +314,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param positionStart 批量增加的其实位置。
      * @param datum         要增加Item。
      */
+    @Override
     public void addAll(@Size(min = 0) int positionStart, @NonNull Collection<D> datum) {
         addAll(positionStart, datum, true);
     }
@@ -319,6 +325,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param datum   要增加Item。
      * @param refresh 是否在增加完成后刷新条目。
      */
+    @Override
     public void addAll(@NonNull Collection<D> datum, boolean refresh) {
         addAll(-1, datum, refresh);
     }
@@ -330,6 +337,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param datum         要增加Item。
      * @param refresh       是否在增加完成后刷新条目。
      */
+    @Override
     public void addAll(@Size(min = 0) int positionStart, @NonNull Collection<D> datum, boolean refresh) {
         if (datum.isEmpty()) return;
         if (positionStart < 0) {
@@ -350,6 +358,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param position 要移除的条目的位置。
      * @return 返回被移除的对象。
      */
+    @Override
     public D removeItem(@Size(min = 0) int position) {
         return removeItem(position, true);
     }
@@ -361,6 +370,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param refresh  是否在移除完成后刷新列表。
      * @return 返回被移除的对象。
      */
+    @Override
     public D removeItem(@Size(min = 0) int position, boolean refresh) {
         if (position < 0) return null;
         if (!isEmptyList()) {
@@ -383,6 +393,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param object 要移除的对象。
      * @return 移除成功返回改对象所在的位置，移除失败返回-1。
      */
+    @Override
     public int removeItem(@NonNull D object) {
         return removeItem(object, true);
     }
@@ -394,6 +405,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param refresh 是否在移除完成后刷新列表。
      * @return 移除成功返回改对象所在的位置，移除失败返回-1。
      */
+    @Override
     public int removeItem(@NonNull D object, boolean refresh) {
         if (!isEmptyList()) {
             int position;
@@ -420,6 +432,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param positionStart 开始移除的位置。
      * @param itemCount     要移除的条目数。
      */
+    @Override
     public void removeAll(@Size(min = 0) int positionStart, int itemCount) {
         removeAll(positionStart, itemCount, true);
     }
@@ -431,6 +444,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param itemCount     要移除的条目数。
      * @param refresh       是否在移除成功后刷新列表。
      */
+    @Override
     public void removeAll(@Size(min = 0) int positionStart, @Size(min = 0) int itemCount, boolean refresh) {
         if (positionStart < 0 || itemCount < 0) throw new IllegalArgumentException("the positionStart Arguments or itemCount Arguments must is greater than 0 integer");
         if (!isEmptyList()) {
@@ -455,6 +469,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      *
      * @param datum 要移除的条目的数据模型对象。
      */
+    @Override
     public void removeAll(@NonNull Collection<D> datum) {
         removeAll(datum, true);
     }
@@ -465,6 +480,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param datum   要移除的条目的数据模型对象。
      * @param refresh 是否在移除成功后刷新列表。
      */
+    @Override
     public void removeAll(@NonNull Collection<D> datum, boolean refresh) {
         if (!isEmptyList() && !datum.isEmpty()) {
             List<D> dataList = getDataList();
@@ -484,6 +500,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     /**
      * 清空列表。
      */
+    @Override
     public void clear() {
         clear(true);
     }
@@ -493,6 +510,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      *
      * @param refresh 在清空完成后是否刷新列表。
      */
+    @Override
     public void clear(boolean refresh) {
         if (!isEmptyList()) {
             List<D> dataList = getDataList();

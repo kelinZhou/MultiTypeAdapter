@@ -242,7 +242,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
                 int targetPosition = getDataList().size() - mLoadMoreOffset;
                 if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
                     Log.i("MultiTypeAdapter", "开始加载更多");
-                    mLoadMoreCallback.OnLoadMore();
+                    mLoadMoreCallback.onLoadMore();
                     mIsInTheLoadMore = true;
                 }
             }

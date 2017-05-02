@@ -21,7 +21,7 @@ import java.util.List;
  */
 
 public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
-
+    // TODO: 2017/5/2 这里不能继承EditSuperAdapter.应当实现AdapterEdit接口。
     /**
      * 用来从ViewHolder中获取数据模型的键。
      */
