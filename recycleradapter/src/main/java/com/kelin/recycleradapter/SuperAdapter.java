@@ -10,8 +10,10 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.widget.LinearLayout;
 
+import com.kelin.recycleradapter.data.LoadMoreLayoutInfo;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
@@ -51,14 +53,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     private int mTotalSpanSize;
     private LinearLayoutManager mLm;
     /**
-     * 加载更多时显示的布局文件ID。
-     */
-    int mLoadMoreViewId;
-    /**
-     * 没有更多数据时显示的布局文件ID。
-     */
-    private int mNoMoreDataViewId;
-    /**
      * 加载更多的回调。
      */
     private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
@@ -74,6 +68,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 触发加载更多的偏移值，如果改值为0，则LoadMoreView显示的时候开始加载，否则就是在LoadMoreView的mLoadMoreOffset个item的时候开始触发LoadMore事件。
      */
     private int mLoadMoreOffset;
+    LoadMoreLayoutInfo mLoadMoreLayoutInfo;
 
     /**
      * 构造方法。
@@ -207,32 +202,63 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @return 返回当前条目的占屏值。
      */
     protected int getItemSpan(int position) {
-        if ((mLoadMoreViewId != 0 && position == getItemCount() - 1)
-                || HEADER_DATA_FLAG.equals(getObject(position))
-                || FOOTER_DATA_FLAG.equals(getObject(position))) return getTotalSpanSize();
-        return getItemSpanSize(position);
+        if (isLoadMoreItem(position) || HEADER_DATA_FLAG.equals(getObject(position)) || FOOTER_DATA_FLAG.equals(getObject(position))) {
+            return getTotalSpanSize();
+        } else {
+            return getItemSpanSize(position);
+        }
+    }
+
+    private boolean isLoadMoreItem(int position) {
+        return mLoadMoreLayoutInfo != null && !mLoadMoreLayoutInfo.noCurStateLayoutId() && position == getItemCount() - 1;
     }
 
     protected abstract int getItemSpanSize(int position);
 
     /**
      * 设置加载更多时显示的布局。
-     * @param loadMoreViewId 加载更多时显示的布局的资源ID。
+     * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
+     * @param retryLayoutId 加载更多失败时显示的布局。
      * @param callback 加载更多的回调。
      */
-    public void setLoadMoreView(@LayoutRes int loadMoreViewId, @LayoutRes int noMoreDataViewId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        setLoadMoreView(loadMoreViewId, noMoreDataViewId, 0, callback);
+    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        setLoadMoreView(loadMoreLayoutId, retryLayoutId, 0, callback);
     }
 
     /**
      * 设置加载更多时显示的布局。
-     * @param loadMoreViewId 加载更多时显示的布局的资源ID。
+     * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
+     * @param retryLayoutId 加载更多失败时显示的布局。
+     * @param noMoreDataLayoutId 没有更多数据时显示的布局。
      * @param callback 加载更多的回调。
      */
-    public void setLoadMoreView(@LayoutRes int loadMoreViewId, @LayoutRes int noMoreDataViewId, @Size(min = 1, max = 10) int loadMoreOffset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        mLoadMoreViewId = loadMoreViewId;
-        mNoMoreDataViewId = noMoreDataViewId;
-        mLoadMoreOffset = loadMoreOffset < 0 ? 0 : loadMoreOffset > 10 ? 10 : loadMoreOffset;
+    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        setLoadMoreView(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, 0, callback);
+    }
+
+    /**
+     * 设置加载更多时显示的布局。
+     * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
+     * @param retryLayoutId 加载更多失败时显示的布局。
+     * @param noMoreDataLayoutId 没有更多数据时显示的布局。
+     * @param offset 加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
+     *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
+     * @param callback 加载更多的回调。
+     */
+    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        setLoadMoreView(new LoadMoreLayoutInfo(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId), offset, callback);
+    }
+
+    /**
+     * 设置加载更多时显示的布局。
+     * @param layoutInfo LoadMore布局信息对象。
+     * @param offset 加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
+     *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
+     * @param callback 加载更多的回调。
+     */
+    public void setLoadMoreView(LoadMoreLayoutInfo layoutInfo, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        mLoadMoreLayoutInfo = layoutInfo;
+        mLoadMoreOffset = offset < 0 ? 0 : offset > 10 ? 10 : offset;
         mLoadMoreCallback = callback;
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -241,12 +267,21 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
                 int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
                 int targetPosition = getDataList().size() - mLoadMoreOffset;
                 if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
-                    Log.i("MultiTypeAdapter", "开始加载更多");
-                    mLoadMoreCallback.onLoadMore();
-                    mIsInTheLoadMore = true;
+                    startLoadMore();
                 }
             }
         });
+    }
+
+    /**
+     * 开始加载更多。
+     */
+    private void startLoadMore() {
+        if (mLoadMoreCallback != null) {
+            Log.i("MultiTypeAdapter", "开始加载更多");
+            mIsInTheLoadMore = true;
+            mLoadMoreCallback.onLoadMore();
+        }
     }
 
     /**
@@ -258,22 +293,46 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     }
 
     /**
+     * 当加载更多失败后要调用此方法，否则没有办法点击重试加载更多。
+     */
+    public void setLoadMoreFailed() {
+        checkLoadMoreAvailable();
+        mIsInTheLoadMore = false;
+        int position = getItemCount() - 1;
+        mLoadMoreLayoutInfo.setRetryState();
+        notifyItemChanged(position);
+        Log.i("MultiTypeAdapter", "加载完成");
+    }
+
+    /**
      * 如果你的页面已经没有更多数据可以加载了的话，应当调用此方法。调用了此方法后就不会再触发LoadMore事件，否则还会触发。
      */
     public void setNoMoreData() {
+        checkLoadMoreAvailable();
         mNoMoreData = true;
-        mLoadMoreViewId = mNoMoreDataViewId == 0 ? 0 : mNoMoreDataViewId; // TODO: 2017/5/1 单纯的这样替换并不好，会创建一个ViewHolder. 后面再解决。
+        int position = getItemCount() - 1;
+        mLoadMoreLayoutInfo.setNoMoreState();
+        notifyItemChanged(position);
+    }
+
+    private void checkLoadMoreAvailable() {
+        if (mLoadMoreLayoutInfo == null) {
+            throw new RuntimeException("You are not set to load more View, you can call the setLoadMoreView() method.");
+        }
     }
 
     @Override
     public int getItemCount() {
-        return getDataList().size() + (mLoadMoreViewId == 0 ? 0 : 1);
+        return getDataList().size() + (mLoadMoreLayoutInfo == null || mLoadMoreLayoutInfo.noCurStateLayoutId() ? 0 : 1);
     }
 
     @Override
     public final int getItemViewType(int position) {
-        if (mLoadMoreViewId != 0 && position == getItemCount() - 1) return mLoadMoreViewId;
-        return getItemType(position);
+        if (position == 91) {
+            position = 91;
+        }
+        if (isLoadMoreItem(position)) return mLoadMoreLayoutInfo.getCurStateLayoutId();
+        return  getItemType(position);
     }
 
     protected abstract int getItemType(int position);
@@ -395,5 +454,27 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
             return mTempList.get(position);
         }
         return null;
+    }
+
+
+
+    /**
+     * 加载更多的回调对象。
+     */
+    public abstract static class LoadMoreCallback{
+
+        /**
+         * 加载更多时的回调。
+         */
+        public abstract void onLoadMore();
+    }
+
+    class LoadMoreRetryClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            mLoadMoreLayoutInfo.setLoadState();
+            notifyItemChanged(getItemCount() - 1);
+            startLoadMore();
+        }
     }
 }

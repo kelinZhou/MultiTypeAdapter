@@ -143,7 +143,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @param position 要判断的position。
      */
     boolean isFooter(int position) {
-        return position == getItemCount() - (mLoadMoreViewId == 0 ? 1 : 2) && haveFooter();
+        return position == getItemCount() - (mLoadMoreLayoutInfo != null ? 1 : 2) && haveFooter();
     }
 
     @Override
@@ -217,7 +217,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     protected int getItemSpan(int position) {
-        if ((mLoadMoreViewId != 0 && position == getItemCount() - 1)
+        if ((mLoadMoreLayoutInfo != null && position == getItemCount() - 1)
                 || isHeader(position)
                 || isFooter(position)) return getTotalSpanSize();
         return getItemSpanSize(position);

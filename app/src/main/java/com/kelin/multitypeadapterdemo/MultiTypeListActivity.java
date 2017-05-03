@@ -29,6 +29,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
 
     private MultiTypeAdapter mMultiTypeAdapter;
     private int mStartPage;
+    private boolean mLoadMoreAble;
 
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
@@ -74,20 +75,24 @@ public class MultiTypeListActivity extends AppCompatActivity {
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                loadData();
-                mMultiTypeAdapter.notifyDataSetChanged();
-                mMultiTypeAdapter.setLoadMoreFinished();
+                if (mLoadMoreAble) {
+                    loadData();
+                    mMultiTypeAdapter.notifyDataSetChanged();
+                    mMultiTypeAdapter.setLoadMoreFinished();
 
-                if (mStartPage == 3) {
-                    mMultiTypeAdapter.setNoMoreData();
+                    if (mStartPage == 3) {
+                        mMultiTypeAdapter.setNoMoreData();
+                    }
+                } else {
+                    mMultiTypeAdapter.setLoadMoreFailed();
+                    mLoadMoreAble = true;
                 }
             }
         };
 
-        mMultiTypeAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_no_more_data, new MultiTypeAdapter.LoadMoreCallback() {
+        mMultiTypeAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_load_more_failed, new MultiTypeAdapter.LoadMoreCallback() {
             @Override
             public void onLoadMore() {
-                //                Snackbar.make(recyclerView, "加载更多", Snackbar.LENGTH_SHORT).setAction("Action", null).show();
                 recyclerView.postDelayed(runnable, 500);
             }
         });

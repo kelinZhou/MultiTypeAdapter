@@ -4,13 +4,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
-import com.kelin.recycleradapter.interfaces.AdapterEdit;
 import com.kelin.recycleradapter.interfaces.Orientation;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * 子条目数据变化的观察者。
      */
     private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();
+    private LoadMoreRetryClickListener mLoadMoreRetryClickListener;
 
     /**
      * 构造方法。
@@ -106,7 +109,20 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     public ItemViewHolder<Object> onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == mLoadMoreViewId) return new LoadMoreViewHolder(parent, viewType);
+        if (mLoadMoreLayoutInfo != null && viewType == mLoadMoreLayoutInfo.getCurStateLayoutId()) {
+            LoadMoreViewHolder loadMoreViewHolder = new LoadMoreViewHolder(parent, viewType);
+            if (mLoadMoreLayoutInfo.isRetryState()) {
+                if (mLoadMoreRetryClickListener == null) {
+                    mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
+                }
+                View clickView = loadMoreViewHolder.getView(loadMoreViewHolder.getItemClickViewId());
+                if (clickView == null) {
+                    clickView = loadMoreViewHolder.itemView;
+                }
+                clickView.setOnClickListener(mLoadMoreRetryClickListener);
+            }
+            return loadMoreViewHolder;
+        }
         ItemViewHolder holder = null;
         for (ItemAdapter adapter : mChildAdapters) {
             if (adapter.getItemViewType() == viewType) {
@@ -326,16 +342,5 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 }
             }
         }
-    }
-
-    /**
-     * 加载更多的回调对象。
-     */
-    public abstract static class LoadMoreCallback{
-
-        /**
-         * 加载更多时的回调。
-         */
-        public abstract void onLoadMore();
     }
 }
