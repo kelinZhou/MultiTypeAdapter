@@ -1,6 +1,5 @@
 package com.kelin.recycleradapter;
 
-import android.database.Observable;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -28,34 +27,28 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> implements AdapterEdit<D> {
-
-    /**
-     * 适配器数据的观察者对象。
-     */
-    private AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable();
+public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> implements AdapterEdit<D, VH> {
 
     /**
      * 当前适配器中的ViewHolder对象。
      */
     private VH mViewHolder;
-
     /**
      * 用来存放ViewHolder的字节码对象。
      */
-    Class<? extends VH> mHolderClass;
+    private Class<? extends VH> mHolderClass;
     /**
      * 用来记录头布局的资源文件ID。
      */
-    private int mHeaderLayoutId;
+    private @LayoutRes int mHeaderLayoutId;
     /**
      * 用来记录脚布局的资源文件ID。
      */
-    private int mFooterLayoutId;
+    private @LayoutRes int mFooterLayoutId;
     /**
      * 用来记录当前适配器中的布局资源ID。
      */
-    private int mRootLayoutId;
+    private @LayoutRes int mRootLayoutId;
     private int mItemSpanSize;
 
     public EditSuperAdapter(@NonNull RecyclerView recyclerView, List<D> list, Class<? extends VH> holderClass) {
@@ -88,41 +81,74 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     /**
      * 是否拥有Header。
      */
-    boolean haveHeader() {
+    @Override
+    public boolean haveHeader() {
         return mHeaderLayoutId != ItemLayout.NOT_HEADER_FOOTER;
     }
 
     /**
      * 是否拥有Footer。
      */
-    boolean haveFooter() {
+    @Override
+    public boolean haveFooter() {
         return mFooterLayoutId != ItemLayout.NOT_HEADER_FOOTER;
     }
 
-    int getItemViewType() {
+    /**
+     * 获取条目类型。
+     *
+     * @return 返回跟布局的资源ID。
+     */
+    @Override
+    public int getRootViewType() {
         return mRootLayoutId;
     }
 
-    int getHeaderItemViewType() {
+    /**
+     * 获取Header条目类型。
+     *
+     * @return 返回Header布局的资源ID。
+     */
+    @Override
+    public int getHeaderViewType() {
         return mHeaderLayoutId;
     }
 
-    int getFooterItemViewType() {
+    /**
+     * 获取Footer条目类型。
+     *
+     * @return 返回Footer布局的资源ID。
+     */
+    @Override
+    public int getFooterViewType() {
         return mFooterLayoutId;
     }
 
-    int getHeaderCount() {
+    /**
+     * 获取Header的数量。
+     *
+     * @return 如果有Header则返回1，否则返回0。
+     */
+    @Override
+    public int getHeaderCount() {
         return haveHeader() ? 1 : 0;
     }
 
-    int getFooterCount() {
+    /**
+     * 获取Footer的数量。
+     *
+     * @return 如果有Footer则返回1，否则返回0。
+     */
+    @Override
+    public int getFooterCount() {
         return haveFooter() ? 1 : 0;
     }
 
     /**
      * 获取头和脚的数量。
      */
-    private int getHeaderAndFooterCount() {
+    @Override
+    public int getHeaderAndFooterCount() {
         return getHeaderCount() + getFooterCount();
     }
 
@@ -192,17 +218,17 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
-        holder.onBindPartData(position, getItemObject(holder), payloads);
+        holder.onBindPartData(position, getObject(holder.getLayoutPosition() - getHeaderCount()), payloads);
     }
 
     @Override
     public int getItemType(int position) {
         if (isHeader(position)) {
-            return getHeaderItemViewType();
+            return getHeaderViewType();
         } else if (isFooter(position)) {
-            return getFooterItemViewType();
+            return getFooterViewType();
         } else {
-            return getItemViewType();
+            return getRootViewType();
         }
     }
 
@@ -220,17 +246,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     }
 
     @Override
-    protected final int getItemSpanSize(int position) {
+    public int getItemSpanSize(int position) {
         return mItemSpanSize;
-    }
-
-    /**
-     * 获取条目的数据模型。
-     *
-     * @param holder 当前的ViewHolder对象。
-     */
-    protected D getItemObject(VH holder) {
-        return getObject(holder.getLayoutPosition() - getHeaderCount());
     }
 
     /**
@@ -288,9 +305,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     @Override
     public void addItem(int position, @NonNull D object, boolean refresh) {
         getDataList().add(position, object);
-        mAdapterDataObservable.add(position, object);
         if (refresh) {
-            mapNotifyItemInserted(position);
+            notifyItemInserted(position + getHeaderCount());
         }
     }
 
@@ -341,9 +357,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         }
         boolean addAll = getDataList().addAll(positionStart, datum);
         if (addAll) {
-            mAdapterDataObservable.addAll(positionStart, datum);
             if (refresh) {
-                mapNotifyItemRangeInserted(positionStart, datum.size());
+                notifyItemRangeInserted(positionStart + getHeaderCount(), datum.size());
             }
         }
     }
@@ -372,9 +387,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         if (!isEmptyList()) {
             D d = getDataList().remove(position);
             if (d != null) {
-                mAdapterDataObservable.remove(d);
                 if (refresh) {
-                    mapNotifyItemRemoved(position);
+                    notifyItemRemoved(position + getHeaderCount());
                 }
             }
             return d;
@@ -410,9 +424,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             if (position != -1) {
                 boolean remove = dataList.remove(object);
                 if (remove) {
-                    mAdapterDataObservable.remove(object);
                     if (refresh) {
-                        mapNotifyItemRemoved(position);
+                        notifyItemRemoved(position + getHeaderCount());
                     }
                 }
             }
@@ -452,9 +465,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             }
             boolean removeAll = dataList.removeAll(temp);
             if (removeAll) {
-                mAdapterDataObservable.removeAll(temp);
                 if (refresh) {
-                    mapNotifyItemRangeRemoved(positionStart, itemCount);
+                    notifyItemRangeRemoved(positionStart + getHeaderCount(), itemCount);
                 }
             }
         }
@@ -485,9 +497,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             int positionStart = dataList.indexOf(d);
             boolean removeAll = dataList.removeAll(datum);
             if (removeAll) {
-                mAdapterDataObservable.removeAll(datum);
                 if (refresh) {
-                    mapNotifyItemRangeRemoved(positionStart, datum.size());
+                    notifyItemRangeRemoved(positionStart + getHeaderCount(), datum.size());
                 }
             }
         }
@@ -511,114 +522,9 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         if (!isEmptyList()) {
             List<D> dataList = getDataList();
             dataList.clear();
-            mAdapterDataObservable.removeAll(dataList);
             if (refresh) {
-                mapNotifyItemRangeRemoved(0, dataList.size());
+                notifyItemRangeRemoved(getHeaderCount(), dataList.size());
             }
         }
-    }
-
-    protected void mapNotifyItemInserted(int position) {
-        notifyItemInserted(position + getHeaderCount());
-    }
-
-    protected void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
-        notifyItemRangeInserted(positionStart + getHeaderCount(), itemCount);
-    }
-
-    protected void mapNotifyItemRemoved(int position) {
-        notifyItemRemoved(position + getHeaderCount());
-    }
-
-    protected void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
-        notifyItemRangeRemoved(positionStart + getHeaderCount(), itemCount);
-    }
-
-    /**
-     * 注册数据观察者。
-     *
-     * @param observer 观察者对象。
-     */
-    public void registerObserver(AdapterDataObserver observer) {
-        mAdapterDataObservable.registerObserver(observer);
-    }
-
-    /**
-     * 取消注册数据观察者。
-     *
-     * @param observer 观察者对象。
-     */
-    public void unRegisterObserver(AdapterDataObserver observer) {
-        mAdapterDataObservable.unregisterObserver(observer);
-    }
-
-    /**
-     * 取消注册所有数据观察者。
-     */
-    public void unregisterAll() {
-        mAdapterDataObservable.unregisterAll();
-    }
-
-    private class AdapterDataObservable extends Observable<AdapterDataObserver> {
-
-        public void add(int position, Object object) {
-            for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).add(position, object, EditSuperAdapter.this);
-            }
-        }
-
-        void addAll(int firstPosition, Collection<D> dataList) {
-            for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).addAll(firstPosition, (Collection<Object>) dataList, EditSuperAdapter.this);
-            }
-        }
-
-        void remove(Object d) {
-            for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).remove(d, EditSuperAdapter.this);
-            }
-        }
-
-        void removeAll(Collection<D> dataList) {
-            for (int i = mObservers.size() - 1; i >= 0; i--) {
-                mObservers.get(i).removeAll((Collection<Object>) dataList, EditSuperAdapter.this);
-            }
-        }
-    }
-
-    static abstract class AdapterDataObserver {
-        /**
-         * 列表中新增了数据。
-         *
-         * @param position 被新增的位置。
-         * @param object   新增的数据。
-         * @param adapter  当前被观察的Adapter对象。
-         */
-        protected abstract void add(int position, Object object, EditSuperAdapter adapter);
-
-        /**
-         * 列表中批量新增了数据。
-         *
-         * @param firstPosition 新增的起始位置。
-         * @param dataList      新增的数据集合。
-         * @param adapter       当前被观察的Adapter对象。
-         */
-        protected abstract void addAll(int firstPosition, Collection<Object> dataList, EditSuperAdapter adapter);
-
-        /**
-         * 删除了列表中的数据。
-         *
-         * @param object  被删除的数据。
-         * @param adapter 当前被观察的Adapter对象。
-         */
-        protected abstract void remove(Object object, EditSuperAdapter adapter);
-
-        /**
-         * 批量删除了列表中的数据。
-         *
-         * @param dataList 被删除的数据集合。
-         * @param adapter  当前被观察的Adapter对象。
-         */
-        protected abstract void removeAll(Collection<Object> dataList, EditSuperAdapter adapter);
     }
 }

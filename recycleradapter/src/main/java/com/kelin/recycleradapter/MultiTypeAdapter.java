@@ -125,22 +125,22 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
         ItemViewHolder holder = null;
         for (ItemAdapter adapter : mChildAdapters) {
-            if (adapter.getItemViewType() == viewType) {
+            if (adapter.getRootViewType() == viewType) {
                 holder = adapter.onCreateViewHolder(parent, viewType);
                 Class itemModelClass = adapter.getItemModelClass();
                 if (!mItemViewHolderMap.containsKey(itemModelClass)) {
                     mItemViewHolderMap.put(itemModelClass, holder);
                 }
-            } else if (adapter.haveHeader() && adapter.getHeaderItemViewType() == viewType) {
+            } else if (adapter.haveHeader() && adapter.getHeaderViewType() == viewType) {
                 holder = adapter.onCreateHeaderViewHolder(parent, viewType);
-            } else if (adapter.haveFooter() && adapter.getFooterItemViewType() == viewType) {
+            } else if (adapter.haveFooter() && adapter.getFooterViewType() == viewType) {
                 holder = adapter.onCreateFooterViewHolder(parent, viewType);
             }
             if (holder != null) {
                 return holder;
             }
         }
-        throw new RuntimeException("viewType not found !");
+        throw new RuntimeException("the viewType: " + viewType + " not found !");
     }
 
     @Override
@@ -169,11 +169,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             itemCount = adapter.getItemCount();
             if (position < itemCount + total) {
                 if (adapter.haveHeader() && position == adapter.firstItemPosition) {
-                    return adapter.getHeaderItemViewType();
+                    return adapter.getHeaderViewType();
                 } else if (adapter.haveFooter() && position == adapter.lastItemPosition) {
-                    return adapter.getFooterItemViewType();
+                    return adapter.getFooterViewType();
                 } else {
-                    return adapter.getItemViewType();
+                    return adapter.getRootViewType();
                 }
             } else {
                 total += itemCount;
@@ -270,37 +270,35 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return mItemViewHolderMap.get(holderModelClazz);
     }
 
-    private class ItemAdapterDataObserver extends SingleTypeAdapter.AdapterDataObserver {
+    private class ItemAdapterDataObserver extends ItemAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, EditSuperAdapter adapter) {
-            ItemAdapter itemAdapter = (ItemAdapter) adapter;
-            getDataList().add(position + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), o);
-            updateFirstAndLastPosition(itemAdapter, 1, true);
+        protected void add(int position, Object o, ItemAdapter adapter) {
+            getDataList().add(position + adapter.firstItemPosition + adapter.getHeaderCount(), o);
+            updateFirstAndLastPosition(adapter, 1, true);
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection<Object> dataList, EditSuperAdapter adapter) {
-            ItemAdapter itemAdapter = (ItemAdapter) adapter;
-            boolean addAll = getDataList().addAll(firstPosition + itemAdapter.firstItemPosition + itemAdapter.getHeaderCount(), dataList);
+        protected void addAll(int firstPosition, Collection dataList, ItemAdapter adapter) {
+            boolean addAll = getDataList().addAll(firstPosition + adapter.firstItemPosition + adapter.getHeaderCount(), dataList);
             if (addAll) {
-                updateFirstAndLastPosition(itemAdapter, dataList.size(), true);
+                updateFirstAndLastPosition(adapter, dataList.size(), true);
             }
         }
 
         @Override
-        protected void remove(Object o, EditSuperAdapter adapter) {
+        protected void remove(Object o, ItemAdapter adapter) {
             boolean remove = getDataList().remove(o);
             if (remove) {
-                updateFirstAndLastPosition((ItemAdapter) adapter, 1, false);
+                updateFirstAndLastPosition(adapter, 1, false);
             }
         }
 
         @Override
-        protected void removeAll(Collection<Object> dataList, EditSuperAdapter adapter) {
+        protected void removeAll(Collection dataList, ItemAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
             if (removeAll) {
-                updateFirstAndLastPosition((ItemAdapter) adapter, dataList.size(), false);
+                updateFirstAndLastPosition(adapter, dataList.size(), false);
             }
         }
 

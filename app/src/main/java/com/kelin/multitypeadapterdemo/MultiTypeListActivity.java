@@ -127,8 +127,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(int position, String s, int adapterPosition) {
                     Toast.makeText(getApplicationContext(), "条目点击position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-                    getAdapter().addItem(adapterPosition, "我是新增条目", false);
-                    getAdapter().notifyRefresh();
+                    getAdapter().addItem(adapterPosition, "我是新增条目" + position);
                 }
 
                 @Override

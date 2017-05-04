@@ -78,7 +78,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
             public void onClick(View v) {
                 if (mItemEventListener == null) return;
                 int position = viewHolder.getLayoutPosition();
-                D object = getItemObject(viewHolder);
+                D object = getObject(viewHolder.getLayoutPosition() - getHeaderCount());
                 if (isHeader(position)) {
                     mItemEventListener.onItemHeaderClick();
                 } else if (isFooter(position)) {
@@ -98,7 +98,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
             @Override
             public boolean onLongClick(View v) {
                 if (mItemEventListener != null) {
-                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder));
+                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getObject(viewHolder.getLayoutPosition() - getHeaderCount()));
                 }
                 return true;
             }

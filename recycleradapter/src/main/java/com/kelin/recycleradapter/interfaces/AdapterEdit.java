@@ -1,9 +1,14 @@
 package com.kelin.recycleradapter.interfaces;
 
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
+import android.view.ViewGroup;
+
+import com.kelin.recycleradapter.holder.ItemViewHolder;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * 描述 用来描述Adapter中的条目编辑。
@@ -12,7 +17,7 @@ import java.util.Collection;
  * 版本 v 1.0.0
  */
 
-public interface AdapterEdit<D> {
+public interface AdapterEdit<D, VH extends ItemViewHolder<D>> {
 
     /**
      * 表示当前的条目是占满屏幕的。
@@ -152,4 +157,77 @@ public interface AdapterEdit<D> {
      * @param refresh 在清空完成后是否刷新列表。
      */
     void clear(boolean refresh);
+
+    /**
+     * 是否拥有Header。
+     */
+    boolean haveHeader();
+
+    /**
+     * 是否拥有Footer。
+     */
+    boolean haveFooter();
+
+    /**
+     * 获取条目类型。
+     * @return 返回跟布局的资源ID。
+     */
+    @LayoutRes int getRootViewType();
+
+    /**
+     * 获取Header条目类型。
+     * @return 返回Header布局的资源ID。
+     */
+    @LayoutRes int getHeaderViewType();
+
+    /**
+     * 获取Footer条目类型。
+     * @return 返回Footer布局的资源ID。
+     */
+    @LayoutRes int getFooterViewType();
+
+    /**
+     * 获取Header的数量。
+     * @return 如果有Header则返回1，否则返回0。
+     */
+    int getHeaderCount();
+
+    /**
+     * 获取Footer的数量。
+     * @return 如果有Footer则返回1，否则返回0。
+     */
+    int getFooterCount();
+
+    /**
+     * 获取头和脚的数量。
+     */
+    int getHeaderAndFooterCount();
+
+    /**
+     * 当需要创建ViewHolder的时候调用。
+     * @param parent 当前的parent对象，也就是RecyclerView对象。
+     * @param viewType 当前的条目类型，也是当前要创建的ViewHolder的布局文件ID。
+     * @return 需要返回一个 {@link VH} 对象。
+     */
+    VH onCreateViewHolder(ViewGroup parent, int viewType);
+
+    /**
+     * 当需要绑定ViewHolder的时候调用。
+     * @param holder 需要绑定数据的 {@link VH} 对象。
+     * @param position 当前的位置。
+     * @param payloads 两个对象之间的差异。
+     */
+    void onBindViewHolder(VH holder, int position, List<Object> payloads);
+
+    /**
+     * 获取当前条目的总数量。
+     */
+    int getItemCount();
+
+    /**
+     * 获取条目的占屏比。
+     * @param position 当前的条目的位置。
+     * @return 返回当前条目的占屏比。
+     */
+    int getItemSpanSize(int position);
 }

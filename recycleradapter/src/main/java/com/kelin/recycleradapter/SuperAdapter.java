@@ -318,9 +318,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     @Override
     public final int getItemViewType(int position) {
-        if (position == 91) {
-            position = 91;
-        }
         if (isLoadMoreItem(position)) return mLoadMoreLayoutInfo.getCurStateLayoutId();
         return  getItemType(position);
     }

@@ -1,5 +1,7 @@
 package com.kelin.recycleradapter;
 
+import android.database.Observable;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
@@ -8,9 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
+import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.interfaces.AdapterEdit;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -20,8 +27,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
-    // TODO: 2017/5/2 这里继承EditSuperAdapter好像不大合适.应当实现AdapterEdit接口。
+public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     /**
      * 用来从ViewHolder中获取数据模型的键。
      */
@@ -46,7 +52,33 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
      * 用来记录当前Adapter在RecyclerView列表中的结束位置。
      */
     int lastItemPosition;
+    /**
+     * 适配器数据的观察者对象。
+     */
+    private AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable();
+    /**
+     * 用来存放ViewHolder的字节码对象。
+     */
+    private Class<? extends ItemViewHolder<D>> mHolderClass;
+    /**
+     * 用来记录头布局的资源文件ID。
+     */
+    private @LayoutRes
+    int mHeaderLayoutId;
+    /**
+     * 用来记录脚布局的资源文件ID。
+     */
+    private @LayoutRes int mFooterLayoutId;
+    /**
+     * 用来记录当前适配器中的布局资源ID。
+     */
+    private @LayoutRes int mRootLayoutId;
     private OnItemEventListener<D> mItemEventListener;
+    private int mItemSpanSize;
+    /**
+     * 当前页面的数据集。
+     */
+    private List<D> mDataList;
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(SPAN_SIZE_FULL_SCREEN, holderClass);
@@ -61,7 +93,407 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
     }
 
     public ItemAdapter(List<D> list, @Size(min = 1, max = 100) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        super(null, spanSize, spanSize, list, holderClass);
+        mItemSpanSize = spanSize <= 0 ? SPAN_SIZE_FULL_SCREEN : spanSize;
+        mHolderClass = holderClass;
+        ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
+        if (annotation != null) {
+            mRootLayoutId = annotation.rootLayoutId();
+            mHeaderLayoutId = annotation.headerLayoutId();
+            mFooterLayoutId = annotation.footerLayoutId();
+        } else {
+            throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+        }
+
+        setDataList(list);
+    }
+
+    /**
+     * 设置数据。
+     *
+     * @param list 数据集合。
+     */
+    public void setDataList(List<D> list) {
+        mDataList = list != null ? list : new ArrayList<D>();
+    }
+
+    /**
+     * 获取当前的数据集合。
+     */
+    List<D> getDataList() {
+        if (mDataList == null) {
+            mDataList = new ArrayList<>();
+        }
+        return mDataList;
+    }
+
+    /**
+     * 判断当前列表是否为空列表。
+     *
+     * @return <code color="blue">true</code> 表示为空列表，<code color="blue">false</code> 表示为非空列表。
+     */
+    public boolean isEmptyList() {
+        return mDataList == null || mDataList.isEmpty();
+    }
+
+    /**
+     * 在列表的末尾处添加一个条目。
+     *
+     * @param object 要添加的对象。
+     */
+    @Override
+    public void addItem(@NonNull D object) {
+        addItem(getDataList().size(), object);
+    }
+
+    /**
+     * 在列表的指定位置添加一个条目。
+     *
+     * @param position 要添加的位置。
+     * @param object   要添加的对象。
+     */
+    @Override
+    public void addItem(int position, @NonNull D object) {
+        addItem(position, object, true);
+    }
+
+    /**
+     * 在列表的指定位置添加一个条目。
+     *
+     * @param position 要添加的位置。
+     * @param object   要添加的对象。
+     * @param refresh  是否刷新列表。
+     */
+    @Override
+    public void addItem(int position, @NonNull D object, boolean refresh) {
+        getDataList().add(position, object);
+        mAdapterDataObservable.add(position, object);
+        if (refresh) {
+            mapNotifyItemInserted(position);
+        }
+    }
+
+    /**
+     * 批量增加Item。
+     *
+     * @param datum 要增加Item。
+     */
+    @Override
+    public void addAll(@NonNull Collection<D> datum) {
+        addAll(datum, true);
+    }
+
+    /**
+     * 批量增加Item。
+     *
+     * @param positionStart 批量增加的其实位置。
+     * @param datum         要增加Item。
+     */
+    @Override
+    public void addAll(@Size(min = 0) int positionStart, @NonNull Collection<D> datum) {
+        addAll(positionStart, datum, true);
+    }
+
+    /**
+     * 批量增加Item。
+     *
+     * @param datum   要增加Item。
+     * @param refresh 是否在增加完成后刷新条目。
+     */
+    @Override
+    public void addAll(@NonNull Collection<D> datum, boolean refresh) {
+        addAll(-1, datum, refresh);
+    }
+
+    /**
+     * 批量增加Item。
+     *
+     * @param positionStart 批量增加的其实位置。
+     * @param datum         要增加Item。
+     * @param refresh       是否在增加完成后刷新条目。
+     */
+    @Override
+    public void addAll(@Size(min = 0) int positionStart, @NonNull Collection<D> datum, boolean refresh) {
+        if (datum.isEmpty()) return;
+        if (positionStart < 0) {
+            positionStart = getDataList().size();
+        }
+        boolean addAll = getDataList().addAll(positionStart, datum);
+        if (addAll) {
+            mAdapterDataObservable.addAll(positionStart, datum);
+            if (refresh) {
+                mapNotifyItemRangeInserted(positionStart, datum.size());
+            }
+        }
+    }
+
+    /**
+     * 移除指定位置的条目。
+     *
+     * @param position 要移除的条目的位置。
+     * @return 返回被移除的对象。
+     */
+    @Override
+    public D removeItem(@Size(min = 0) int position) {
+        return removeItem(position, true);
+    }
+
+    /**
+     * 移除指定位置的条目。
+     *
+     * @param position 要移除的条目的位置。
+     * @param refresh  是否在移除完成后刷新列表。
+     * @return 返回被移除的对象。
+     */
+    @Override
+    public D removeItem(@Size(min = 0) int position, boolean refresh) {
+        if (position < 0) return null;
+        if (!isEmptyList()) {
+            D d = getDataList().remove(position);
+            if (d != null) {
+                mAdapterDataObservable.remove(d);
+                if (refresh) {
+                    mapNotifyItemRemoved(position);
+                }
+            }
+            return d;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 将指定的对象从列表中移除。
+     *
+     * @param object 要移除的对象。
+     * @return 移除成功返回改对象所在的位置，移除失败返回-1。
+     */
+    @Override
+    public int removeItem(@NonNull D object) {
+        return removeItem(object, true);
+    }
+
+    /**
+     * 将指定的对象从列表中移除。
+     *
+     * @param object  要移除的对象。
+     * @param refresh 是否在移除完成后刷新列表。
+     * @return 移除成功返回改对象所在的位置，移除失败返回-1。
+     */
+    @Override
+    public int removeItem(@NonNull D object, boolean refresh) {
+        if (!isEmptyList()) {
+            int position;
+            List<D> dataList = getDataList();
+            position = dataList.indexOf(object);
+            if (position != -1) {
+                boolean remove = dataList.remove(object);
+                if (remove) {
+                    mAdapterDataObservable.remove(object);
+                    if (refresh) {
+                        mapNotifyItemRemoved(position);
+                    }
+                }
+            }
+            return position;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * 批量移除条目。
+     *
+     * @param positionStart 开始移除的位置。
+     * @param itemCount     要移除的条目数。
+     */
+    @Override
+    public void removeAll(@Size(min = 0) int positionStart, int itemCount) {
+        removeAll(positionStart, itemCount, true);
+    }
+
+    /**
+     * 批量移除条目。
+     *
+     * @param positionStart 开始移除的位置。
+     * @param itemCount     要移除的条目数。
+     * @param refresh       是否在移除成功后刷新列表。
+     */
+    @Override
+    public void removeAll(@Size(min = 0) int positionStart, @Size(min = 0) int itemCount, boolean refresh) {
+        if (positionStart < 0 || itemCount < 0) throw new IllegalArgumentException("the positionStart Arguments or itemCount Arguments must is greater than 0 integer");
+        if (!isEmptyList()) {
+            List<D> dataList = getDataList();
+            int positionEnd = positionStart + (itemCount = itemCount > dataList.size() ? dataList.size() : itemCount);
+            List<D> temp = new ArrayList<>();
+            for (int i = positionStart; i < positionEnd; i++) {
+                temp.add(dataList.get(i));
+            }
+            boolean removeAll = dataList.removeAll(temp);
+            if (removeAll) {
+                mAdapterDataObservable.removeAll(temp);
+                if (refresh) {
+                    mapNotifyItemRangeRemoved(positionStart, itemCount);
+                }
+            }
+        }
+    }
+
+    /**
+     * 批量移除条目。
+     *
+     * @param datum 要移除的条目的数据模型对象。
+     */
+    @Override
+    public void removeAll(@NonNull Collection<D> datum) {
+        removeAll(datum, true);
+    }
+
+    /**
+     * 批量移除条目。
+     *
+     * @param datum   要移除的条目的数据模型对象。
+     * @param refresh 是否在移除成功后刷新列表。
+     */
+    @Override
+    public void removeAll(@NonNull Collection<D> datum, boolean refresh) {
+        if (!isEmptyList() && !datum.isEmpty()) {
+            List<D> dataList = getDataList();
+            Iterator<D> iterator = datum.iterator();
+            D d = iterator.next();
+            int positionStart = dataList.indexOf(d);
+            boolean removeAll = dataList.removeAll(datum);
+            if (removeAll) {
+                mAdapterDataObservable.removeAll(datum);
+                if (refresh) {
+                    mapNotifyItemRangeRemoved(positionStart, datum.size());
+                }
+            }
+        }
+    }
+
+    /**
+     * 清空列表。
+     */
+    @Override
+    public void clear() {
+        clear(true);
+    }
+
+    /**
+     * 清空列表。
+     *
+     * @param refresh 在清空完成后是否刷新列表。
+     */
+    @Override
+    public void clear(boolean refresh) {
+        if (!isEmptyList()) {
+            List<D> dataList = getDataList();
+            dataList.clear();
+            mAdapterDataObservable.removeAll(dataList);
+            if (refresh) {
+                mapNotifyItemRangeRemoved(0, dataList.size());
+            }
+        }
+    }
+
+    /**
+     * 是否拥有Header。
+     */
+    @Override
+    public boolean haveHeader() {
+        return mHeaderLayoutId != ItemLayout.NOT_HEADER_FOOTER;
+    }
+
+    /**
+     * 是否拥有Footer。
+     */
+    @Override
+    public boolean haveFooter() {
+        return mFooterLayoutId != ItemLayout.NOT_HEADER_FOOTER;
+    }
+
+    /**
+     * 获取条目类型。
+     *
+     * @return 返回跟布局的资源ID。
+     */
+    @Override
+    public int getRootViewType() {
+        return mRootLayoutId;
+    }
+
+    /**
+     * 获取Header条目类型。
+     *
+     * @return 返回Header布局的资源ID。
+     */
+    @Override
+    public int getHeaderViewType() {
+        return mHeaderLayoutId;
+    }
+
+    /**
+     * 获取Footer条目类型。
+     *
+     * @return 返回Footer布局的资源ID。
+     */
+    @Override
+    public int getFooterViewType() {
+        return mFooterLayoutId;
+    }
+
+    /**
+     * 获取Header的数量。
+     *
+     * @return 如果有Header则返回1，否则返回0。
+     */
+    @Override
+    public int getHeaderCount() {
+        return haveHeader() ? 1 : 0;
+    }
+
+    /**
+     * 获取Footer的数量。
+     *
+     * @return 如果有Footer则返回1，否则返回0。
+     */
+    @Override
+    public int getFooterCount() {
+        return haveFooter() ? 1 : 0;
+    }
+
+    /**
+     * 获取头和脚的数量。
+     */
+    @Override
+    public int getHeaderAndFooterCount() {
+        return getHeaderCount() + getFooterCount();
+    }
+
+    /**
+     * 当需要创建ViewHolder的时候调用。
+     *
+     * @param parent   当前的parent对象，也就是RecyclerView对象。
+     * @param viewType 当前的条目类型，也是当前要创建的ViewHolder的布局文件ID。
+     * @return 需要返回一个 {@link ItemViewHolder<D>} 对象。
+     */
+    @Override
+    public ItemViewHolder<D> onCreateViewHolder(ViewGroup parent, int viewType) {
+        ItemViewHolder<D> viewHolder;
+        try {
+            Constructor<? extends ItemViewHolder<D>> constructor = mHolderClass.getDeclaredConstructor(ViewGroup.class, int.class);
+            constructor.setAccessible(true);
+            viewHolder = constructor.newInstance(parent, viewType);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        if (viewHolder != null) {
+            bindItemClickEvent(viewHolder);
+            return viewHolder;
+
+        } else {
+            throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+        }
     }
 
 
@@ -74,7 +506,6 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         mItemEventListener = listener;
     }
 
-    @Override
     public void notifyRefresh() {
         //因为子Adapter不是RecyclerView的Adapter，所以这里是调用父级Adapter的刷新。
         if (mParentAdapter != null) {
@@ -86,15 +517,46 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
     public void onBindViewHolder(ItemViewHolder<D> holder, int position, List<Object> payloads) {
         D object = getObject(position - getHeaderCount());
         holder.itemView.setTag(KEY_ITEM_MODEL, object);
-        super.onBindViewHolder(holder, position, payloads);
+        holder.onBindPartData(position, getItemObject(holder), payloads);
     }
 
+    /**
+     * 获取当前条目的总数量。
+     */
     @Override
+    public int getItemCount() {
+        return getDataList().size() + getHeaderAndFooterCount();
+    }
+
+    /**
+     * 获取条目的占屏比。
+     *
+     * @param position 当前的条目的位置。
+     * @return 返回当前条目的占屏比。
+     */
+    @Override
+    public int getItemSpanSize(int position) {
+        return mItemSpanSize;
+    }
+
+    /**
+     * 获取指定位置的对象。
+     *
+     * @param position 要获取对象对应的条目索引。
+     * @return 返回 {@link D} 对象。
+     */
+    public D getObject(int position) {
+        List<D> dataList = getDataList();
+        if (dataList.size() > position && position >= 0) {
+            return dataList.get(position);
+        }
+        return null;
+    }
+
     protected D getItemObject(ItemViewHolder<D> holder) {
         return (D) holder.itemView.getTag(KEY_ITEM_MODEL);
     }
 
-    @Override
     protected View.OnClickListener onGetClickListener(final ItemViewHolder<D> viewHolder) {
         return new View.OnClickListener() {
             @Override
@@ -123,7 +585,6 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         };
     }
 
-    @Override
     protected View.OnLongClickListener onGetLongClickListener(final ItemViewHolder<D> viewHolder) {
         return new View.OnLongClickListener() {
             @Override
@@ -183,21 +644,38 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         }
     }
 
-    @Override
+    void bindItemClickEvent(ItemViewHolder<D> viewHolder) {
+        View.OnClickListener onClickListener = onGetClickListener(viewHolder);
+
+        View clickView;
+        if (viewHolder.getItemClickViewId() == 0 || (clickView = viewHolder.getView(viewHolder.getItemClickViewId())) == null) {
+            clickView = viewHolder.itemView;
+        }
+        clickView.setOnClickListener(onClickListener);
+        clickView.setOnLongClickListener(onGetLongClickListener(viewHolder));
+        int[] childViewIds = viewHolder.onGetNeedListenerChildViewIds();
+        if (childViewIds != null && childViewIds.length > 0) {
+            for (int viewId : childViewIds) {
+                View v = viewHolder.getView(viewId);
+                if (v != null) {
+                    v.setOnClickListener(onClickListener);
+                }
+            }
+        }
+    }
+
     protected void mapNotifyItemInserted(int position) {
         Log.i("ItemAdapter", "mapNotifyItemInserted/position=" + position);
         if (mParentAdapter != null)
             mParentAdapter.notifyItemInserted(position + firstItemPosition + getHeaderCount());
     }
 
-    @Override
     protected void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
         Log.i("ItemAdapter", "mapNotifyItemRangeInserted/positionStart=" + positionStart + " | itemCount=" + itemCount);
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition + getHeaderCount(), itemCount);
     }
 
-    @Override
     protected void mapNotifyItemRemoved(int position) {
         Log.i("ItemAdapter", "mapNotifyItemRemoved/position=" + position);
         if (mParentAdapter != null) {
@@ -213,7 +691,6 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         }
     }
 
-    @Override
     protected void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
         Log.i("ItemAdapter", "mapNotifyItemRangeRemoved/positionStart=" + positionStart + " | itemCount=" + itemCount);
         if (isEmptyList()) {
@@ -229,6 +706,58 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
         }
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
+    }
+
+    /**
+     * 注册数据观察者。
+     *
+     * @param observer 观察者对象。
+     */
+    public void registerObserver(AdapterDataObserver observer) {
+        mAdapterDataObservable.registerObserver(observer);
+    }
+
+    /**
+     * 取消注册数据观察者。
+     *
+     * @param observer 观察者对象。
+     */
+    public void unRegisterObserver(AdapterDataObserver observer) {
+        mAdapterDataObservable.unregisterObserver(observer);
+    }
+
+    /**
+     * 取消注册所有数据观察者。
+     */
+    public void unregisterAll() {
+        mAdapterDataObservable.unregisterAll();
+    }
+
+    private class AdapterDataObservable extends Observable<AdapterDataObserver> {
+
+        public void add(int position, Object object) {
+            for (int i = mObservers.size() - 1; i >= 0; i--) {
+                mObservers.get(i).add(position, object, ItemAdapter.this);
+            }
+        }
+
+        void addAll(int firstPosition, Collection<D> dataList) {
+            for (int i = mObservers.size() - 1; i >= 0; i--) {
+                mObservers.get(i).addAll(firstPosition, dataList, ItemAdapter.this);
+            }
+        }
+
+        void remove(Object d) {
+            for (int i = mObservers.size() - 1; i >= 0; i--) {
+                mObservers.get(i).remove(d, ItemAdapter.this);
+            }
+        }
+
+        void removeAll(Collection<D> dataList) {
+            for (int i = mObservers.size() - 1; i >= 0; i--) {
+                mObservers.get(i).removeAll(dataList, ItemAdapter.this);
+            }
+        }
     }
 
     /**
@@ -303,5 +832,42 @@ public class ItemAdapter<D> extends EditSuperAdapter<D, ItemViewHolder<D>> {
          */
         public void onItemFooterClick(int position, int adapterPosition) {
         }
+    }
+
+
+    static abstract class AdapterDataObserver {
+        /**
+         * 列表中新增了数据。
+         *
+         * @param position 被新增的位置。
+         * @param object   新增的数据。
+         * @param adapter  当前被观察的Adapter对象。
+         */
+        protected abstract void add(int position, Object object, ItemAdapter adapter);
+
+        /**
+         * 列表中批量新增了数据。
+         *
+         * @param firstPosition 新增的起始位置。
+         * @param dataList      新增的数据集合。
+         * @param adapter       当前被观察的Adapter对象。
+         */
+        protected abstract void addAll(int firstPosition, Collection dataList, ItemAdapter adapter);
+
+        /**
+         * 删除了列表中的数据。
+         *
+         * @param object  被删除的数据。
+         * @param adapter 当前被观察的Adapter对象。
+         */
+        protected abstract void remove(Object object, ItemAdapter adapter);
+
+        /**
+         * 批量删除了列表中的数据。
+         *
+         * @param dataList 被删除的数据集合。
+         * @param adapter  当前被观察的Adapter对象。
+         */
+        protected abstract void removeAll(Collection dataList, ItemAdapter adapter);
     }
 }
