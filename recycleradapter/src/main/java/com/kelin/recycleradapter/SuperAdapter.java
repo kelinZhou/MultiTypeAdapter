@@ -412,6 +412,13 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     }
 
     /**
+     * 获取临时数据集合。
+     */
+    List<D> getOldDataList() {
+        return mTempList;
+    }
+
+    /**
      * 判断当前列表是否为空列表。
      *
      * @return <code color="blue">true</code> 表示为空列表，<code color="blue">false</code> 表示为非空列表。

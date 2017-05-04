@@ -47,7 +47,6 @@ public class LoadMoreLayoutInfo {
     }
 
     public void setRetryState() {
-        setInTheLoadMore(false);
         mCurState = STATE_FAILED;
     }
 

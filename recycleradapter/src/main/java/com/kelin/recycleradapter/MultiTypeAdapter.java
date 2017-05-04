@@ -275,13 +275,15 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         @Override
         protected void add(int position, Object o, ItemAdapter adapter) {
             getDataList().add(position + adapter.firstItemPosition + adapter.getHeaderCount(), o);
+            getOldDataList().add(position + adapter.firstItemPosition + adapter.getHeaderCount(), o);
             updateFirstAndLastPosition(adapter, 1, true);
         }
 
         @Override
         protected void addAll(int firstPosition, Collection dataList, ItemAdapter adapter) {
             boolean addAll = getDataList().addAll(firstPosition + adapter.firstItemPosition + adapter.getHeaderCount(), dataList);
-            if (addAll) {
+            boolean oldAddAll = getOldDataList().addAll(firstPosition + adapter.firstItemPosition + adapter.getHeaderCount(), dataList);
+            if (addAll && oldAddAll) {
                 updateFirstAndLastPosition(adapter, dataList.size(), true);
             }
         }
@@ -289,7 +291,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         @Override
         protected void remove(Object o, ItemAdapter adapter) {
             boolean remove = getDataList().remove(o);
-            if (remove) {
+            boolean oldRemove = getOldDataList().remove(o);
+            if (remove && oldRemove) {
                 updateFirstAndLastPosition(adapter, 1, false);
             }
         }
@@ -297,7 +300,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         @Override
         protected void removeAll(Collection dataList, ItemAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
-            if (removeAll) {
+            boolean oldRemoveAll = getOldDataList().removeAll(dataList);
+            if (removeAll && oldRemoveAll) {
                 updateFirstAndLastPosition(adapter, dataList.size(), false);
             }
         }
