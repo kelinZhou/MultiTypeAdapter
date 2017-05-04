@@ -49,6 +49,9 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * 用来记录当前适配器中的布局资源ID。
      */
     private @LayoutRes int mRootLayoutId;
+    /**
+     * 用来记录当前适配器中条目的占屏比。
+     */
     private int mItemSpanSize;
 
     public EditSuperAdapter(@NonNull RecyclerView recyclerView, List<D> list, Class<? extends VH> holderClass) {
@@ -100,7 +103,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @return 返回跟布局的资源ID。
      */
     @Override
-    public int getRootViewType() {
+    public @LayoutRes int getRootViewType() {
         return mRootLayoutId;
     }
 
@@ -110,7 +113,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @return 返回Header布局的资源ID。
      */
     @Override
-    public int getHeaderViewType() {
+    public @LayoutRes int getHeaderViewType() {
         return mHeaderLayoutId;
     }
 
@@ -120,7 +123,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @return 返回Footer布局的资源ID。
      */
     @Override
-    public int getFooterViewType() {
+    public @LayoutRes int getFooterViewType() {
         return mFooterLayoutId;
     }
 
@@ -170,20 +173,10 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     public VH onCreateViewHolder(ViewGroup parent, int viewType) {
-        return createHolder(parent, viewType);
-    }
-
-    /**
-     * 当需要创建 {@link ItemViewHolder<D>} 对象的时候调用。
-     *
-     * @param parent {@link ItemViewHolder<D>} 的父容器对象，通常情况下为 {@link android.support.v7.widget.RecyclerView}。
-     * @return {@link ItemViewHolder<D>} 对象。
-     */
-    VH createHolder(ViewGroup parent, @LayoutRes int layoutId) {
         try {
             Constructor<? extends VH> constructor = mHolderClass.getDeclaredConstructor(ViewGroup.class, int.class);
             constructor.setAccessible(true);
-            mViewHolder = constructor.newInstance(parent, layoutId);
+            mViewHolder = constructor.newInstance(parent, viewType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -196,7 +189,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         }
     }
 
-    void bindItemClickEvent(VH viewHolder) {
+    private void bindItemClickEvent(VH viewHolder) {
         View.OnClickListener onClickListener = onGetClickListener(viewHolder);
 
         View clickView;

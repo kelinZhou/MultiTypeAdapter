@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * 描述 用来描述Adapter中的条目编辑。
+ * 描述 用来描述Adapter中的条目创建、编辑操作的类。
  * 创建人 kelin
  * 创建时间 2017/5/2  上午10:54
  * 版本 v 1.0.0

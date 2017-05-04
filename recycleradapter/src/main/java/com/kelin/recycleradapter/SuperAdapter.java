@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 描述 {@link android.support.v7.widget.RecyclerView.Adapter} 的基类。
+ * 描述 {@link android.support.v7.widget.RecyclerView} 的适配器的基类。
  * 创建人 kelin
  * 创建时间 2017/3/28  下午12:42
  * 版本 v 1.0.0
@@ -29,8 +29,8 @@ import java.util.List;
 
 abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
 
-    protected static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
-    protected static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
+    static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
+    static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
     /**
      * 当前页面的数据集。
      */
@@ -51,6 +51,9 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 当前 {@link RecyclerView} 的宽度被均分成的份数。
      */
     private int mTotalSpanSize;
+    /**
+     * 当前的布局管理器对象。
+     */
     private LinearLayoutManager mLm;
     /**
      * 加载更多的回调。
@@ -60,6 +63,9 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 触发加载更多的偏移值，如果改值为0，则LoadMoreView显示的时候开始加载，否则就是在LoadMoreView的mLoadMoreOffset个item的时候开始触发LoadMore事件。
      */
     private int mLoadMoreOffset;
+    /**
+     * 加载更多的布局信息对象。
+     */
     LoadMoreLayoutInfo mLoadMoreLayoutInfo;
 
     /**

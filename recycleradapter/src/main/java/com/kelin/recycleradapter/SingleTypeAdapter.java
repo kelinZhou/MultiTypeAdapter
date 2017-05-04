@@ -10,7 +10,7 @@ import com.kelin.recycleradapter.interfaces.Orientation;
 import java.util.List;
 
 /**
- * 描述 {@link RecyclerView} 的适配器的基类。
+ * 描述 {@link RecyclerView} 的单类型适配器。
  * 创建人 kelin
  * 创建时间 2016/11/28  上午10:09
  * 版本 v 1.0.0
@@ -109,6 +109,9 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
 
         private A adapter;
 
+        /**
+         * 获取当前的Adapter对象。
+         */
         protected @NonNull A getAdapter() {
             return adapter;
         }

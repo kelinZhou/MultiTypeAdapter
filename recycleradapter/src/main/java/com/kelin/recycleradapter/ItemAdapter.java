@@ -5,7 +5,6 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -21,17 +20,13 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * 描述 条目适配器 {@link MultiTypeAdapter} 的子适配器。
+ * 描述 {@link RecyclerView} 的适配器 {@link MultiTypeAdapter} 的子适配器。
  * 创建人 kelin
  * 创建时间 2017/1/19  下午4:22
  * 版本 v 1.0.0
  */
 
 public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
-    /**
-     * 用来从ViewHolder中获取数据模型的键。
-     */
-    private static final int KEY_ITEM_MODEL = 0X0000_0010 << 24;
     /**
      * 表示创建头Holder。
      */
@@ -63,8 +58,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     /**
      * 用来记录头布局的资源文件ID。
      */
-    private @LayoutRes
-    int mHeaderLayoutId;
+    private @LayoutRes int mHeaderLayoutId;
     /**
      * 用来记录脚布局的资源文件ID。
      */
@@ -73,7 +67,13 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * 用来记录当前适配器中的布局资源ID。
      */
     private @LayoutRes int mRootLayoutId;
+    /**
+     * 条目事件监听对象。
+     */
     private OnItemEventListener<D> mItemEventListener;
+    /**
+     * 用来记录条目的占屏比。
+     */
     private int mItemSpanSize;
     /**
      * 当前页面的数据集。
@@ -418,7 +418,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回跟布局的资源ID。
      */
     @Override
-    public int getRootViewType() {
+    public @LayoutRes int getRootViewType() {
         return mRootLayoutId;
     }
 
@@ -428,7 +428,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回Header布局的资源ID。
      */
     @Override
-    public int getHeaderViewType() {
+    public @LayoutRes int getHeaderViewType() {
         return mHeaderLayoutId;
     }
 
@@ -438,7 +438,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回Footer布局的资源ID。
      */
     @Override
-    public int getFooterViewType() {
+    public @LayoutRes int getFooterViewType() {
         return mFooterLayoutId;
     }
 
@@ -507,7 +507,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     public void notifyRefresh() {
-        //因为子Adapter不是RecyclerView的Adapter，所以这里是调用父级Adapter的刷新。
+        //因为ItemAdapter不是RecyclerView的Adapter，所以这里是调用父级Adapter的刷新。
         if (mParentAdapter != null) {
             mParentAdapter.notifyRefresh();
         }
@@ -515,8 +515,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     @Override
     public void onBindViewHolder(ItemViewHolder<D> holder, int position, List<Object> payloads) {
-        D object = getObject(position - getHeaderCount());
-        holder.itemView.setTag(KEY_ITEM_MODEL, object);
         holder.onBindPartData(position, getItemObject(holder), payloads);
     }
 
@@ -553,11 +551,11 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         return null;
     }
 
-    protected D getItemObject(ItemViewHolder<D> holder) {
-        return (D) holder.itemView.getTag(KEY_ITEM_MODEL);
+    private D getItemObject(ItemViewHolder<D> holder) {
+        return (D) mParentAdapter.getObject(holder.getLayoutPosition());
     }
 
-    protected View.OnClickListener onGetClickListener(final ItemViewHolder<D> viewHolder) {
+    private View.OnClickListener onGetClickListener(final ItemViewHolder<D> viewHolder) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -585,7 +583,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         };
     }
 
-    protected View.OnLongClickListener onGetLongClickListener(final ItemViewHolder<D> viewHolder) {
+    private View.OnLongClickListener onGetLongClickListener(final ItemViewHolder<D> viewHolder) {
         return new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -597,7 +595,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         };
     }
 
-    protected int getAdapterPosition(ItemViewHolder<D> holder) {
+    private int getAdapterPosition(ItemViewHolder<D> holder) {
         return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition()) - getHeaderCount();
     }
 
@@ -618,7 +616,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     private ItemViewHolder createHolderForType(ViewGroup parent, int viewType, int type) {
-        ItemViewHolder viewHolder;
+        ItemViewHolder<D> viewHolder;
         HeaderFooterViewHolder holder;
         try {
             Constructor<? extends ItemViewHolder> constructor = HeaderFooterViewHolder.class.getDeclaredConstructor(ViewGroup.class, int.class);
@@ -644,7 +642,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-    void bindItemClickEvent(ItemViewHolder<D> viewHolder) {
+    private void bindItemClickEvent(ItemViewHolder<D> viewHolder) {
         View.OnClickListener onClickListener = onGetClickListener(viewHolder);
 
         View clickView;
@@ -664,26 +662,23 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-    protected void mapNotifyItemInserted(int position) {
-        Log.i("ItemAdapter", "mapNotifyItemInserted/position=" + position);
+    private void mapNotifyItemInserted(int position) {
         if (mParentAdapter != null)
             mParentAdapter.notifyItemInserted(position + firstItemPosition + getHeaderCount());
     }
 
-    protected void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
-        Log.i("ItemAdapter", "mapNotifyItemRangeInserted/positionStart=" + positionStart + " | itemCount=" + itemCount);
+    private void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition + getHeaderCount(), itemCount);
     }
 
-    protected void mapNotifyItemRemoved(int position) {
-        Log.i("ItemAdapter", "mapNotifyItemRemoved/position=" + position);
+    private void mapNotifyItemRemoved(int position) {
         if (mParentAdapter != null) {
             if (!isEmptyList()) {
                 mParentAdapter.notifyItemRemoved(position + firstItemPosition + getHeaderCount());
             } else {
                 if (haveHeader() || haveFooter()) {
-                   mParentAdapter.notifyItemRangeRemoved(firstItemPosition, getHeaderCount() + getFooterCount() + 1);
+                   mParentAdapter.notifyItemRangeRemoved(firstItemPosition, getHeaderAndFooterCount() + 1);
                 } else {
                     mParentAdapter.notifyItemRemoved(position + firstItemPosition);
                 }
@@ -691,8 +686,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-    protected void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
-        Log.i("ItemAdapter", "mapNotifyItemRangeRemoved/positionStart=" + positionStart + " | itemCount=" + itemCount);
+    private void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
         if (isEmptyList()) {
             positionStart = firstItemPosition;
             if (haveHeader()) {
@@ -713,7 +707,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      *
      * @param observer 观察者对象。
      */
-    public void registerObserver(AdapterDataObserver observer) {
+    void registerObserver(AdapterDataObserver observer) {
         mAdapterDataObservable.registerObserver(observer);
     }
 
@@ -722,17 +716,20 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      *
      * @param observer 观察者对象。
      */
-    public void unRegisterObserver(AdapterDataObserver observer) {
+    void unRegisterObserver(AdapterDataObserver observer) {
         mAdapterDataObservable.unregisterObserver(observer);
     }
 
     /**
      * 取消注册所有数据观察者。
      */
-    public void unregisterAll() {
+    void unregisterAll() {
         mAdapterDataObservable.unregisterAll();
     }
 
+    /**
+     * 当前适配器的数据改变被观察者。
+     */
     private class AdapterDataObservable extends Observable<AdapterDataObserver> {
 
         public void add(int position, Object object) {
@@ -758,6 +755,45 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
                 mObservers.get(i).removeAll(dataList, ItemAdapter.this);
             }
         }
+    }
+
+    /**
+     * 当前适配器的数据观察者对象。
+     */
+    static abstract class AdapterDataObserver {
+        /**
+         * 列表中新增了数据。
+         *
+         * @param position 被新增的位置。
+         * @param object   新增的数据。
+         * @param adapter  当前被观察的Adapter对象。
+         */
+        protected abstract void add(int position, Object object, ItemAdapter adapter);
+
+        /**
+         * 列表中批量新增了数据。
+         *
+         * @param firstPosition 新增的起始位置。
+         * @param dataList      新增的数据集合。
+         * @param adapter       当前被观察的Adapter对象。
+         */
+        protected abstract void addAll(int firstPosition, Collection dataList, ItemAdapter adapter);
+
+        /**
+         * 删除了列表中的数据。
+         *
+         * @param object  被删除的数据。
+         * @param adapter 当前被观察的Adapter对象。
+         */
+        protected abstract void remove(Object object, ItemAdapter adapter);
+
+        /**
+         * 批量删除了列表中的数据。
+         *
+         * @param dataList 被删除的数据集合。
+         * @param adapter  当前被观察的Adapter对象。
+         */
+        protected abstract void removeAll(Collection dataList, ItemAdapter adapter);
     }
 
     /**
@@ -832,42 +868,5 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
          */
         public void onItemFooterClick(int position, int adapterPosition) {
         }
-    }
-
-
-    static abstract class AdapterDataObserver {
-        /**
-         * 列表中新增了数据。
-         *
-         * @param position 被新增的位置。
-         * @param object   新增的数据。
-         * @param adapter  当前被观察的Adapter对象。
-         */
-        protected abstract void add(int position, Object object, ItemAdapter adapter);
-
-        /**
-         * 列表中批量新增了数据。
-         *
-         * @param firstPosition 新增的起始位置。
-         * @param dataList      新增的数据集合。
-         * @param adapter       当前被观察的Adapter对象。
-         */
-        protected abstract void addAll(int firstPosition, Collection dataList, ItemAdapter adapter);
-
-        /**
-         * 删除了列表中的数据。
-         *
-         * @param object  被删除的数据。
-         * @param adapter 当前被观察的Adapter对象。
-         */
-        protected abstract void remove(Object object, ItemAdapter adapter);
-
-        /**
-         * 批量删除了列表中的数据。
-         *
-         * @param dataList 被删除的数据集合。
-         * @param adapter  当前被观察的Adapter对象。
-         */
-        protected abstract void removeAll(Collection dataList, ItemAdapter adapter);
     }
 }
