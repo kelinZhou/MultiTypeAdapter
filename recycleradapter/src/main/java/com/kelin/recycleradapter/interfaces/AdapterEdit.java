@@ -14,6 +14,10 @@ import java.util.Collection;
 
 public interface AdapterEdit<D> {
 
+    /**
+     * 表示当前的条目是占满屏幕的。
+     */
+    int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
 
     /**
      * 在列表的末尾处添加一个条目。

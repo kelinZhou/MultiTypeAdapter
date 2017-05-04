@@ -31,10 +31,6 @@ import java.util.List;
 public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> implements AdapterEdit<D> {
 
     /**
-     * 表示当前的条目是占满屏幕的。
-     */
-    static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
-    /**
      * 适配器数据的观察者对象。
      */
     private AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable();

@@ -27,6 +27,10 @@ public class LoadMoreLayoutInfo {
      * 没有更多数据时显示的布局文件ID。
      */
     private int mNoMoreDataLayoutId;
+    /**
+     * 是否正在加载更多，通过此变量做判断，防止LoadMore重复触发。
+     */
+    private boolean mIsInTheLoadMore;
 
     public LoadMoreLayoutInfo(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId) {
         mLoadMoreLayoutId = loadMoreLayoutId;
@@ -34,7 +38,16 @@ public class LoadMoreLayoutInfo {
         mNoMoreDataLayoutId = noMoreDataLayoutId;
     }
 
+    public void setInTheLoadMore(boolean isInTheLoadMore) {
+        mIsInTheLoadMore = isInTheLoadMore;
+    }
+
+    public boolean isInTheLoadMore() {
+        return mIsInTheLoadMore;
+    }
+
     public void setRetryState() {
+        setInTheLoadMore(false);
         mCurState = STATE_FAILED;
     }
 
@@ -43,7 +56,12 @@ public class LoadMoreLayoutInfo {
     }
 
     public void setNoMoreState() {
+        setInTheLoadMore(false);
         mCurState = STATE_NO_MORE;
+    }
+
+    public boolean isNoMoreState() {
+        return mCurState == STATE_NO_MORE;
     }
 
     public void setLoadState() {

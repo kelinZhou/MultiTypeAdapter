@@ -57,14 +57,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
     /**
-     * 是否正在加载更多，通过此变量做判断，防止LoadMore重复触发。
-     */
-    private boolean mIsInTheLoadMore;
-    /**
-     * 用来记录是否已经没有更多数据了。
-     */
-    private boolean mNoMoreData;
-    /**
      * 触发加载更多的偏移值，如果改值为0，则LoadMoreView显示的时候开始加载，否则就是在LoadMoreView的mLoadMoreOffset个item的时候开始触发LoadMore事件。
      */
     private int mLoadMoreOffset;
@@ -256,14 +248,14 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
      * @param callback 加载更多的回调。
      */
-    public void setLoadMoreView(LoadMoreLayoutInfo layoutInfo, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+    public void setLoadMoreView(@NonNull LoadMoreLayoutInfo layoutInfo, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
         mLoadMoreLayoutInfo = layoutInfo;
         mLoadMoreOffset = offset < 0 ? 0 : offset > 10 ? 10 : offset;
         mLoadMoreCallback = callback;
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (mIsInTheLoadMore || mNoMoreData) return;
+                if (mLoadMoreLayoutInfo.isInTheLoadMore() || mLoadMoreLayoutInfo.isNoMoreState()) return;
                 int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
                 int targetPosition = getDataList().size() - mLoadMoreOffset;
                 if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
@@ -279,7 +271,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     private void startLoadMore() {
         if (mLoadMoreCallback != null) {
             Log.i("MultiTypeAdapter", "开始加载更多");
-            mIsInTheLoadMore = true;
+            mLoadMoreLayoutInfo.setInTheLoadMore(true);
             mLoadMoreCallback.onLoadMore();
         }
     }
@@ -288,7 +280,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
      */
     public void setLoadMoreFinished() {
-        mIsInTheLoadMore = false;
+        mLoadMoreLayoutInfo.setInTheLoadMore(false);
         Log.i("MultiTypeAdapter", "加载完成");
     }
 
@@ -297,7 +289,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     public void setLoadMoreFailed() {
         checkLoadMoreAvailable();
-        mIsInTheLoadMore = false;
         int position = getItemCount() - 1;
         mLoadMoreLayoutInfo.setRetryState();
         notifyItemChanged(position);
@@ -309,7 +300,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     public void setNoMoreData() {
         checkLoadMoreAvailable();
-        mNoMoreData = true;
         int position = getItemCount() - 1;
         mLoadMoreLayoutInfo.setNoMoreState();
         notifyItemChanged(position);
@@ -396,7 +386,9 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     void addDataList(List<D> list) {
         getDataList().addAll(list);
-        mTempList.addAll(list);
+        if (mLoadMoreLayoutInfo == null || !mLoadMoreLayoutInfo.isInTheLoadMore()) {
+            mTempList.addAll(list);
+        }
     }
 
     /**
@@ -406,7 +398,9 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     void addData(D d) {
         getDataList().add(d);
-        mTempList.add(d);
+        if (mLoadMoreLayoutInfo == null || !mLoadMoreLayoutInfo.isInTheLoadMore()) {
+            mTempList.add(d);
+        }
     }
 
     /**

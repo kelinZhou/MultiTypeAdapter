@@ -70,14 +70,14 @@ public class MultiTypeListActivity extends AppCompatActivity {
 //            }
 //        };
         mStartPage = 0;
-        loadData();
         recyclerView.setAdapter(mMultiTypeAdapter);
+        loadData();
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 if (mLoadMoreAble) {
                     loadData();
-                    mMultiTypeAdapter.notifyDataSetChanged();
+                    mMultiTypeAdapter.notifyRefresh();
                     mMultiTypeAdapter.setLoadMoreFinished();
 
                     if (mStartPage == 3) {
@@ -127,7 +127,8 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(int position, String s, int adapterPosition) {
                     Toast.makeText(getApplicationContext(), "条目点击position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-                    getAdapter().addItem(adapterPosition, "我是新增条目");
+                    getAdapter().addItem(adapterPosition, "我是新增条目", false);
+                    getAdapter().notifyRefresh();
                 }
 
                 @Override
