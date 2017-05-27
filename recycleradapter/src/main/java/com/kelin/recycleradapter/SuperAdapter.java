@@ -60,10 +60,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
     /**
-     * 触发加载更多的偏移值，如果改值为0，则LoadMoreView显示的时候开始加载，否则就是在LoadMoreView的mLoadMoreOffset个item的时候开始触发LoadMore事件。
-     */
-    private int mLoadMoreOffset;
-    /**
      * 加载更多的布局信息对象。
      */
     LoadMoreLayoutInfo mLoadMoreLayoutInfo;
@@ -101,15 +97,34 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
      * @param orientation 列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
      */
-    public SuperAdapter(RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
+    public SuperAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
         if (totalSpanSize < 1 || totalSpanSize > 100) {
             throw new RuntimeException("the totalSpanSize argument must be an integer greater than zero and less than 1000");
         }
         mTotalSpanSize = totalSpanSize;
-        if (recyclerView != null) {
-            mRecyclerView = recyclerView;
-            initLayoutManager(recyclerView, orientation, mTotalSpanSize);
-        }
+        mRecyclerView = recyclerView;
+        initLayoutManager(recyclerView, orientation, mTotalSpanSize);
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                SuperAdapter.this.onRecyclerViewScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
+                if (mLoadMoreLayoutInfo != null) {
+                    if (mLoadMoreLayoutInfo.isInTheLoadMore() || mLoadMoreLayoutInfo.isNoMoreState()) return;
+                    int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
+                    int targetPosition = getDataList().size() - mLoadMoreLayoutInfo.getLoadMoreOffset();
+                    if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
+                        startLoadMore();
+                    }
+                }
+            }
+        });
+
         mDiffUtilCallback = new DiffUtil.Callback() {
             @Override
             public int getOldListSize() {
@@ -244,32 +259,34 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param callback 加载更多的回调。
      */
     public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        setLoadMoreView(new LoadMoreLayoutInfo(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId), offset, callback);
+        setLoadMoreView(new LoadMoreLayoutInfo(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, offset), callback);
     }
 
     /**
      * 设置加载更多时显示的布局。
      * @param layoutInfo LoadMore布局信息对象。
-     * @param offset 加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
-     *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
      * @param callback 加载更多的回调。
      */
-    public void setLoadMoreView(@NonNull LoadMoreLayoutInfo layoutInfo, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+    public void setLoadMoreView(@NonNull LoadMoreLayoutInfo layoutInfo, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
         mLoadMoreLayoutInfo = layoutInfo;
-        mLoadMoreOffset = offset < 0 ? 0 : offset > 10 ? 10 : offset;
         mLoadMoreCallback = callback;
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (mLoadMoreLayoutInfo.isInTheLoadMore() || mLoadMoreLayoutInfo.isNoMoreState()) return;
-                int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
-                int targetPosition = getDataList().size() - mLoadMoreOffset;
-                if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
-                    startLoadMore();
-                }
-            }
-        });
     }
+
+    /**
+     * 当列表的滚动状态被改变的时候执行的回调方法。
+     * @param recyclerView 当前被滚动的 {@link RecyclerView} 对象。
+     * @param newState 当前的滚动状态。
+     */
+    protected void onRecyclerViewScrollStateChanged(RecyclerView recyclerView, int newState) {}
+
+    /**
+     * 当列表被滚的时候执行的回调方法。
+     * @param recyclerView 当前正在滚动中的 {@link RecyclerView} 对象。
+     * @param dx x轴的偏移值。
+     * @param dy y轴的偏移值。
+     * @param lm 当前 {@link RecyclerView} 的布局管理器LayoutManager。
+     */
+    protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {}
 
     /**
      * 开始加载更多。

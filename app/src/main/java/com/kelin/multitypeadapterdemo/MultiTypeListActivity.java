@@ -15,6 +15,7 @@ import com.kelin.multitypeadapterdemo.holder.Type1Holder;
 import com.kelin.multitypeadapterdemo.holder.Type2Holder;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
+import com.kelin.recycleradapter.view.FloatLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ public class MultiTypeListActivity extends AppCompatActivity {
     private MultiTypeAdapter mMultiTypeAdapter;
     private int mStartPage;
     private boolean mLoadMoreAble;
+    private FloatLayout mFloatLayout;
 
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
@@ -44,9 +46,10 @@ public class MultiTypeListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multi_type_list);
-
+        mFloatLayout = (FloatLayout) findViewById(R.id.fl_float_layout);
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mMultiTypeAdapter = new MultiTypeAdapter(recyclerView, 1);
+        mMultiTypeAdapter.setFloatLayout(mFloatLayout);
 //        Type1Adapter type1Adapter = new Type1Adapter(getList("A类型条目", 5), 0, 2);
 //        multiTypeAdapter.addAdapter(type1Adapter);
 //
@@ -114,8 +117,8 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 adapter = itemAdapter;
             } else {
                 ItemAdapter<String> itemAdapter = new ItemAdapter<>(Type2Holder.class);
-                itemAdapter.addItem("B类型条目" + i + "-0");
-                itemAdapter.addItem("B类型条目" + i + "-1");
+                itemAdapter.addItem("B类型条目" + i);
+                itemAdapter.setFloatAble(true);
                 adapter = itemAdapter;
             }
             adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<String>() {

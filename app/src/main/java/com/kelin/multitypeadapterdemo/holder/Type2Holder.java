@@ -8,6 +8,7 @@ import android.widget.TextView;
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.ViewHelper;
 
 /**
  * 创建人 kelin
@@ -37,6 +38,11 @@ public class Type2Holder extends ItemViewHolder<String> {
     @Override
     public void onBindData(int position, String s) {
         mTvTitle.setText(s);
+    }
+
+    @Override
+    public void onBindFloatLayoutData(ViewHelper viewHelper, int position, String s) {
+        viewHelper.setText(R.id.tvTitle, s);
     }
 
     @Override

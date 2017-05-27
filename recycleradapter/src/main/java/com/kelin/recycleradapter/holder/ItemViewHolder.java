@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.kelin.recycleradapter.callback.NotifyCallback;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
+import com.kelin.recycleradapter.view.FloatLayout;
 
 import java.util.List;
 
@@ -222,4 +223,18 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
             }
         }
     }
+
+    /**
+     * 当需要绑定悬浮控件的数据的时候调用。如果你通过
+     * {@link com.kelin.recycleradapter.ItemAdapter#setFloatLayout(FloatLayout)} 方法设置了悬浮控件的话就可以通过复写该方法
+     * 为你的悬浮控件绑定数据了。
+     * <p>
+     * 你要绑定数据的控件的 {@link IdRes} 资源Id都是和你ViewHolder中的资源Id相同的。
+     * 例如你ViewHolder中通过 <code>setText(R.id.tv_title, user.getUserName())</code> 这样的方式给一个TextView设置Text就可以通过
+     * 参数中的viewHolder用同样的方式设置Text： <code>viewHolder.setText(R.id.tv_title, user.getUserName())</code>。
+     * @param viewHelper {@link ViewHelper} View相关操作的帮助对象。
+     * @param position 当前的索引位置。
+     * @param d 需要绑定的数据模型。
+     */
+    public void onBindFloatLayoutData(ViewHelper viewHelper, int position, D d) {}
 }

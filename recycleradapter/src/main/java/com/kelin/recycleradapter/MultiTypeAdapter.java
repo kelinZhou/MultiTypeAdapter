@@ -1,8 +1,10 @@
 package com.kelin.recycleradapter;
 
 import android.os.Bundle;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +13,9 @@ import android.widget.LinearLayout;
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
+import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.Orientation;
+import com.kelin.recycleradapter.view.FloatLayout;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +35,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     /**
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
      */
-    private Map<Class, ItemViewHolder> mItemViewHolderMap = new HashMap<>();;
+    private Map<Class, ItemViewHolder> mItemViewHolderMap = new HashMap<>();
+    ;
     /**
      * 用来存放所有的子条目对象。
      */
@@ -41,6 +46,10 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      */
     private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();
     private LoadMoreRetryClickListener mLoadMoreRetryClickListener;
+    private FloatLayout mFloatLayout;
+    private int mCurPosition;
+    private int mFloatLayoutHeight;
+    private int mLastBindPosition = 0xFFFF_FFFF;
 
     /**
      * 构造方法。
@@ -58,9 +67,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
      * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
      *
-     * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
+     * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
-     *
      */
     public MultiTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize) {
         this(recyclerView, totalSpanSize, LinearLayout.VERTICAL);
@@ -73,11 +81,33 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      *
      * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
-     * @param orientation 列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
+     * @param orientation   列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
      */
     public MultiTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
         super(recyclerView, totalSpanSize, orientation);
         mChildAdapters = new ArrayList<>();
+    }
+
+    /**
+     * 设置用来显示悬浮条目的布局。
+     *
+     * @param floatLayout 一个 {@link FloatLayout} 对象。
+     */
+    public void setFloatLayout(FloatLayout floatLayout) {
+        mFloatLayout = floatLayout;
+        if (mFloatLayout.isEmpty()) {
+            setFloatLayoutVisibility(false);
+        }
+    }
+
+    private void setFloatLayoutVisibility(boolean visible) {
+        if (mFloatLayout != null) {
+            mFloatLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private boolean isFloatLayoutShowing() {
+        return mFloatLayout != null && mFloatLayout.getVisibility() == View.VISIBLE;
     }
 
     /**
@@ -127,6 +157,14 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         for (ItemAdapter adapter : mChildAdapters) {
             if (adapter.getRootViewType() == viewType) {
                 holder = adapter.onCreateViewHolder(parent, viewType);
+                if (adapter.isFloatAble() && mFloatLayout != null && mFloatLayout.isEmpty()) {
+                    mFloatLayout.setFloatContent(viewType, new FloatLayout.OnSizeChangedListener() {
+                        @Override
+                        public void onSizeChanged(int width, int height) {
+                            mFloatLayoutHeight = height;
+                        }
+                    });
+                }
                 Class itemModelClass = adapter.getItemModelClass();
                 if (!mItemViewHolderMap.containsKey(itemModelClass)) {
                     mItemViewHolderMap.put(itemModelClass, holder);
@@ -144,8 +182,72 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     @Override
+    public void onViewRecycled(ItemViewHolder<Object> holder) {
+        if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder)
+            return;
+        ItemAdapter adapter;
+        int itemCount;
+        int position = holder.getLayoutPosition();
+        for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
+            adapter = mChildAdapters.get(i);
+            itemCount = adapter.getItemCount();
+            if (position < itemCount + total) {
+                adapter.onViewRecycled(holder, position - total);
+                return;
+            } else {
+                total += itemCount;
+            }
+        }
+    }
+
+    @Override
+    protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
+        ItemAdapter adapter = getAdjacentChildAdapterByPosition(mCurPosition, true, false);
+        if (adapter == null) return;
+        if (adapter.isFloatAble() && dy != 0) {
+            View view = lm.findViewByPosition(adapter.firstItemPosition);
+            if (view != null) {
+                if (isFirstFloatAbleChildAdapter(mCurPosition) && isFloatLayoutShowing()) {
+                    setFloatLayoutVisibility(false);
+                } else if (view.getTop() <= (isFloatLayoutShowing() ? mFloatLayoutHeight : 0)) {
+                    if (view.getTop() <= 0) {
+                        mFloatLayout.setY(0);
+                    } else {
+                        mFloatLayout.setY(-(mFloatLayoutHeight - view.getTop()));
+                    }
+                    setFloatLayoutVisibility(true);
+                } else {
+                    mFloatLayout.setY(0);
+                }
+            }
+        }
+
+
+        if (mCurPosition != lm.findFirstVisibleItemPosition()) {
+            mCurPosition = lm.findFirstVisibleItemPosition();
+            ItemAdapter itemAdapter;
+            if (dy < 0) {
+                itemAdapter = getAdjacentChildAdapterByPosition(mCurPosition + 1, false, true);
+            } else {
+                itemAdapter = getChildAdapterByPosition(mCurPosition);
+            }
+            if (itemAdapter != null && mLastBindPosition != itemAdapter.firstItemPosition) {
+                mLastBindPosition = itemAdapter.firstItemPosition;
+                updateFloatLayout(itemAdapter);
+            }
+        }
+    }
+
+    private void updateFloatLayout(ItemAdapter itemAdapter) {
+        if (itemAdapter != null && itemAdapter.isFloatAble()) {
+            itemAdapter.onBindFloatViewData(new ViewHelper(mFloatLayout), itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
+        }
+    }
+
+    @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
-        if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder) return;
+        if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder)
+            return;
         ItemAdapter adapter;
         int itemCount;
         for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
@@ -215,6 +317,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     /**
      * 通过{@link RecyclerView}的Adapter的position获取{@link ItemAdapter}中对应的position。
+     *
      * @param position 当前 {@link RecyclerView} 的position。
      */
     int getItemAdapterPosition(int position) {
@@ -263,11 +366,82 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     /**
      * 根据Holder的数据模型类型获取 {@link ItemViewHolder} 对象。
+     *
      * @param holderModelClazz {@link ItemViewHolder} 中泛型指定的数据模型的字节码对象。
      * @return 返回 {@link ItemViewHolder} 对象。
      */
     private ItemViewHolder getViewHolder(Class<?> holderModelClazz) {
         return mItemViewHolderMap.get(holderModelClazz);
+    }
+
+    /**
+     * 根据position获取相邻的子条目的Adapter。具体是获取前一个还是后一个由next参数决定。是否只获取可悬浮的由floatAble参数决定。
+     *
+     * @param position  当前的position索引。
+     * @param next      是否是获取后一个，true表示获取后一个，false表示获取前一个。
+     */
+    @CheckResult
+    ItemAdapter getAdjacentChildAdapterByPosition(int position, boolean next, boolean floatAble) {
+        ItemAdapter adapter;
+        ItemAdapter lastFloatAbleAdapter = null;
+        int itemCount;
+        boolean isContinue = false;
+        for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
+            adapter = mChildAdapters.get(i);
+            if (isContinue && adapter.isFloatAble()) {
+                return adapter;
+            }
+            itemCount = adapter.getItemCount();
+            if (position < itemCount + total) {
+                if (floatAble) {
+                    if (next) {
+                        isContinue = true;
+                        continue;
+                    } else {
+                        return lastFloatAbleAdapter;
+                    }
+                }
+                if (next) {
+                    if (i == mChildAdapters.size() - 1) {
+                        return null;
+                    } else {
+                        return mChildAdapters.get(i + 1);
+                    }
+                } else {
+                    if (i == 0) {
+                        return null;
+                    } else {
+                        return mChildAdapters.get(i - 1);
+                    }
+                }
+            } else {
+                if (adapter.isFloatAble()) {
+                    lastFloatAbleAdapter = adapter;
+                }
+                total += itemCount;
+            }
+        }
+        return null;
+    }
+
+    private boolean isFirstFloatAbleChildAdapter(int position) {
+        boolean isFirst = true;
+        ItemAdapter adapter;
+        int itemCount;
+        for (int i = 0, total = 0; i < mChildAdapters.size(); i++) {
+            adapter = mChildAdapters.get(i);
+            itemCount = adapter.getItemCount();
+            if (position < itemCount + total) {
+                break;
+            } else {
+                if (adapter.isFloatAble()) {
+                    isFirst = false;
+                    break;
+                }
+                total += itemCount;
+            }
+        }
+        return isFirst;
     }
 
     private class ItemAdapterDataObserver extends ItemAdapter.AdapterDataObserver {

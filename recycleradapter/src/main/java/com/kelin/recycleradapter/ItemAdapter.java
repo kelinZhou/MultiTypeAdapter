@@ -4,13 +4,16 @@ import android.database.Observable;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
+import android.support.v4.util.Pools;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.AdapterEdit;
 
 import java.lang.reflect.Constructor;
@@ -35,6 +38,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * 表示创建脚Holder。
      */
     private static final int FOOTER_HOLDER = 0X0000_0102;
+    private static final String TAG = "ItemAdapter";
     /**
      * {@link MultiTypeAdapter} 对象。也是当前Adapter的父级Adapter，是输入RecyclerView的Adapter。
      */
@@ -58,15 +62,21 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     /**
      * 用来记录头布局的资源文件ID。
      */
-    private @LayoutRes int mHeaderLayoutId;
+    private
+    @LayoutRes
+    int mHeaderLayoutId;
     /**
      * 用来记录脚布局的资源文件ID。
      */
-    private @LayoutRes int mFooterLayoutId;
+    private
+    @LayoutRes
+    int mFooterLayoutId;
     /**
      * 用来记录当前适配器中的布局资源ID。
      */
-    private @LayoutRes int mRootLayoutId;
+    private
+    @LayoutRes
+    int mRootLayoutId;
     /**
      * 条目事件监听对象。
      */
@@ -79,6 +89,10 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * 当前页面的数据集。
      */
     private List<D> mDataList;
+
+    private boolean isVisible;
+    private ItemViewHolder<D> mFloatLayoutBinder;
+    private boolean isFloatAble;
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(SPAN_SIZE_FULL_SCREEN, holderClass);
@@ -105,6 +119,28 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
 
         setDataList(list);
+    }
+
+    public void setFloatAble(boolean floatAble) {
+        isFloatAble = floatAble;
+    }
+
+    /**
+     * 设置当前是否可见。
+     *
+     * @param visible true表示可见，false表示不可见。
+     */
+    void setVisibleState(boolean visible) {
+        isVisible = visible;
+    }
+
+    /**
+     * 判断当前适配器是否可见。
+     *
+     * @return 可见返回true, 不可见返回false。
+     */
+    boolean isVisible() {
+        return isVisible;
     }
 
     /**
@@ -320,7 +356,8 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      */
     @Override
     public void removeAll(@Size(min = 0) int positionStart, @Size(min = 0) int itemCount, boolean refresh) {
-        if (positionStart < 0 || itemCount < 0) throw new IllegalArgumentException("the positionStart Arguments or itemCount Arguments must is greater than 0 integer");
+        if (positionStart < 0 || itemCount < 0)
+            throw new IllegalArgumentException("the positionStart Arguments or itemCount Arguments must is greater than 0 integer");
         if (!isEmptyList()) {
             List<D> dataList = getDataList();
             int positionEnd = positionStart + (itemCount = itemCount > dataList.size() ? dataList.size() : itemCount);
@@ -418,7 +455,9 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回跟布局的资源ID。
      */
     @Override
-    public @LayoutRes int getRootViewType() {
+    public
+    @LayoutRes
+    int getRootViewType() {
         return mRootLayoutId;
     }
 
@@ -428,7 +467,9 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回Header布局的资源ID。
      */
     @Override
-    public @LayoutRes int getHeaderViewType() {
+    public
+    @LayoutRes
+    int getHeaderViewType() {
         return mHeaderLayoutId;
     }
 
@@ -438,7 +479,9 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回Footer布局的资源ID。
      */
     @Override
-    public @LayoutRes int getFooterViewType() {
+    public
+    @LayoutRes
+    int getFooterViewType() {
         return mFooterLayoutId;
     }
 
@@ -515,6 +558,13 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     @Override
     public void onBindViewHolder(ItemViewHolder<D> holder, int position, List<Object> payloads) {
+        if (position == 0) {
+            setVisibleState(true);
+            Log.i(TAG, "onViewRecycled: 条目被显示并绑定数据。AdapterPosition=" + position);
+        }
+        if (isFloatAble && mFloatLayoutBinder == null) {
+            mFloatLayoutBinder = holder;
+        }
         holder.onBindPartData(position, getItemObject(holder), payloads);
     }
 
@@ -552,7 +602,11 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     private D getItemObject(ItemViewHolder<D> holder) {
-        return (D) mParentAdapter.getObject(holder.getLayoutPosition());
+        return getItemObject(holder.getLayoutPosition());
+    }
+
+    private D getItemObject(int parentPosition) {
+        return (D) mParentAdapter.getObject(parentPosition);
     }
 
     private View.OnClickListener onGetClickListener(final ItemViewHolder<D> viewHolder) {
@@ -565,7 +619,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
                 int adapterPosition = getAdapterPosition(viewHolder);
                 if (viewHolder instanceof HeaderFooterViewHolder) {
                     HeaderFooterViewHolder holder = (HeaderFooterViewHolder) viewHolder;
-                    if (holder.isHeader()){
+                    if (holder.isHeader()) {
                         mItemEventListener.onItemHeaderClick(position);
                     } else if (holder.isFooter()) {
                         mItemEventListener.onItemFooterClick(position, adapterPosition);
@@ -601,6 +655,10 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     void setParent(MultiTypeAdapter parent) {
         mParentAdapter = parent;
+        //被添加的MultiTypeAdapter中以后检查悬浮条件的规则。
+        if (isFloatAble() && (mItemSpanSize < mParentAdapter.getTotalSpanSize() || getHeaderAndFooterCount() > 0 || getItemCount() > 1)) {
+            throw new RuntimeException("The current child adapter number must be can only be one, and not have header or footer in the child adapter, also must is be full screen width.");
+        }
     }
 
     Class<?> getItemModelClass() {
@@ -678,7 +736,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
                 mParentAdapter.notifyItemRemoved(position + firstItemPosition + getHeaderCount());
             } else {
                 if (haveHeader() || haveFooter()) {
-                   mParentAdapter.notifyItemRangeRemoved(firstItemPosition, getHeaderAndFooterCount() + 1);
+                    mParentAdapter.notifyItemRangeRemoved(firstItemPosition, getHeaderAndFooterCount() + 1);
                 } else {
                     mParentAdapter.notifyItemRemoved(position + firstItemPosition);
                 }
@@ -698,8 +756,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         } else {
             positionStart += firstItemPosition + getHeaderCount();
         }
-        if (mParentAdapter != null)
-            mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
+        if (mParentAdapter != null) mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
     }
 
     /**
@@ -725,6 +782,87 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      */
     void unregisterAll() {
         mAdapterDataObservable.unregisterAll();
+    }
+
+    /**
+     * 当当前Adapter中视图中小时的时候调用。
+     *
+     * @param holder   当前的ViewHolder对象。
+     * @param position 当前的索引。
+     */
+    void onViewRecycled(ItemViewHolder<Object> holder, int position) {
+        if (position == getItemCount() - 1) {
+            setVisibleState(false);
+            Log.i(TAG, "onViewRecycled: 条目被释放。AdapterPosition=" + position);
+        }
+    }
+
+//    /**
+//     * 当列表被滚的时候执行的回调方法。
+//     *
+//     * @param recyclerView 当前正在滚动中的 {@link RecyclerView} 对象。
+//     * @param dx           x轴的偏移值。
+//     * @param dy           y轴的偏移值。
+//     * @param lm           当前 {@link RecyclerView} 的布局管理器LayoutManager。
+//     */
+//    void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
+//        ItemAdapter adapter = mParentAdapter.getAdjacentChildAdapterByPosition(mCurPosition, true, false);
+//        if (adapter == null) return;
+//        if (adapter.isFloatAble() && dy != 0) {
+//            View view = lm.findViewByPosition(adapter.firstItemPosition);
+//            if (view != null) {
+//                if (mParentAdapter.isFirstFloatAbleChildAdapter(mCurPosition) && isFloatLayoutShowing()) {
+//                    setFloatLayoutVisibility(false);
+//                } else if (view.getTop() <= (isFloatLayoutShowing() ? sFloatLayoutHeight : 0)) {
+//                    if (view.getTop() <= 0) {
+//                        mFloatLayout.setY(0);
+//                        updateFloatLayout(true);
+//                        Log.i(TAG, "onRecyclerViewScrolled: 绑定新数据");
+//                    } else {
+//                        mFloatLayout.setY(-(sFloatLayoutHeight - view.getTop()));
+//                        if (mFloatLayout.getY() < 0 && dy < 0) {
+//                            Log.i(TAG, "onRecyclerViewScrolled: 绑定老数据");
+//                            updateFloatLayout(false);
+//                        }
+//                    }
+//                    setFloatLayoutVisibility(true);
+//                } else {
+//                    mFloatLayout.setY(0);
+//                }
+//            }
+//        }
+//
+//
+//        if (mCurPosition != lm.findFirstVisibleItemPosition()) {
+//            mCurPosition = lm.findFirstVisibleItemPosition();
+//        }
+//    }
+
+//    private void updateFloatLayout(boolean next) {
+//        //因为悬浮的条目做了限制，必须是ItemCount为1。所以这里直接给0。
+//        D object;
+//        if (next) {
+//            object = getObject(0);
+//            sPositionPool.release(firstItemPosition);
+//            Log.i(TAG, "updateFloatLayout: 缓存位置" + firstItemPosition);
+//        } else {
+//            Integer lastPosition = sPositionPool.acquire(firstItemPosition);
+//            if (lastPosition == null) {
+//                return;
+//            }
+//            Log.i(TAG, "updateFloatLayout: 获取缓存" + lastPosition);
+//            object = getItemObject(lastPosition);
+//        }
+//        mFloatLayoutBinder.onBindFloatLayoutData(new ViewHelper(mFloatLayout), 0, object);
+//    }
+
+
+    void onBindFloatViewData(ViewHelper viewHelper, int position, D d) {
+        mFloatLayoutBinder.onBindFloatLayoutData(viewHelper, position - firstItemPosition, d);
+    }
+
+    public boolean isFloatAble() {
+        return isFloatAble;
     }
 
     /**
@@ -833,7 +971,8 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
          *                        作为 {@link MultiTypeAdapter} 的子条目并使用该监听时这个值才有意义，
          *                        这时该参数的值将会与 position 参数的值不同，该参数的值将表示当前点击的条目在当前子 Adapter 中的位置。
          */
-        public void onItemLongClick(int position, D d, int adapterPosition) {}
+        public void onItemLongClick(int position, D d, int adapterPosition) {
+        }
 
         /**
          * 当条目中的子控件被点击的时候调用。
@@ -869,4 +1008,47 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         public void onItemFooterClick(int position, int adapterPosition) {
         }
     }
+
+    private static class PositionPool implements Pools.Pool<Integer> {
+        private ArrayList<Integer> mPool = new ArrayList<>();
+
+        /**
+         * 获取位置池中的位置。
+         */
+        @Override
+        public Integer acquire() {
+            if (mPool.isEmpty()) return null;
+            int endIndex = mPool.size() - 1;
+            Integer instance = mPool.get(endIndex);
+            mPool.remove(endIndex);
+            return instance;
+        }
+        /**
+         * 获取位置池中的位置。
+         */
+        public Integer acquire(int curInstance) {
+            Integer acquire = acquire();
+            if (acquire != null && acquire >= curInstance) {
+                return acquire();
+            } else {
+                return acquire;
+            }
+        }
+
+        /**
+         * 发布一个位置到位置池中。
+         */
+        @Override
+        public boolean release(Integer instance) {
+            if (!mPool.isEmpty() && mPool.get(mPool.size() - 1) > instance) {
+                mPool.clear();
+            }
+            return !isInPool(instance) && mPool.add(instance);
+        }
+
+        private boolean isInPool(Integer instance) {
+            return mPool.contains(instance);
+        }
+    }
+
 }
