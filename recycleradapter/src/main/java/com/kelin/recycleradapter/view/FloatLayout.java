@@ -21,7 +21,6 @@ public class FloatLayout extends FrameLayout {
 
     private ViewGroup mFloatLayout;
     private OnSizeChangedListener mOnSizeMeasuredCallback;
-    private OnLocationChangedListener mOnLocationChangedListener;
 
     public FloatLayout(@NonNull Context context) {
         this(context, null);
@@ -43,14 +42,6 @@ public class FloatLayout extends FrameLayout {
         }
     }
 
-    @Override
-    public void setY(float y) {
-        if (mOnLocationChangedListener != null && y != getY()) {
-            mOnLocationChangedListener.onLocationChanged(y, getY());
-        }
-        super.setY(y);
-    }
-
     public boolean isEmpty() {
         return mFloatLayout == null;
     }
@@ -70,10 +61,6 @@ public class FloatLayout extends FrameLayout {
         }
     }
 
-    public void setOnLocationChangedListener(OnLocationChangedListener listener) {
-        mOnLocationChangedListener = listener;
-    }
-
     public interface OnSizeChangedListener {
         /**
          * 当宽高被测量出来以后的回调。
@@ -81,14 +68,5 @@ public class FloatLayout extends FrameLayout {
          * @param height 测量到的高度。
          */
         void onSizeChanged(int width, int height);
-    }
-
-    public interface OnLocationChangedListener {
-        /**
-         * 当位置发生变化的时候调用。
-         * @param y 新的y轴坐标。
-         * @param oldY 旧的y轴坐标。
-         */
-        void onLocationChanged(float y, float oldY);
     }
 }

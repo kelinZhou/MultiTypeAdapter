@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -36,7 +37,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
      */
     private Map<Class, ItemViewHolder> mItemViewHolderMap = new HashMap<>();
-    ;
     /**
      * 用来存放所有的子条目对象。
      */
@@ -45,11 +45,30 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * 子条目数据变化的观察者。
      */
     private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();
+    /**
+     * 加载更多失败时，点击重试的监听。
+     */
     private LoadMoreRetryClickListener mLoadMoreRetryClickListener;
+    /**
+     * 用来展示悬浮窗的布局容器。
+     */
     private FloatLayout mFloatLayout;
+    /**
+     * 用来记录当前第一个可见的条目的位置。
+     */
     private int mCurPosition;
+    /**
+     * 用来记录悬浮条的高度。
+     */
     private int mFloatLayoutHeight;
+    /**
+     * 用来记录上一次被绑定数的悬浮条的位置。
+     */
     private int mLastBindPosition = 0xFFFF_FFFF;
+    /**
+     * 为悬浮条绑定数据的帮助者。
+     */
+    private ViewHelper mFloatViewHelper;
 
     /**
      * 构造方法。
@@ -93,11 +112,10 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      *
      * @param floatLayout 一个 {@link FloatLayout} 对象。
      */
-    public void setFloatLayout(FloatLayout floatLayout) {
+    public void setFloatLayout(@NonNull FloatLayout floatLayout) {
         mFloatLayout = floatLayout;
-        if (mFloatLayout.isEmpty()) {
-            setFloatLayoutVisibility(false);
-        }
+        mFloatViewHelper = new ViewHelper(mFloatLayout);
+        setFloatLayoutVisibility(false);
     }
 
     private void setFloatLayoutVisibility(boolean visible) {
@@ -231,7 +249,10 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             } else {
                 itemAdapter = getChildAdapterByPosition(mCurPosition);
             }
-            if (itemAdapter != null && mLastBindPosition != itemAdapter.firstItemPosition) {
+            if (itemAdapter != null && itemAdapter.isFloatAble() && mLastBindPosition != itemAdapter.firstItemPosition) {
+                if (dy < 0) {
+                    mFloatLayout.setY(-mFloatLayoutHeight);
+                }
                 mLastBindPosition = itemAdapter.firstItemPosition;
                 updateFloatLayout(itemAdapter);
             }
@@ -239,9 +260,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     private void updateFloatLayout(ItemAdapter itemAdapter) {
-        if (itemAdapter != null && itemAdapter.isFloatAble()) {
-            itemAdapter.onBindFloatViewData(new ViewHelper(mFloatLayout), itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
-        }
+        itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
     }
 
     @Override
@@ -377,8 +396,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     /**
      * 根据position获取相邻的子条目的Adapter。具体是获取前一个还是后一个由next参数决定。是否只获取可悬浮的由floatAble参数决定。
      *
-     * @param position  当前的position索引。
-     * @param next      是否是获取后一个，true表示获取后一个，false表示获取前一个。
+     * @param position 当前的position索引。
+     * @param next     是否是获取后一个，true表示获取后一个，false表示获取前一个。
      */
     @CheckResult
     ItemAdapter getAdjacentChildAdapterByPosition(int position, boolean next, boolean floatAble) {
