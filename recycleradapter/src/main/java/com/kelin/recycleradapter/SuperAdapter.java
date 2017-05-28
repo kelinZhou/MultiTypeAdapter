@@ -222,7 +222,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         }
     }
 
-    private boolean isLoadMoreItem(int position) {
+    boolean isLoadMoreItem(int position) {
         return mLoadMoreLayoutInfo != null && !mLoadMoreLayoutInfo.noCurStateLayoutId() && position == getItemCount() - 1;
     }
 
@@ -476,8 +476,6 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         }
         return null;
     }
-
-
 
     /**
      * 加载更多的回调对象。

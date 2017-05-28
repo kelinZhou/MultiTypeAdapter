@@ -173,6 +173,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     public VH onCreateViewHolder(ViewGroup parent, int viewType) {
+        //这里没有使用LoadMoreViewHolder是因为做了泛型限定，只能返回VH，所以这里使用了VH作为LoadMoreViewHolder。只是给的布局不同了而已。
         try {
             Constructor<? extends VH> constructor = mHolderClass.getDeclaredConstructor(ViewGroup.class, int.class);
             constructor.setAccessible(true);
@@ -211,6 +212,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
+        if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
         holder.onBindPartData(position, getObject(holder.getLayoutPosition() - getHeaderCount()), payloads);
     }
 
