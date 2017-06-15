@@ -4,7 +4,6 @@ import android.database.Observable;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
-import android.support.v4.util.Pools;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +14,7 @@ import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.AdapterEdit;
+import com.kelin.recycleradapter.interfaces.ChildEventBindInterceptor;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -93,6 +93,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private boolean isVisible;
     private ItemViewHolder<D> mFloatLayoutBinder;
     private boolean isFloatAble;
+    private ChildEventBindInterceptor mEventInterceptor;
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(SPAN_SIZE_FULL_SCREEN, holderClass);
@@ -703,17 +704,20 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private void bindItemClickEvent(ItemViewHolder<D> viewHolder) {
         View.OnClickListener onClickListener = onGetClickListener(viewHolder);
 
-        View clickView;
-        if (viewHolder.getItemClickViewId() == 0 || (clickView = viewHolder.getView(viewHolder.getItemClickViewId())) == null) {
-            clickView = viewHolder.itemView;
+        if (viewHolder.clickable()) {
+            View clickView;
+            if (viewHolder.getItemClickViewId() == 0 || (clickView = viewHolder.getView(viewHolder.getItemClickViewId())) == null) {
+                clickView = viewHolder.itemView;
+            }
+            clickView.setOnClickListener(onClickListener);
+            clickView.setOnLongClickListener(onGetLongClickListener(viewHolder));
         }
-        clickView.setOnClickListener(onClickListener);
-        clickView.setOnLongClickListener(onGetLongClickListener(viewHolder));
         int[] childViewIds = viewHolder.onGetNeedListenerChildViewIds();
         if (childViewIds != null && childViewIds.length > 0) {
+            View v;
             for (int viewId : childViewIds) {
-                View v = viewHolder.getView(viewId);
-                if (v != null) {
+                v = viewHolder.getView(viewId);
+                if (v != null && (mEventInterceptor == null || !mEventInterceptor.onInterceptor(v))) {
                     v.setOnClickListener(onClickListener);
                 }
             }
@@ -797,72 +801,20 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-//    /**
-//     * 当列表被滚的时候执行的回调方法。
-//     *
-//     * @param recyclerView 当前正在滚动中的 {@link RecyclerView} 对象。
-//     * @param dx           x轴的偏移值。
-//     * @param dy           y轴的偏移值。
-//     * @param lm           当前 {@link RecyclerView} 的布局管理器LayoutManager。
-//     */
-//    void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
-//        ItemAdapter adapter = mParentAdapter.getAdjacentChildAdapterByPosition(mCurPosition, true, false);
-//        if (adapter == null) return;
-//        if (adapter.isFloatAble() && dy != 0) {
-//            View view = lm.findViewByPosition(adapter.firstItemPosition);
-//            if (view != null) {
-//                if (mParentAdapter.isFirstFloatAbleChildAdapter(mCurPosition) && isFloatLayoutShowing()) {
-//                    setFloatLayoutVisibility(false);
-//                } else if (view.getTop() <= (isFloatLayoutShowing() ? sFloatLayoutHeight : 0)) {
-//                    if (view.getTop() <= 0) {
-//                        mFloatLayout.setY(0);
-//                        updateFloatLayout(true);
-//                        Log.i(TAG, "onRecyclerViewScrolled: 绑定新数据");
-//                    } else {
-//                        mFloatLayout.setY(-(sFloatLayoutHeight - view.getTop()));
-//                        if (mFloatLayout.getY() < 0 && dy < 0) {
-//                            Log.i(TAG, "onRecyclerViewScrolled: 绑定老数据");
-//                            updateFloatLayout(false);
-//                        }
-//                    }
-//                    setFloatLayoutVisibility(true);
-//                } else {
-//                    mFloatLayout.setY(0);
-//                }
-//            }
-//        }
-//
-//
-//        if (mCurPosition != lm.findFirstVisibleItemPosition()) {
-//            mCurPosition = lm.findFirstVisibleItemPosition();
-//        }
-//    }
-
-//    private void updateFloatLayout(boolean next) {
-//        //因为悬浮的条目做了限制，必须是ItemCount为1。所以这里直接给0。
-//        D object;
-//        if (next) {
-//            object = getObject(0);
-//            sPositionPool.release(firstItemPosition);
-//            Log.i(TAG, "updateFloatLayout: 缓存位置" + firstItemPosition);
-//        } else {
-//            Integer lastPosition = sPositionPool.acquire(firstItemPosition);
-//            if (lastPosition == null) {
-//                return;
-//            }
-//            Log.i(TAG, "updateFloatLayout: 获取缓存" + lastPosition);
-//            object = getItemObject(lastPosition);
-//        }
-//        mFloatLayoutBinder.onBindFloatLayoutData(new ViewHelper(mFloatLayout), 0, object);
-//    }
-
-
     void onBindFloatViewData(ViewHelper viewHelper, int position, D d) {
         mFloatLayoutBinder.onBindFloatLayoutData(viewHelper, position - firstItemPosition, d);
     }
 
     public boolean isFloatAble() {
         return isFloatAble;
+    }
+
+    /**
+     * 设置条目子控件事件绑定的拦截器。
+     * @param interceptor 子控件事件绑定的拦截器。
+     */
+    public void setEventInterceptor(ChildEventBindInterceptor interceptor) {
+        mEventInterceptor = interceptor;
     }
 
     /**
@@ -1008,47 +960,4 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         public void onItemFooterClick(int position, int adapterPosition) {
         }
     }
-
-    private static class PositionPool implements Pools.Pool<Integer> {
-        private ArrayList<Integer> mPool = new ArrayList<>();
-
-        /**
-         * 获取位置池中的位置。
-         */
-        @Override
-        public Integer acquire() {
-            if (mPool.isEmpty()) return null;
-            int endIndex = mPool.size() - 1;
-            Integer instance = mPool.get(endIndex);
-            mPool.remove(endIndex);
-            return instance;
-        }
-        /**
-         * 获取位置池中的位置。
-         */
-        public Integer acquire(int curInstance) {
-            Integer acquire = acquire();
-            if (acquire != null && acquire >= curInstance) {
-                return acquire();
-            } else {
-                return acquire;
-            }
-        }
-
-        /**
-         * 发布一个位置到位置池中。
-         */
-        @Override
-        public boolean release(Integer instance) {
-            if (!mPool.isEmpty() && mPool.get(mPool.size() - 1) > instance) {
-                mPool.clear();
-            }
-            return !isInPool(instance) && mPool.add(instance);
-        }
-
-        private boolean isInPool(Integer instance) {
-            return mPool.contains(instance);
-        }
-    }
-
 }

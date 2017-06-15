@@ -355,6 +355,11 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         holder.onBindPartData(position, getObject(position), payloads);
     }
 
+    @Override
+    public void onViewRecycled(VH holder) {
+        holder.onViewRecycled();
+    }
+
     /**
      * 判断两个位置的Item是否相同。
      * @param oldItemData 旧的Item数据。

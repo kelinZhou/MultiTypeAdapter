@@ -42,13 +42,13 @@ public class SingleTypeListActivity extends AppCompatActivity {
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         //        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         mPage = 0;
-        List<String> list = loadData();
+        List<String> list = loadData(6);
         mAdapter = new SingleTypeAdapter<>(recyclerView, list, MyHolder.class);
 
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                List<String> data = loadData();
+                List<String> data = loadData(30);
                 mAdapter.addAll(data);
                 mAdapter.setLoadMoreFinished();
                 if (mPage == 3) {
@@ -80,9 +80,9 @@ public class SingleTypeListActivity extends AppCompatActivity {
     }
 
     @NonNull
-    private List<String> loadData() {
+    private List<String> loadData(int size) {
         List<String> list = new ArrayList<>();
-        for (int i = mPage * 30; i < (mPage + 1) * 30; i++) {
+        for (int i = mPage * size; i < (mPage + 1) * size; i++) {
             list.add("测试条目" + i);
         }
         mPage++;

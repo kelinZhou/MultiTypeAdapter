@@ -226,7 +226,7 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
 
     /**
      * 当需要绑定悬浮控件的数据的时候调用。如果你通过
-     * {@link com.kelin.recycleradapter.ItemAdapter#setFloatLayout(FloatLayout)} 方法设置了悬浮控件的话就可以通过复写该方法
+     * {@link com.kelin.recycleradapter.MultiTypeAdapter#setFloatLayout(FloatLayout)} 方法设置了悬浮控件的话就可以通过复写该方法
      * 为你的悬浮控件绑定数据了。
      * <p>
      * 你要绑定数据的控件的 {@link IdRes} 资源Id都是和你ViewHolder中的资源Id相同的。
@@ -237,4 +237,19 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
      * @param d 需要绑定的数据模型。
      */
     public void onBindFloatLayoutData(ViewHelper viewHelper, int position, D d) {}
+
+    /**
+     * 当Holder可以被复用的时候调用。
+     */
+    public void onViewRecycled() {}
+
+    /**
+     * 当前条目可以否被点击。默认所有条目都是可以被点击的，都会触发条目点击事件和长按事件。
+     * 子类可以通过覆盖该方法来改变条目是否可以被点击。
+     * <P>如果子类覆盖了该方法并返回了<code>false</code>那么适配器则不会对这个条目绑定任何事件，但是子View的事件绑定并不受影响。
+     * @return <code>true</code>表示可以点击，<code>false</code>表示不可点击。
+     */
+    public boolean clickable() {
+        return true;
+    }
 }
