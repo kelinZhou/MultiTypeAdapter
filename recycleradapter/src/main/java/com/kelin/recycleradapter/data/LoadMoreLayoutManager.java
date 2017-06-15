@@ -9,7 +9,7 @@ import android.support.annotation.Size;
  * 创建时间 2017/5/3  下午2:39
  * 版本 v 1.0.0
  */
-public class LoadMoreLayoutInfo {
+public class LoadMoreLayoutManager {
 
     private static final int STATE_FAILED = 0X0000_00F0;
     private static final int STATE_NO_MORE = 0X0000_00F1;
@@ -33,6 +33,10 @@ public class LoadMoreLayoutInfo {
      * 是否正在加载更多，通过此变量做判断，防止LoadMore重复触发。
      */
     private boolean mIsInTheLoadMore;
+    /**
+     * 加载更多是否可用。
+     */
+    private boolean mIsUsable = true;
 
     /**
      * 构建一个加载更多的布局信息对象。
@@ -42,7 +46,7 @@ public class LoadMoreLayoutInfo {
      * @param offset 加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
      *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
      */
-    public LoadMoreLayoutInfo(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset) {
+    public LoadMoreLayoutManager(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset) {
         mLoadMoreLayoutId = loadMoreLayoutId;
         mRetryLayoutId = retryLayoutId;
         mNoMoreDataLayoutId = noMoreDataLayoutId;
@@ -97,5 +101,13 @@ public class LoadMoreLayoutInfo {
 
     public int getLoadMoreOffset() {
         return mLoadMoreOffset;
+    }
+
+    public void setLoadMoreUsable(boolean usable) {
+        mIsUsable = usable;
+    }
+
+    public boolean isUsable() {
+        return mIsUsable;
     }
 }

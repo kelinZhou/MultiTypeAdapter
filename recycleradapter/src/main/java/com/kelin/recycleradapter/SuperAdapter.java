@@ -13,7 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.kelin.recycleradapter.data.LoadMoreLayoutInfo;
+import com.kelin.recycleradapter.data.LoadMoreLayoutManager;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
@@ -62,7 +62,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     /**
      * 加载更多的布局信息对象。
      */
-    LoadMoreLayoutInfo mLoadMoreLayoutInfo;
+    LoadMoreLayoutManager mLoadMoreLayoutManager;
 
     /**
      * 构造方法。
@@ -114,10 +114,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
-                if (mLoadMoreLayoutInfo != null) {
-                    if (mLoadMoreLayoutInfo.isInTheLoadMore() || mLoadMoreLayoutInfo.isNoMoreState()) return;
+                if (isLoadMoreUsable()) {
+                    if (mLoadMoreLayoutManager.isInTheLoadMore() || mLoadMoreLayoutManager.isNoMoreState()) return;
                     int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
-                    int targetPosition = getDataList().size() - mLoadMoreLayoutInfo.getLoadMoreOffset();
+                    int targetPosition = getDataList().size() - mLoadMoreLayoutManager.getLoadMoreOffset();
                     if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
                         startLoadMore();
                     }
@@ -163,6 +163,26 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
                 return bundle.size() == 0 ? null : bundle;
             }
         };
+    }
+
+    /**
+     * 设置加载更多是否可用。如果有时候你的页面虽然是支持分页加载的，但是特殊情况下你并不希望展示加载中的条目，这时就可以通过
+     * 调用此方法禁止加载中条目的显示。
+     * <p>例如：当你的总条目不足以显示一页的时候（假如你每页数据是20条，但是你总数据一共才5条），这时候你就可以通过调用这个方法
+     * 禁止加载中条目的显示。
+     * @param usable true表示可用，false表示不可用。
+     */
+    public void setLoadMoreUsable(boolean usable) {
+        if (mLoadMoreLayoutManager != null) {
+            mLoadMoreLayoutManager.setLoadMoreUsable(usable);
+        }
+    }
+
+    /**
+     * 加载更多是否可用。
+     */
+    private boolean isLoadMoreUsable() {
+        return mLoadMoreLayoutManager != null && mLoadMoreLayoutManager.isUsable();
     }
 
     /**
@@ -223,7 +243,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     }
 
     boolean isLoadMoreItem(int position) {
-        return mLoadMoreLayoutInfo != null && !mLoadMoreLayoutInfo.noCurStateLayoutId() && position == getItemCount() - 1;
+        return isLoadMoreUsable() && !mLoadMoreLayoutManager.noCurStateLayoutId() && position == getItemCount() - 1;
     }
 
     protected abstract int getItemSpanSize(int position);
@@ -259,7 +279,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param callback 加载更多的回调。
      */
     public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        setLoadMoreView(new LoadMoreLayoutInfo(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, offset), callback);
+        setLoadMoreView(new LoadMoreLayoutManager(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, offset), callback);
     }
 
     /**
@@ -267,8 +287,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param layoutInfo LoadMore布局信息对象。
      * @param callback 加载更多的回调。
      */
-    public void setLoadMoreView(@NonNull LoadMoreLayoutInfo layoutInfo, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        mLoadMoreLayoutInfo = layoutInfo;
+    public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+        mLoadMoreLayoutManager = layoutInfo;
         mLoadMoreCallback = callback;
     }
 
@@ -294,7 +314,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     private void startLoadMore() {
         if (mLoadMoreCallback != null) {
             Log.i("MultiTypeAdapter", "开始加载更多");
-            mLoadMoreLayoutInfo.setInTheLoadMore(true);
+            mLoadMoreLayoutManager.setInTheLoadMore(true);
             mLoadMoreCallback.onLoadMore();
         }
     }
@@ -303,7 +323,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
      */
     public void setLoadMoreFinished() {
-        mLoadMoreLayoutInfo.setInTheLoadMore(false);
+        mLoadMoreLayoutManager.setInTheLoadMore(false);
         Log.i("MultiTypeAdapter", "加载完成");
     }
 
@@ -313,7 +333,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     public void setLoadMoreFailed() {
         checkLoadMoreAvailable();
         int position = getItemCount() - 1;
-        mLoadMoreLayoutInfo.setRetryState();
+        mLoadMoreLayoutManager.setRetryState();
         notifyItemChanged(position);
         Log.i("MultiTypeAdapter", "加载完成");
     }
@@ -324,24 +344,24 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     public void setNoMoreData() {
         checkLoadMoreAvailable();
         int position = getItemCount() - 1;
-        mLoadMoreLayoutInfo.setNoMoreState();
+        mLoadMoreLayoutManager.setNoMoreState();
         notifyItemChanged(position);
     }
 
     private void checkLoadMoreAvailable() {
-        if (mLoadMoreLayoutInfo == null) {
+        if (mLoadMoreLayoutManager == null) {
             throw new RuntimeException("You are not set to load more View, you can call the setLoadMoreView() method.");
         }
     }
 
     @Override
     public int getItemCount() {
-        return getDataList().size() + (mLoadMoreLayoutInfo == null || mLoadMoreLayoutInfo.noCurStateLayoutId() ? 0 : 1);
+        return getDataList().size() + (mLoadMoreLayoutManager == null || mLoadMoreLayoutManager.noCurStateLayoutId() ? 0 : 1);
     }
 
     @Override
     public final int getItemViewType(int position) {
-        if (isLoadMoreItem(position)) return mLoadMoreLayoutInfo.getCurStateLayoutId();
+        if (isLoadMoreItem(position)) return mLoadMoreLayoutManager.getCurStateLayoutId();
         return  getItemType(position);
     }
 
@@ -411,7 +431,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     void addDataList(List<D> list) {
         getDataList().addAll(list);
-        if (mLoadMoreLayoutInfo == null || !mLoadMoreLayoutInfo.isInTheLoadMore()) {
+        if (mLoadMoreLayoutManager == null || !mLoadMoreLayoutManager.isInTheLoadMore()) {
             mTempList.addAll(list);
         }
     }
@@ -423,7 +443,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      */
     void addData(D d) {
         getDataList().add(d);
-        if (mLoadMoreLayoutInfo == null || !mLoadMoreLayoutInfo.isInTheLoadMore()) {
+        if (mLoadMoreLayoutManager == null || !mLoadMoreLayoutManager.isInTheLoadMore()) {
             mTempList.add(d);
         }
     }
@@ -496,7 +516,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     class LoadMoreRetryClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            mLoadMoreLayoutInfo.setLoadState();
+            mLoadMoreLayoutManager.setLoadState();
             notifyItemChanged(getItemCount() - 1);
             startLoadMore();
         }

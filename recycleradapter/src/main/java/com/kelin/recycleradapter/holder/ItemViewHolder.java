@@ -97,10 +97,15 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     }
 
     /**
-     * 获取两个对象不同的部分。
+     * 由{@link com.kelin.recycleradapter.SuperAdapter} 调用，用来获取两个对象不同的部分。这个方法只有在
+     * {@link #areItemsTheSame(Object, Object)} 方法被调用并返回<code>true</code>后才会被调用。
+     * <p>你并不需要将模型中的所有字段进行比较，只需要比较需要展示在界面上的字段就可以了。
      * @param oldItemData 旧的数据模型。
      * @param newItemDate 新的数据模型。
-     * @param bundle 比较两个对象不同的部分，将两个对象不同的部分存入该参数中。
+     * @param bundle 比较两个对象不同的部分，将两个对象不同的部分以键值对的形式存入该参数中。这个参数你会在
+     * {@link #onBindPartData(int, Object, List)} 方法中获得。
+     *
+     * @see #onBindPartData(int, Object, List)
      */
     @Override
     public void getChangePayload(D oldItemData, D newItemDate, Bundle bundle) {}
@@ -226,20 +231,30 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
 
     /**
      * 当需要绑定悬浮控件的数据的时候调用。如果你通过
-     * {@link com.kelin.recycleradapter.MultiTypeAdapter#setFloatLayout(FloatLayout)} 方法设置了悬浮控件的话就可以通过复写该方法
-     * 为你的悬浮控件绑定数据了。
+     * {@link com.kelin.recycleradapter.MultiTypeAdapter#setFloatLayout(FloatLayout) MultiTypeAdapter.setFloatLayout(FloatLayout)}
+     * 方法设置了悬浮控件的话，就可以通过复写该方法为你的悬浮控件绑定数据了。
      * <p>
-     * 你要绑定数据的控件的 {@link IdRes} 资源Id都是和你ViewHolder中的资源Id相同的。
-     * 例如你ViewHolder中通过 <code>setText(R.id.tv_title, user.getUserName())</code> 这样的方式给一个TextView设置Text就可以通过
-     * 参数中的viewHolder用同样的方式设置Text： <code>viewHolder.setText(R.id.tv_title, user.getUserName())</code>。
+     * 你要绑定数据的控件的 {@link IdRes} 资源Id名称都是和你ViewHolder中的资源Id名称相同的。
+     * <p>例如:你ViewHolder中通过 <code>setText(R.id.tv_title, user.getUserName())</code> 这样的方式给一个TextView设置Text,
+     * 那么就可以通过参数中的viewHelper用同样的方式设置Text： <code>viewHelper.setText(R.id.tv_title, user.getUserName())</code>。
+     *
+     * <h1><font color="#619BE5">注意：</font> </h1>
+     *      {@link ViewHelper} 类只是封装了一些常用的与一些常用View相关的操作，例如：setText()、setTextColor()、setBackground()等方法，
+     *      并没有把全部的与View相关的操作都封装进去，这是没有必要的也是不可能的，因为我并不知道你以后会写出什么样的花哨的自定义控件。
+     *      <p>如果你没有找到你所希望提供的方法操作View该怎么办呢？放心，你仍然可以通过 {@link ViewHelper#getView(int)} 方法获取到你所关心的
+     *      View然后对他们进行你所需要的操作。
      * @param viewHelper {@link ViewHelper} View相关操作的帮助对象。
      * @param position 当前的索引位置。
      * @param d 需要绑定的数据模型。
+     *
+     * @see FloatLayout
      */
     public void onBindFloatLayoutData(ViewHelper viewHelper, int position, D d) {}
 
     /**
-     * 当Holder可以被复用的时候调用。
+     * 由 {@link RecyclerView.Adapter} 调用，当该方法被调用的时候说明当前的ViewHolder已经可以被复用，
+     * 也就是时候当前的ViewHolder已经不在屏幕区域内了。
+     * @see RecyclerView.Adapter#onViewRecycled(RecyclerView.ViewHolder)。
      */
     public void onViewRecycled() {}
 

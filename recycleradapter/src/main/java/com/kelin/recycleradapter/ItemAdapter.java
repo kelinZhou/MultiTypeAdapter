@@ -789,12 +789,12 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     /**
-     * 当当前Adapter中视图中小时的时候调用。
+     * 当当前Adapter中视图中消失的时候调用。
      *
      * @param holder   当前的ViewHolder对象。
      * @param position 当前的索引。
      */
-    void onViewRecycled(ItemViewHolder<Object> holder, int position) {
+    void onViewRecycled(ItemViewHolder holder, int position) {
         if (position == getItemCount() - 1) {
             setVisibleState(false);
             Log.i(TAG, "onViewRecycled: 条目被释放。AdapterPosition=" + position);
