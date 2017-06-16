@@ -136,6 +136,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @see ItemAdapter#ItemAdapter(List, Class)
      * @see ItemAdapter#ItemAdapter(List, int, Class)
      */
+    @SuppressWarnings("unchecked")
     public MultiTypeAdapter addAdapter(@NonNull ItemAdapter... adapters) {
         for (ItemAdapter adapter : adapters) {
             adapter.registerObserver(mAdapterDataObserver);
@@ -154,6 +155,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ItemViewHolder<Object> onCreateViewHolder(ViewGroup parent, int viewType) {
         if (mLoadMoreLayoutManager != null && viewType == mLoadMoreLayoutManager.getCurStateLayoutId()) {
@@ -248,10 +250,12 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void updateFloatLayout(ItemAdapter itemAdapter) {
         itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
         if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder) {
@@ -302,6 +306,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return position - mPool.acquireFromLayoutPosition(position).firstItemPosition;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected boolean areItemsTheSame(Object oldItemData, Object newItemData) {
         if (oldItemData.getClass() != newItemData.getClass()) {
@@ -311,6 +316,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return viewHolder == null || viewHolder.areItemsTheSame(oldItemData, newItemData);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected boolean areContentsTheSame(Object oldItemData, Object newItemData) {
         if (oldItemData.getClass() != newItemData.getClass()) {
@@ -320,6 +326,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return viewHolder == null || viewHolder.areContentsTheSame(oldItemData, newItemData);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void getChangePayload(Object oldItemData, Object newItemData, Bundle bundle) {
         if (oldItemData.getClass() != newItemData.getClass()) {
@@ -338,6 +345,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @return 返回 {@link ItemViewHolder} 对象。
      */
     private ItemViewHolder getViewHolder(Class<?> holderModelClazz) {
+        //因为我省略了Adapter是不需要自己创建Adapter子类的，所以只能讲所有方法都封装到ViewHolder中。这里存ViewHolder也是迫不得已
+        //暂时没有想到更好的方法去比较两个模型的相同与不同。
         return mItemViewHolderMap.get(holderModelClazz);
     }
 
@@ -346,20 +355,19 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      *
      * @param position 当前的position索引。
      * @param next     是否是获取后一个，true表示获取后一个，false表示获取前一个。
+     * @param floatAble 是否获取可悬浮的。
      */
     @CheckResult
     private ItemAdapter getAdjacentChildAdapterByPosition(int position, boolean next, boolean floatAble) {
         ItemAdapter adapter;
         ItemAdapter lastFloatAbleAdapter = null;
-        int itemCount;
         boolean isContinue = false;
-        for (int i = 0, total = 0; i < mPool.size(); i++) {
+        for (int i = 0; i < mPool.size(); i++) {
             adapter = mPool.acquire(i);
             if (isContinue && adapter.isFloatAble()) {
                 return adapter;
             }
-            itemCount = adapter.getItemCount();
-            if (position < itemCount + total) {
+            if (adapter.firstItemPosition <= position && adapter.lastItemPosition >= position) {
                 if (floatAble) {
                     if (next) {
                         isContinue = true;
@@ -385,7 +393,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 if (adapter.isFloatAble()) {
                     lastFloatAbleAdapter = adapter;
                 }
-                total += itemCount;
             }
         }
         return null;
