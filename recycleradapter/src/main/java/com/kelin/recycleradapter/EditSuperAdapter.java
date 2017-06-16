@@ -38,14 +38,6 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      */
     private Class<? extends VH> mHolderClass;
     /**
-     * 用来记录头布局的资源文件ID。
-     */
-    private @LayoutRes int mHeaderLayoutId;
-    /**
-     * 用来记录脚布局的资源文件ID。
-     */
-    private @LayoutRes int mFooterLayoutId;
-    /**
      * 用来记录当前适配器中的布局资源ID。
      */
     private @LayoutRes int mRootLayoutId;
@@ -72,29 +64,11 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
         if (annotation != null) {
             mRootLayoutId = annotation.rootLayoutId();
-            mHeaderLayoutId = annotation.headerLayoutId();
-            mFooterLayoutId = annotation.footerLayoutId();
         } else {
             throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
         }
 
         setDataList(list);
-    }
-
-    /**
-     * 是否拥有Header。
-     */
-    @Override
-    public boolean haveHeader() {
-        return mHeaderLayoutId != ItemLayout.NOT_HEADER_FOOTER;
-    }
-
-    /**
-     * 是否拥有Footer。
-     */
-    @Override
-    public boolean haveFooter() {
-        return mFooterLayoutId != ItemLayout.NOT_HEADER_FOOTER;
     }
 
     /**
@@ -105,70 +79,6 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     @Override
     public @LayoutRes int getRootViewType() {
         return mRootLayoutId;
-    }
-
-    /**
-     * 获取Header条目类型。
-     *
-     * @return 返回Header布局的资源ID。
-     */
-    @Override
-    public @LayoutRes int getHeaderViewType() {
-        return mHeaderLayoutId;
-    }
-
-    /**
-     * 获取Footer条目类型。
-     *
-     * @return 返回Footer布局的资源ID。
-     */
-    @Override
-    public @LayoutRes int getFooterViewType() {
-        return mFooterLayoutId;
-    }
-
-    /**
-     * 获取Header的数量。
-     *
-     * @return 如果有Header则返回1，否则返回0。
-     */
-    @Override
-    public int getHeaderCount() {
-        return haveHeader() ? 1 : 0;
-    }
-
-    /**
-     * 获取Footer的数量。
-     *
-     * @return 如果有Footer则返回1，否则返回0。
-     */
-    @Override
-    public int getFooterCount() {
-        return haveFooter() ? 1 : 0;
-    }
-
-    /**
-     * 获取头和脚的数量。
-     */
-    @Override
-    public int getHeaderAndFooterCount() {
-        return getHeaderCount() + getFooterCount();
-    }
-
-    /**
-     * 判断当前Position是否是头。
-     * @param position 要判断的position。
-     */
-    boolean isHeader(int position) {
-        return position == 0 && haveHeader();
-    }
-
-    /**
-     * 判断当前Position是否是脚。
-     * @param position 要判断的position。
-     */
-    boolean isFooter(int position) {
-        return position == getItemCount() - (mLoadMoreLayoutManager != null ? 1 : 2) && haveFooter();
     }
 
     @Override
@@ -213,30 +123,22 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
         if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
-        holder.onBindPartData(position, getObject(holder.getLayoutPosition() - getHeaderCount()), payloads);
+        holder.onBindPartData(position, getObject(holder.getLayoutPosition()), payloads);
     }
 
     @Override
     public int getItemType(int position) {
-        if (isHeader(position)) {
-            return getHeaderViewType();
-        } else if (isFooter(position)) {
-            return getFooterViewType();
-        } else {
-            return getRootViewType();
-        }
+        return getRootViewType();
     }
 
     @Override
     public int getItemCount() {
-        return super.getItemCount() + getHeaderAndFooterCount();
+        return super.getItemCount();
     }
 
     @Override
     protected int getItemSpan(int position) {
-        if ((mLoadMoreLayoutManager != null && position == getItemCount() - 1)
-                || isHeader(position)
-                || isFooter(position)) return getTotalSpanSize();
+        if ((mLoadMoreLayoutManager != null && position == getItemCount() - 1)) return getTotalSpanSize();
         return getItemSpanSize(position);
     }
 
@@ -301,7 +203,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     public void addItem(int position, @NonNull D object, boolean refresh) {
         getDataList().add(position, object);
         if (refresh) {
-            notifyItemInserted(position + getHeaderCount());
+            notifyItemInserted(position);
         }
     }
 
@@ -353,7 +255,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         boolean addAll = getDataList().addAll(positionStart, datum);
         if (addAll) {
             if (refresh) {
-                notifyItemRangeInserted(positionStart + getHeaderCount(), datum.size());
+                notifyItemRangeInserted(positionStart, datum.size());
             }
         }
     }
@@ -383,7 +285,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             D d = getDataList().remove(position);
             if (d != null) {
                 if (refresh) {
-                    notifyItemRemoved(position + getHeaderCount());
+                    notifyItemRemoved(position);
                 }
             }
             return d;
@@ -420,7 +322,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
                 boolean remove = dataList.remove(object);
                 if (remove) {
                     if (refresh) {
-                        notifyItemRemoved(position + getHeaderCount());
+                        notifyItemRemoved(position);
                     }
                 }
             }
@@ -461,7 +363,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             boolean removeAll = dataList.removeAll(temp);
             if (removeAll) {
                 if (refresh) {
-                    notifyItemRangeRemoved(positionStart + getHeaderCount(), itemCount);
+                    notifyItemRangeRemoved(positionStart, itemCount);
                 }
             }
         }
@@ -493,7 +395,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             boolean removeAll = dataList.removeAll(datum);
             if (removeAll) {
                 if (refresh) {
-                    notifyItemRangeRemoved(positionStart + getHeaderCount(), datum.size());
+                    notifyItemRangeRemoved(positionStart, datum.size());
                 }
             }
         }
@@ -518,7 +420,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
             List<D> dataList = getDataList();
             dataList.clear();
             if (refresh) {
-                notifyItemRangeRemoved(getHeaderCount(), dataList.size());
+                notifyItemRangeRemoved(0, dataList.size());
             }
         }
     }

@@ -6,11 +6,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
@@ -142,13 +142,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             adapter.registerObserver(mAdapterDataObserver);
             mPool.release(adapter);
             adapter.firstItemPosition = getDataList().size();
-            if (adapter.haveHeader()) {
-                addData(HEADER_DATA_FLAG);
-            }
             addDataList(adapter.getDataList());
-            if (adapter.haveFooter()) {
-                addData(FOOTER_DATA_FLAG);
-            }
             adapter.lastItemPosition = getDataList().size() - 1;
             adapter.setParent(this);
         }
@@ -188,10 +182,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 if (!mItemViewHolderMap.containsKey(itemModelClass)) {
                     mItemViewHolderMap.put(itemModelClass, holder);
                 }
-            } else if (adapter.haveHeader() && adapter.getHeaderViewType() == viewType) {
-                holder = adapter.onCreateHeaderViewHolder(parent, viewType);
-            } else if (adapter.haveFooter() && adapter.getFooterViewType() == viewType) {
-                holder = adapter.onCreateFooterViewHolder(parent, viewType);
             }
             if (holder != null) {
                 return holder;
@@ -202,8 +192,9 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     public void onViewRecycled(ItemViewHolder<Object> holder) {
-        if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder)
+        if (holder instanceof LoadMoreViewHolder) {
             return;
+        }
         int position = holder.getLayoutPosition();
         ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onViewRecycled(holder, position - itemAdapter.firstItemPosition);
@@ -216,17 +207,19 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         if (adapter.isFloatAble() && dy != 0) {
             View view = lm.findViewByPosition(adapter.firstItemPosition);
             if (view != null) {
-                if (isFirstFloatAbleChildAdapter(mCurPosition) && isFloatLayoutShowing()) {
+                if (isFirstFloatAbleChildAdapter(mCurPosition + 1) && isFloatLayoutShowing()) {
                     setFloatLayoutVisibility(false);
-                } else if (view.getTop() <= (isFloatLayoutShowing() ? mFloatLayoutHeight : 0)) {
-                    if (view.getTop() <= 0) {
-                        mFloatLayout.setY(0);
-                    } else {
-                        mFloatLayout.setY(-(mFloatLayoutHeight - view.getTop()));
-                    }
-                    setFloatLayoutVisibility(true);
                 } else {
-                    mFloatLayout.setY(0);
+                    if (view.getTop() <= (isFloatLayoutShowing() ? mFloatLayoutHeight : 0)) {
+                        if (view.getTop() <= 0) {
+                            mFloatLayout.setY(0);
+                        } else {
+                            mFloatLayout.setY(-(mFloatLayoutHeight - view.getTop()));
+                        }
+                        setFloatLayoutVisibility(true);
+                    } else {
+                        mFloatLayout.setY(0);
+                    }
                 }
             }
         }
@@ -234,6 +227,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
         if (mCurPosition != lm.findFirstVisibleItemPosition()) {
             mCurPosition = lm.findFirstVisibleItemPosition();
+            Log.i("-------", "onRecyclerViewScrolled: mCurPosition=" + mCurPosition);
             ItemAdapter itemAdapter;
             if (dy < 0) {
                 itemAdapter = getAdjacentChildAdapterByPosition(mCurPosition + 1, false, true);
@@ -258,7 +252,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
-        if (holder instanceof HeaderFooterViewHolder || holder instanceof LoadMoreViewHolder) {
+        if (holder instanceof LoadMoreViewHolder) {
             return;
         }
         ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
@@ -267,14 +261,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     public int getItemType(int position) {
-        ItemAdapter adapter = mPool.acquireFromLayoutPosition(position);
-        if (adapter.haveHeader() && position == adapter.firstItemPosition) {
-            return adapter.getHeaderViewType();
-        } else if (adapter.haveFooter() && position == adapter.lastItemPosition) {
-            return adapter.getFooterViewType();
-        } else {
-            return adapter.getRootViewType();
-        }
+        return mPool.acquireFromLayoutPosition(position).getRootViewType();
     }
 
     @Override
@@ -353,8 +340,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     /**
      * 根据position获取相邻的子条目的Adapter。具体是获取前一个还是后一个由next参数决定。是否只获取可悬浮的由floatAble参数决定。
      *
-     * @param position 当前的position索引。
-     * @param next     是否是获取后一个，true表示获取后一个，false表示获取前一个。
+     * @param position  当前的position索引。
+     * @param next      是否是获取后一个，true表示获取后一个，false表示获取前一个。
      * @param floatAble 是否获取可悬浮的。
      */
     @CheckResult
@@ -400,6 +387,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     /**
      * 根据布局位置判断是否是第一个可悬浮的子Adapter。
+     *
      * @param position 要判断的位置。
      */
     private boolean isFirstFloatAbleChildAdapter(int position) {
@@ -411,15 +399,15 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
         @Override
         protected void add(int position, Object o, ItemAdapter adapter) {
-            getDataList().add(position + adapter.firstItemPosition + adapter.getHeaderCount(), o);
-            getOldDataList().add(position + adapter.firstItemPosition + adapter.getHeaderCount(), o);
+            getDataList().add(position + adapter.firstItemPosition, o);
+            getOldDataList().add(position + adapter.firstItemPosition, o);
             updateFirstAndLastPosition(adapter, 1, true);
         }
 
         @Override
         protected void addAll(int firstPosition, Collection dataList, ItemAdapter adapter) {
-            boolean addAll = getDataList().addAll(firstPosition + adapter.firstItemPosition + adapter.getHeaderCount(), dataList);
-            boolean oldAddAll = getOldDataList().addAll(firstPosition + adapter.firstItemPosition + adapter.getHeaderCount(), dataList);
+            boolean addAll = getDataList().addAll(firstPosition + adapter.firstItemPosition, dataList);
+            boolean oldAddAll = getOldDataList().addAll(firstPosition + adapter.firstItemPosition, dataList);
             if (addAll && oldAddAll) {
                 updateFirstAndLastPosition(adapter, dataList.size(), true);
             }
@@ -456,19 +444,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 int index = mPool.indexOf(current);
                 current.lastItemPosition -= updateSize;
                 if (current.isEmptyList()) {
-                    //先删除Footer否则会角标错位。
-                    if (current.haveFooter()) {
-                        Object remove = getDataList().remove(current.lastItemPosition);
-                        if (remove != null) {
-                            updateSize += 1;
-                        }
-                    }
-                    if (current.haveHeader()) {
-                        Object remove = getDataList().remove(current.firstItemPosition);
-                        if (remove != null) {
-                            updateSize += 1;
-                        }
-                    }
                     current.unregisterAll();
                     mPool.remove(current);
                 } else {
@@ -502,20 +477,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         @Override
         public ItemAdapter acquire(int position) {
             return adapters.get(position);
-        }
-
-        /**
-         * 根据类型获取对象。
-         *
-         * @param type 要获取的对象的类型。
-         */
-        public ItemAdapter acquireFromType(int type) {
-            for (ItemAdapter adapter : adapters) {
-                if (adapter.getRootViewType() == type || adapter.getHeaderViewType() == type || adapter.getFooterViewType() == type) {
-                    return adapter;
-                }
-            }
-            return null;
         }
 
         /**

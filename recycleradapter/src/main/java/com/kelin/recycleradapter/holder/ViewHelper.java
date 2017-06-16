@@ -12,6 +12,7 @@ import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.util.SparseArray;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.kelin.recycleradapter.interfaces.ViewOperation;
@@ -160,5 +161,16 @@ public class ViewHelper implements ViewOperation {
                 ((TextView)getView(viewId)).setTextColor(color);
             }
         }
+    }
+
+    /**
+     * 给imageView设置图片。
+     *
+     * @param viewId 要设置的 {@link ImageView} 的ID。
+     * @param img    图片资源。
+     */
+    @Override
+    public void setImageResource(@IdRes int viewId, @DrawableRes int img) {
+        ((ImageView)getView(viewId)).setImageResource(img);
     }
 }

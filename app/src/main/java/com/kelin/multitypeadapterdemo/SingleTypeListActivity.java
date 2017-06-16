@@ -6,11 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
 import com.kelin.multitypeadapterdemo.holder.MyHolder;
-import com.kelin.recycleradapter.MultiTypeAdapter;
 import com.kelin.recycleradapter.SingleTypeAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,32 +39,12 @@ public class SingleTypeListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setTitle("单条目列表");
         setContentView(R.layout.activity_single_type_list);
-
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        //        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
-        mPage = 0;
-        List<String> list = loadData(6);
+        List<String> list = loadData(100);
         mAdapter = new SingleTypeAdapter<>(recyclerView, list, MyHolder.class);
-
-        final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                List<String> data = loadData(30);
-                mAdapter.addAll(data);
-                mAdapter.setLoadMoreFinished();
-                if (mPage == 3) {
-                    mAdapter.setNoMoreData();
-                }
-            }
-        };
-
-        mAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_load_more_failed, R.layout.layout_no_more_data, 1, new MultiTypeAdapter.LoadMoreCallback() {
-            @Override
-            public void onLoadMore() {
-                recyclerView.postDelayed(runnable, 500);
-            }
-        });
         mAdapter.setItemEventListener(new SingleTypeAdapter.OnItemEventListener<String, SingleTypeAdapter<String, MyHolder>>() {
             @Override
             public void onItemClick(int position, String s) {
@@ -77,6 +59,14 @@ public class SingleTypeListActivity extends AppCompatActivity {
             }
         });
         recyclerView.setAdapter(mAdapter);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @NonNull

@@ -159,49 +159,10 @@ public interface AdapterEdit<D, VH extends ItemViewHolder<D>> {
     void clear(boolean refresh);
 
     /**
-     * 是否拥有Header。
-     */
-    boolean haveHeader();
-
-    /**
-     * 是否拥有Footer。
-     */
-    boolean haveFooter();
-
-    /**
      * 获取条目类型。
      * @return 返回跟布局的资源ID。
      */
     @LayoutRes int getRootViewType();
-
-    /**
-     * 获取Header条目类型。
-     * @return 返回Header布局的资源ID。
-     */
-    @LayoutRes int getHeaderViewType();
-
-    /**
-     * 获取Footer条目类型。
-     * @return 返回Footer布局的资源ID。
-     */
-    @LayoutRes int getFooterViewType();
-
-    /**
-     * 获取Header的数量。
-     * @return 如果有Header则返回1，否则返回0。
-     */
-    int getHeaderCount();
-
-    /**
-     * 获取Footer的数量。
-     * @return 如果有Footer则返回1，否则返回0。
-     */
-    int getFooterCount();
-
-    /**
-     * 获取头和脚的数量。
-     */
-    int getHeaderAndFooterCount();
 
     /**
      * 当需要创建ViewHolder的时候调用。

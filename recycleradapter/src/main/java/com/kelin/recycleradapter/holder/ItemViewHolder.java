@@ -17,6 +17,7 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.kelin.recycleradapter.callback.NotifyCallback;
@@ -37,21 +38,12 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
 
     protected ItemViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(LayoutInflater.from(parent.getContext()).inflate(itemRootViewId, parent, false));
-
         mViews = new SparseArray<>();
-        initHolder(itemView);
     }
 
     public @IdRes int[] onGetNeedListenerChildViewIds(){
         return null;
     }
-
-    /**
-     * 初始化ViewHolder。
-     *
-     * @param itemView 当前Holder的布局View。
-     */
-    protected abstract void initHolder(View itemView);
 
     /**
      * 绑定数据的时候调用。
@@ -227,6 +219,17 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
                 ((TextView)getView(viewId)).setTextColor(color);
             }
         }
+    }
+
+    /**
+     * 给imageView设置图片。
+     *
+     * @param viewId 要设置的 {@link ImageView} 的ID。
+     * @param img    图片资源。
+     */
+    @Override
+    public void setImageResource(@IdRes int viewId, @DrawableRes int img) {
+        ((ImageView)getView(viewId)).setImageResource(img);
     }
 
     /**

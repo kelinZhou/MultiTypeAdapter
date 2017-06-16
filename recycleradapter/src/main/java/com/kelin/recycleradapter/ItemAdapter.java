@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.kelin.recycleradapter.holder.HeaderFooterViewHolder;
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
@@ -113,8 +112,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
         if (annotation != null) {
             mRootLayoutId = annotation.rootLayoutId();
-            mHeaderLayoutId = annotation.headerLayoutId();
-            mFooterLayoutId = annotation.footerLayoutId();
         } else {
             throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
         }
@@ -435,22 +432,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     /**
-     * 是否拥有Header。
-     */
-    @Override
-    public boolean haveHeader() {
-        return mHeaderLayoutId != ItemLayout.NOT_HEADER_FOOTER;
-    }
-
-    /**
-     * 是否拥有Footer。
-     */
-    @Override
-    public boolean haveFooter() {
-        return mFooterLayoutId != ItemLayout.NOT_HEADER_FOOTER;
-    }
-
-    /**
      * 获取条目类型。
      *
      * @return 返回跟布局的资源ID。
@@ -460,58 +441,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     @LayoutRes
     int getRootViewType() {
         return mRootLayoutId;
-    }
-
-    /**
-     * 获取Header条目类型。
-     *
-     * @return 返回Header布局的资源ID。
-     */
-    @Override
-    public
-    @LayoutRes
-    int getHeaderViewType() {
-        return mHeaderLayoutId;
-    }
-
-    /**
-     * 获取Footer条目类型。
-     *
-     * @return 返回Footer布局的资源ID。
-     */
-    @Override
-    public
-    @LayoutRes
-    int getFooterViewType() {
-        return mFooterLayoutId;
-    }
-
-    /**
-     * 获取Header的数量。
-     *
-     * @return 如果有Header则返回1，否则返回0。
-     */
-    @Override
-    public int getHeaderCount() {
-        return haveHeader() ? 1 : 0;
-    }
-
-    /**
-     * 获取Footer的数量。
-     *
-     * @return 如果有Footer则返回1，否则返回0。
-     */
-    @Override
-    public int getFooterCount() {
-        return haveFooter() ? 1 : 0;
-    }
-
-    /**
-     * 获取头和脚的数量。
-     */
-    @Override
-    public int getHeaderAndFooterCount() {
-        return getHeaderCount() + getFooterCount();
     }
 
     /**
@@ -574,7 +503,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      */
     @Override
     public int getItemCount() {
-        return getDataList().size() + getHeaderAndFooterCount();
+        return getDataList().size();
     }
 
     /**
@@ -610,6 +539,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         return (D) mParentAdapter.getObject(parentPosition);
     }
 
+    @SuppressWarnings("unchecked")
     private View.OnClickListener onGetClickListener(final ItemViewHolder<D> viewHolder) {
         return new View.OnClickListener() {
             @Override
@@ -618,15 +548,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
                 mItemEventListener.adapter = mParentAdapter.getChildAdapterByPosition(viewHolder.getLayoutPosition());
                 int position = viewHolder.getLayoutPosition();
                 int adapterPosition = getAdapterPosition(viewHolder);
-                if (viewHolder instanceof HeaderFooterViewHolder) {
-                    HeaderFooterViewHolder holder = (HeaderFooterViewHolder) viewHolder;
-                    if (holder.isHeader()) {
-                        mItemEventListener.onItemHeaderClick(position);
-                    } else if (holder.isFooter()) {
-                        mItemEventListener.onItemFooterClick(position, adapterPosition);
-                    }
-                    return;
-                }
 
                 D object = getItemObject(viewHolder);
                 if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
@@ -651,54 +572,19 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     private int getAdapterPosition(ItemViewHolder<D> holder) {
-        return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition()) - getHeaderCount();
+        return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition());
     }
 
     void setParent(MultiTypeAdapter parent) {
         mParentAdapter = parent;
         //被添加的MultiTypeAdapter中以后检查悬浮条件的规则。
-        if (isFloatAble() && (mItemSpanSize < mParentAdapter.getTotalSpanSize() || getHeaderAndFooterCount() > 0 || getItemCount() > 1)) {
+        if (isFloatAble() && (mItemSpanSize < mParentAdapter.getTotalSpanSize() || getItemCount() > 1)) {
             throw new RuntimeException("The current child adapter number must be can only be one, and not have header or footer in the child adapter, also must is be full screen width.");
         }
     }
 
     Class<?> getItemModelClass() {
         return isEmptyList() ? null : getObject(0).getClass();
-    }
-
-    ItemViewHolder onCreateHeaderViewHolder(ViewGroup parent, int viewType) {
-        return createHolderForType(parent, viewType, HEADER_HOLDER);
-    }
-
-    ItemViewHolder onCreateFooterViewHolder(ViewGroup parent, int viewType) {
-        return createHolderForType(parent, viewType, FOOTER_HOLDER);
-    }
-
-    private ItemViewHolder createHolderForType(ViewGroup parent, int viewType, int type) {
-        ItemViewHolder<D> viewHolder;
-        HeaderFooterViewHolder holder;
-        try {
-            Constructor<? extends ItemViewHolder> constructor = HeaderFooterViewHolder.class.getDeclaredConstructor(ViewGroup.class, int.class);
-            constructor.setAccessible(true);
-            viewHolder = constructor.newInstance(parent, viewType);
-            holder = (HeaderFooterViewHolder) viewHolder;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        switch (type) {
-            case HEADER_HOLDER:
-                holder.setHeaderType();
-                break;
-            case FOOTER_HOLDER:
-                holder.setFooterType();
-        }
-        if (viewHolder != null) {
-            bindItemClickEvent(viewHolder);
-            return viewHolder;
-
-        } else {
-            throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
-        }
     }
 
     private void bindItemClickEvent(ItemViewHolder<D> viewHolder) {
@@ -726,24 +612,20 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     private void mapNotifyItemInserted(int position) {
         if (mParentAdapter != null)
-            mParentAdapter.notifyItemInserted(position + firstItemPosition + getHeaderCount());
+            mParentAdapter.notifyItemInserted(position + firstItemPosition);
     }
 
     private void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
         if (mParentAdapter != null)
-            mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition + getHeaderCount(), itemCount);
+            mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition, itemCount);
     }
 
     private void mapNotifyItemRemoved(int position) {
         if (mParentAdapter != null) {
             if (!isEmptyList()) {
-                mParentAdapter.notifyItemRemoved(position + firstItemPosition + getHeaderCount());
+                mParentAdapter.notifyItemRemoved(position + firstItemPosition);
             } else {
-                if (haveHeader() || haveFooter()) {
-                    mParentAdapter.notifyItemRangeRemoved(firstItemPosition, getHeaderAndFooterCount() + 1);
-                } else {
-                    mParentAdapter.notifyItemRemoved(position + firstItemPosition);
-                }
+                mParentAdapter.notifyItemRemoved(position + firstItemPosition);
             }
         }
     }
@@ -751,14 +633,9 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
         if (isEmptyList()) {
             positionStart = firstItemPosition;
-            if (haveHeader()) {
-                itemCount++;
-            }
-            if (haveFooter()) {
-                itemCount++;
-            }
+
         } else {
-            positionStart += firstItemPosition + getHeaderCount();
+            positionStart += firstItemPosition;
         }
         if (mParentAdapter != null) mParentAdapter.notifyItemRangeRemoved(positionStart, itemCount);
     }
@@ -938,26 +815,5 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
          *                        这时该参数的值将会与 position 参数的值不同，该参数的值将表示当前点击的条目在当前子 Adapter 中的位置。
          */
         public abstract void onItemChildClick(int position, D d, View view, int adapterPosition);
-
-        /**
-         * 当头ViewHolder被点击的时候调用。
-         * <P>如果当前Item事件监听是设置给 {@link SingleTypeAdapter} 的，
-         * 那么重写该方法是没有意义的，因为永远不会被调用。
-         *
-         * @param position 当前被点击的条目在 {@link RecyclerView} 中的索引。
-         */
-        public void onItemHeaderClick(int position) {
-        }
-
-        /**
-         * 当脚ViewHolder被点击的时候调用。
-         * <P>如果当前Item事件监听是设置给 {@link SingleTypeAdapter} 的，
-         * 那么重写该方法是没有意义的，因为永远不会被调用。
-         *
-         * @param position        当前被点击的条目在 {@link RecyclerView} 中的索引。
-         * @param adapterPosition 当前点击的条目在当前子 Adapter 中的位置。
-         */
-        public void onItemFooterClick(int position, int adapterPosition) {
-        }
     }
 }

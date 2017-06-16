@@ -21,6 +21,10 @@
 
         <activity android:name=".MultiTypeListActivity"/>
 
+        <activity android:name=".LoadMoreListActivity"/>
+
+        <activity android:name=".FloatListActivity"/>
+
     </application>
 
 </manifest>

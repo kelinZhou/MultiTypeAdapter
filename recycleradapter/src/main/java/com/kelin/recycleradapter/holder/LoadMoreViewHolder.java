@@ -1,7 +1,6 @@
 package com.kelin.recycleradapter.holder;
 
 import android.support.annotation.LayoutRes;
-import android.view.View;
 import android.view.ViewGroup;
 
 /**
@@ -15,9 +14,6 @@ public class LoadMoreViewHolder extends ItemViewHolder<Object> {
     public LoadMoreViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
     }
-
-    @Override
-    protected void initHolder(View itemView) {}
 
     @Override
     public void onBindData(int position, Object o) {}

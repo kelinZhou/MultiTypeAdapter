@@ -80,15 +80,11 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
             public void onClick(View v) {
                 if (mItemEventListener == null) return;
                 int position = viewHolder.getLayoutPosition();
-                D object = getObject(viewHolder.getLayoutPosition() - getHeaderCount());
-                if (isHeader(position)) {
-                    mItemEventListener.onItemHeaderClick();
-                } else if (isFooter(position)) {
-                    mItemEventListener.onItemFooterClick();
-                }else if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
-                    mItemEventListener.onItemClick(position - getHeaderCount(), object);
+                D object = getObject(viewHolder.getLayoutPosition());
+                if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
+                    mItemEventListener.onItemClick(position, object);
                 } else {
-                    mItemEventListener.onItemChildClick(position - getHeaderCount(), object, v);
+                    mItemEventListener.onItemChildClick(position, object, v);
                 }
             }
         };
@@ -100,7 +96,7 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
             @Override
             public boolean onLongClick(View v) {
                 if (mItemEventListener != null) {
-                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getObject(viewHolder.getLayoutPosition() - getHeaderCount()));
+                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getObject(viewHolder.getLayoutPosition()));
                 }
                 return true;
             }
@@ -141,16 +137,6 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
          * @param d        被点击的条目的条目信息对象。
          * @param view 被点击的{@link View}。
          */
-        public abstract void onItemChildClick(int position, D d, View view);
-
-        /**
-         * 当头ViewHolder被点击的时候调用。
-         */
-        public void onItemHeaderClick() {}
-
-        /**
-         * 当脚ViewHolder被点击的时候调用。
-         */
-        public void onItemFooterClick() {}
+        public void onItemChildClick(int position, D d, View view){}
     }
 }

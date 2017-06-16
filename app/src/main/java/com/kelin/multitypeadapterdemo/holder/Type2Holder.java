@@ -1,9 +1,7 @@
 package com.kelin.multitypeadapterdemo.holder;
 
 import android.support.annotation.LayoutRes;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.recycleradapter.holder.ItemLayout;
@@ -19,8 +17,6 @@ import com.kelin.recycleradapter.holder.ViewHelper;
 @ItemLayout(rootLayoutId = R.layout.item_type2)
 public class Type2Holder extends ItemViewHolder<String> {
 
-    private TextView mTvTitle;
-
     protected Type2Holder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
     }
@@ -31,13 +27,8 @@ public class Type2Holder extends ItemViewHolder<String> {
     }
 
     @Override
-    protected void initHolder(View itemView) {
-        mTvTitle = getView(R.id.tvTitle);
-    }
-
-    @Override
     public void onBindData(int position, String s) {
-        mTvTitle.setText(s);
+        setText(R.id.tvTitle, s);
     }
 
     @Override

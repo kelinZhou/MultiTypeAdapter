@@ -12,7 +12,7 @@ import android.os.Bundle;
 public interface NotifyCallback<D> {
 
     /**
-     * 判断两个数据模型是否为同一个数据模型。如果指定模型有唯一标识应当以唯一标识去判断。
+     * 判断两个数据模型是否相像。如果指定模型有唯一标识应当以唯一标识去判断。
      * @param oldItemData 旧的数据模型。
      * @param newItemDate 新的数据模型。
      * @return 如果相同则应当返回 <code color="blue">true</code>,否则应当返回 <code color="blue">false</code>。
@@ -20,11 +20,14 @@ public interface NotifyCallback<D> {
     boolean areItemsTheSame(D oldItemData, D newItemDate);
 
     /**
-     * 用来检查 两个item是否含有相同的数据,用返回的信息（true false）来检测当前item的内容是否发生了变化,用这个方法替代equals方法去检查是否相等。
-     * 所以你可以根据你的UI去改变它的返回值。这个方法只有当 {@link #areItemsTheSame(D, D)} 返回 <code color="blue">true</code> 的时候才会被调用。
+     * 判断两个模型的内容是否相同。
+     * <p>当 {@link #areItemsTheSame(Object, Object)} 方法返回 <code>true</code> 时，此方法才会被调用，这是因为如果两个对象
+     * 的基本特征都是不同的或，就没有进行进一步比较的必要了。
+     * <p>你不必将模型中的所有字段进行比较，只需要将需要展示到UI上的字段进行比较就可以了，你也可以将这个比较放到
+     * {@link #equals(Object)} 方法中去做。
      * @param oldItemData 旧的数据模型。
      * @param newItemDate 新的数据模型。
-     * @return 如果数据发生了变化则返回 <code color="blue">true</code>, 否则应当返回 <code color="blue">false</code>。
+     * @return 如果相同则返回 <code color="blue">true</code>, 否则应当返回 <code color="blue">false</code>。
      *
      * @see #areItemsTheSame(D, D);
      */

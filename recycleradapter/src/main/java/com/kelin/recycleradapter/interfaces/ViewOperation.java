@@ -113,14 +113,21 @@ public interface ViewOperation {
     /**
      * 设置字体颜色。
      * @param color {@link ColorStateList} 对象。
-     * @param viewIds 要设置的 {@link View} 的ID。
+     * @param viewIds 要设置的 {@link TextView} 的ID。
      */
     void setTextColor(@NonNull ColorStateList color, @IdRes int... viewIds);
 
     /**
      * 设置字体颜色。
      * @param color 要设置的颜色的int值。
-     * @param viewIds 要设置的 {@link View} 的ID。
+     * @param viewIds 要设置的 {@link TextView} 的ID。
      */
     void setTextColor(@ColorInt int color, @IdRes int... viewIds);
+
+    /**
+     * 给imageView设置图片。
+     * @param viewId 要设置的 {@link android.widget.ImageView} 的ID。
+     * @param img 图片资源。
+     */
+    void setImageResource(@IdRes int viewId, @DrawableRes int img);
 }

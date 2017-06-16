@@ -16,24 +16,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface ItemLayout {
-
-    /**
-     * 表示没有指定Header或则Footer布局。
-     */
-    int NOT_HEADER_FOOTER = 0X0000_0000;
-
     /**
      * 条目的布局文件。
      */
     @LayoutRes int rootLayoutId();
-
-    /**
-     * 头布局文件，如果没有指定则表示没有页眉。
-     */
-    @LayoutRes int headerLayoutId() default NOT_HEADER_FOOTER;
-
-    /**
-     * 脚布局文件，如果没有指定则表示没有页脚。
-     */
-    @LayoutRes int footerLayoutId() default NOT_HEADER_FOOTER;
 }

@@ -1,34 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<android.support.v7.widget.RecyclerView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/activity_main"
+    android:id="@+id/recyclerView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="20dp"
-    android:orientation="vertical">
-
-    <Button
-        android:id="@+id/singleType"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="单条目列表"/>
-
-    <Button
-        android:id="@+id/multiType"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="多条目列表（文本）"/>
-
-    <Button
-        android:id="@+id/single_ype_model"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="多条目列表（对象）"/>
-
-    <Button
-        android:id="@+id/multi_type_model"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="多条目列表（仿淘宝）"/>
-
-</LinearLayout>
+    android:layout_height="match_parent"/>

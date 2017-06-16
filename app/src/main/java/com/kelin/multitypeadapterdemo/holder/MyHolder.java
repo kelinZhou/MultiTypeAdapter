@@ -1,9 +1,7 @@
 package com.kelin.multitypeadapterdemo.holder;
 
 import android.support.annotation.LayoutRes;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.recycleradapter.holder.ItemLayout;
@@ -15,10 +13,8 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
  * 创建时间 2016/12/2  下午5:42
  * 版本 v 1.0.0
  */
-@ItemLayout(rootLayoutId = R.layout.item_my, headerLayoutId = R.layout.item_type1_header)
+@ItemLayout(rootLayoutId = R.layout.item_my)
 public class MyHolder extends ItemViewHolder<String> {
-
-    private TextView mTvTitle;
 
     protected MyHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
@@ -30,15 +26,8 @@ public class MyHolder extends ItemViewHolder<String> {
     }
 
     @Override
-    protected void initHolder(View itemView) {
-        mTvTitle = getView(R.id.tvTitle);
-    }
-
-    @Override
     public void onBindData(int position, String s) {
-        if (mTvTitle != null) {
-            mTvTitle.setText(s);
-        }
+        setText(R.id.tvTitle, s);
     }
 
     @Override
