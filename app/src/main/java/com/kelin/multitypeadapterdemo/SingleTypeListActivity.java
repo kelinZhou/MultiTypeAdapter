@@ -3,18 +3,18 @@ package com.kelin.multitypeadapterdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
+import com.kelin.multitypeadapterdemo.data.DataHelper;
+import com.kelin.multitypeadapterdemo.data.Person;
 import com.kelin.multitypeadapterdemo.holder.MyHolder;
 import com.kelin.recycleradapter.SingleTypeAdapter;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import rx.functions.Action1;
 
 /**
  * 描述 单条目列表页面
@@ -24,8 +24,7 @@ import java.util.List;
  */
 public class SingleTypeListActivity extends AppCompatActivity {
 
-    private int mPage;
-    private SingleTypeAdapter<String, MyHolder> mAdapter;
+    private SingleTypeAdapter<Person, MyHolder> mAdapter;
 
     /**
      * 启动自身，可通过其他Activity调用此方法来启动SingleTypeListActivity。
@@ -42,23 +41,22 @@ public class SingleTypeListActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("单条目列表");
         setContentView(R.layout.activity_single_type_list);
-        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        List<String> list = loadData(100);
-        mAdapter = new SingleTypeAdapter<>(recyclerView, list, MyHolder.class);
-        mAdapter.setItemEventListener(new SingleTypeAdapter.OnItemEventListener<String, SingleTypeAdapter<String, MyHolder>>() {
-            @Override
-            public void onItemClick(int position, String s) {
-                Toast.makeText(getApplicationContext(), "点击了条目：" + s, Toast.LENGTH_SHORT).show();
-                getAdapter().addItem(position + 1, "新增条目" + position);
-            }
 
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        mAdapter = new SingleTypeAdapter<>(recyclerView, MyHolder.class);
+        recyclerView.setAdapter(mAdapter);
+        loadData();
+    }
+
+    private void loadData() {
+        DataHelper.getInstance().getPersons().subscribe(new Action1<List<Person>>() {
             @Override
-            public void onItemChildClick(int position, String s, View view) {
-                getAdapter().removeItem(s);
-                Toast.makeText(getApplicationContext(), "删除了条目：" + s, Toast.LENGTH_SHORT).show();
+            public void call(List<Person> persons) {
+                mAdapter.setDataList(persons);
+                mAdapter.notifyRefresh();
             }
         });
-        recyclerView.setAdapter(mAdapter);
     }
 
     @Override
@@ -67,15 +65,5 @@ public class SingleTypeListActivity extends AppCompatActivity {
             finish();
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @NonNull
-    private List<String> loadData(int size) {
-        List<String> list = new ArrayList<>();
-        for (int i = mPage * size; i < (mPage + 1) * size; i++) {
-            list.add("测试条目" + i);
-        }
-        mPage++;
-        return list;
     }
 }
