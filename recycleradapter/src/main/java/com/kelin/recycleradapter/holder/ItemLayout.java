@@ -19,5 +19,5 @@ public @interface ItemLayout {
     /**
      * 条目的布局文件。
      */
-    @LayoutRes int rootLayoutId();
+    @LayoutRes int value();
 }

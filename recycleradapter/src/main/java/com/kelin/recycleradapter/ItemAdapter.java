@@ -111,7 +111,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         mHolderClass = holderClass;
         ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
         if (annotation != null) {
-            mRootLayoutId = annotation.rootLayoutId();
+            mRootLayoutId = annotation.value();
         } else {
             throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
         }

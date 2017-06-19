@@ -5,6 +5,6 @@
               android:orientation="vertical">
 
     <include
-        layout="@layout/item_my"/>
+        layout="@layout/item_person_layout"/>
 
 </FrameLayout>

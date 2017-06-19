@@ -16,10 +16,10 @@ import java.util.Locale;
  * 创建时间 2016/12/2  下午5:42
  * 版本 v 1.0.0
  */
-@ItemLayout(rootLayoutId = R.layout.item_my)
-public class MyHolder extends ItemViewHolder<Person> {
+@ItemLayout(R.layout.item_person_layout)
+public class ManHolder extends ItemViewHolder<Person> {
 
-    protected MyHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
+    protected ManHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
         super(parent, itemRootViewId);
     }
 
@@ -29,13 +29,13 @@ public class MyHolder extends ItemViewHolder<Person> {
     }
 
     @Override
-    public void onBindData(int position, Person s) {
-        setImageResource(R.id.iv_avatar, s.getAvatar());
-        setText(R.id.tv_name, String.format("姓名：%s", s.getName()));
-        setText(R.id.tv_age, String.format(Locale.CHINA, "年龄：%d 岁", s.getAge()));
-        setText(R.id.tv_height, String.format(Locale.CHINA, "身高：%d CM", s.getHeight()));
-        setText(R.id.tv_weight, String.format(Locale.CHINA, "体重：%d Kg", s.getWeight()));
-        setText(R.id.tv_country, String.format("国家：%s", s.getCountry()));
+    public void onBindData(int position, Person person) {
+        setImageResource(R.id.iv_avatar, person.getAvatar());
+        setText(R.id.tv_name, String.format("姓名：%s", person.getName()));
+        setText(R.id.tv_age, String.format(Locale.CHINA, "年龄：%d 岁", person.getAge()));
+        setText(R.id.tv_height, String.format(Locale.CHINA, "身高：%d CM", person.getHeight()));
+        setText(R.id.tv_weight, String.format(Locale.CHINA, "体重：%d Kg", person.getWeight()));
+        setText(R.id.tv_country, String.format("国家：%s", person.getCountry()));
     }
 
     @Override

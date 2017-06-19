@@ -14,7 +14,7 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
  * 创建时间 2017/6/16  下午1:54
  * 版本 v 1.0.0
  */
-@ItemLayout(rootLayoutId = R.layout.item_main_item_layout)
+@ItemLayout(R.layout.item_main_item_layout)
 public class MainItemHolder extends ItemViewHolder<MainItemEntry> {
 
     protected MainItemHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {

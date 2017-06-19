@@ -14,7 +14,7 @@ import com.kelin.recycleradapter.holder.ViewHelper;
  * 版本 v 1.0.0
  */
 
-@ItemLayout(rootLayoutId = R.layout.item_type2)
+@ItemLayout(R.layout.item_type2)
 public class Type2Holder extends ItemViewHolder<String> {
 
     protected Type2Holder(ViewGroup parent, @LayoutRes int itemRootViewId) {

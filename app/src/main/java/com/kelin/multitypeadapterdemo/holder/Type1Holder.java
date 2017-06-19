@@ -13,7 +13,7 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
  * 版本 v 1.0.0
  */
 
-@ItemLayout(rootLayoutId = R.layout.item_type1)
+@ItemLayout(R.layout.item_type1)
 public class Type1Holder extends ItemViewHolder<String> {
 
     protected Type1Holder(ViewGroup parent, @LayoutRes int itemRootViewId) {

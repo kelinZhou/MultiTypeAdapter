@@ -5,15 +5,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
-import com.kelin.multitypeadapterdemo.holder.Type1Holder;
-import com.kelin.multitypeadapterdemo.holder.Type2Holder;
+import com.kelin.multitypeadapterdemo.data.DataHelper;
+import com.kelin.multitypeadapterdemo.data.People;
+import com.kelin.multitypeadapterdemo.data.Person;
+import com.kelin.multitypeadapterdemo.holder.CommonImageHolder;
+import com.kelin.multitypeadapterdemo.holder.ManHolder;
+import com.kelin.multitypeadapterdemo.holder.ManHolder2;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
+
+import rx.functions.Action1;
 
 /**
  * 描述 多条目列表的页面。
@@ -40,48 +43,32 @@ public class MultiTypeListActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("多条目列表");
         setContentView(R.layout.activity_multi_type_list);
-        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mMultiTypeAdapter = new MultiTypeAdapter(recyclerView, 1);
+
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        mMultiTypeAdapter = new MultiTypeAdapter(recyclerView, 2);
         recyclerView.setAdapter(mMultiTypeAdapter);
         loadData();
     }
 
     private void loadData() {
-        for (int i = 0; i < 100; i++) {
-            ItemAdapter<String> adapter;
-            if (i % 2 == 0) {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(Type1Holder.class);
-                itemAdapter.addItem("A类型条目" + i + "-0");
-                itemAdapter.addItem("A类型条目" + i + "-1");
-                itemAdapter.addItem("A类型条目" + i + "-2");
-                itemAdapter.addItem("A类型条目" + i + "-3");
-                itemAdapter.addItem("A类型条目" + i + "-4");
-                adapter = itemAdapter;
-            } else {
-                ItemAdapter<String> itemAdapter = new ItemAdapter<>(Type2Holder.class);
-                itemAdapter.addItem("B类型条目" + i);
-                adapter = itemAdapter;
+        DataHelper.getInstance().getManAndWoman().subscribe(new Action1<People>() {
+            @Override
+            public void call(People people) {
+                ItemAdapter<Integer> titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class);
+                titleAdapter.addItem(0, people.getWomanListImage());
+                mMultiTypeAdapter.addAdapter(titleAdapter);
+                ItemAdapter<Person> adapter = new ItemAdapter<Person>(people.getWomanList(), 1, ManHolder2.class);
+                mMultiTypeAdapter.addAdapter(adapter);
+
+                titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class);
+                titleAdapter.addItem(0, people.getManListImage());
+                mMultiTypeAdapter.addAdapter(titleAdapter);
+                adapter = new ItemAdapter<Person>(people.getManList(), 2, ManHolder.class);
+                mMultiTypeAdapter.addAdapter(adapter);
             }
-            adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<String>() {
-                @Override
-                public void onItemClick(int position, String s, int adapterPosition) {
-                    Toast.makeText(getApplicationContext(), "条目点击position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-                    getAdapter().addItem(adapterPosition, "我是新增条目" + position);
-                }
-
-                @Override
-                public void onItemLongClick(int position, String s, int adapterPosition) {
-                    Log.i("onItemLongClick", "position=" + position + " | s=" + s + " | adapterPosition=" + adapterPosition);
-                }
-
-                @Override
-                public void onItemChildClick(int position, String s, View view, int adapterPosition) {
-                    Toast.makeText(getApplicationContext(), "子控件position=" + position + "|s=" + s, Toast.LENGTH_SHORT).show();
-                    getAdapter().removeItem(adapterPosition);
-                }
-            });
-            mMultiTypeAdapter.addAdapter(adapter);
-        }
+        });
+        mMultiTypeAdapter.notifyRefresh();
     }
 
 

@@ -97,15 +97,32 @@ public class DataHelper {
             public void call(Subscriber<? super List<Person>> subscriber) {
                 List<Person> list = new ArrayList<Person>(1000);
                 for (int i = 0; i < 1000; i++) {
-                    list.add(new Person(icons.get(mRandom.nextInt(icons.size())),
-                            names.get(mRandom.nextInt(names.size())),
-                            countryList.get(mRandom.nextInt(countryList.size())),
-                            mRandom.nextInt(10)+20,
-                            mRandom.nextInt(30) + 150,
-                            mRandom.nextInt(40) + 45));
+                    list.add(new Person(icons.get(mRandom.nextInt(icons.size())), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, Person.Sex.UNKNOWN));
                 }
                 subscriber.onStart();
                 subscriber.onNext(list);
+                subscriber.onCompleted();
+            }
+        });
+    }
+
+    public Observable<People> getManAndWoman() {
+        return Observable.create(new Observable.OnSubscribe<People>() {
+            @Override
+            public void call(Subscriber<? super People> subscriber) {
+                List<Person> m = new ArrayList<Person>();
+                List<Person> w = new ArrayList<Person>();
+                for (int i = 0; i < 70; i++) {
+                    int location = mRandom.nextInt(icons.size());
+                    Person object = new Person(icons.get(location), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, location < 19 ? Person.Sex.MAN : Person.Sex.WOMAN);
+                    if (location < 19) {
+                        m.add(object);
+                    } else {
+                        w.add(object);
+                    }
+                }
+                subscriber.onStart();
+                subscriber.onNext(new People(m, w));
                 subscriber.onCompleted();
             }
         });

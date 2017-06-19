@@ -9,7 +9,7 @@ import android.view.MenuItem;
 
 import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.Person;
-import com.kelin.multitypeadapterdemo.holder.MyHolder;
+import com.kelin.multitypeadapterdemo.holder.ManHolder;
 import com.kelin.recycleradapter.SingleTypeAdapter;
 
 import java.util.List;
@@ -24,7 +24,7 @@ import rx.functions.Action1;
  */
 public class SingleTypeListActivity extends AppCompatActivity {
 
-    private SingleTypeAdapter<Person, MyHolder> mAdapter;
+    private SingleTypeAdapter<Person, ManHolder> mAdapter;
 
     /**
      * 启动自身，可通过其他Activity调用此方法来启动SingleTypeListActivity。
@@ -44,7 +44,7 @@ public class SingleTypeListActivity extends AppCompatActivity {
 
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mAdapter = new SingleTypeAdapter<>(recyclerView, MyHolder.class);
+        mAdapter = new SingleTypeAdapter<>(recyclerView, ManHolder.class);
         recyclerView.setAdapter(mAdapter);
         loadData();
     }
