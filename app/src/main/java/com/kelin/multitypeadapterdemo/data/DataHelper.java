@@ -112,9 +112,11 @@ public class DataHelper {
             public void call(Subscriber<? super People> subscriber) {
                 List<Person> m = new ArrayList<Person>();
                 List<Person> w = new ArrayList<Person>();
+                int location;
+                Person object;
                 for (int i = 0; i < 70; i++) {
-                    int location = mRandom.nextInt(icons.size());
-                    Person object = new Person(icons.get(location), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, location < 19 ? Person.Sex.MAN : Person.Sex.WOMAN);
+                    location = mRandom.nextInt(icons.size());
+                    object = new Person(icons.get(location), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, location < 19 ? Person.Sex.MAN : Person.Sex.WOMAN);
                     if (location < 19) {
                         m.add(object);
                     } else {
@@ -123,6 +125,31 @@ public class DataHelper {
                 }
                 subscriber.onStart();
                 subscriber.onNext(new People(m, w));
+                subscriber.onCompleted();
+            }
+        });
+    }
+
+    public Observable<List<Classs>> getClassList() {
+        return Observable.create(new Observable.OnSubscribe<List<Classs>>() {
+            @Override
+            public void call(Subscriber<? super List<Classs>> subscriber) {
+                String[] c = new String[]{"一年1班", "一年2班", "一年3班","二年1班", "二年2班", "三年1班", "三年2班", "三年3班","四年1班", "四年2班", "四年3班","五年1班", "五年2班", "六年1班", "六年2班", "六年3班","文学班", "地理班", "舞蹈班","编程班"};
+                List<Classs> classList = new ArrayList<Classs>(20);
+                int count;
+                int location;
+                List<Person> list;
+                for (int i = 0; i < 20; i++) {
+                    count = mRandom.nextInt(10) + 10;
+                    list = new ArrayList<Person>(count);
+                    for (int x = 0; x < count; x++) {
+                        location = mRandom.nextInt(icons.size());
+                        list.add(new Person(icons.get(location), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, location < 19 ? Person.Sex.MAN : Person.Sex.WOMAN));
+                    }
+                    classList.add(new Classs(c[i], count, list));
+                }
+                subscriber.onStart();
+                subscriber.onNext(classList);
                 subscriber.onCompleted();
             }
         });

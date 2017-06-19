@@ -95,11 +95,22 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private ChildEventBindInterceptor mEventInterceptor;
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        this(SPAN_SIZE_FULL_SCREEN, holderClass);
+        this(holderClass,null);
+    }
+
+    public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass, D d) {
+        this(SPAN_SIZE_FULL_SCREEN, holderClass, d);
     }
 
     public ItemAdapter(@Size(min = 1, max = 100) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(null, spanSize, holderClass);
+    }
+
+    public ItemAdapter(@Size(min = 1, max = 100) int spanSize, @NonNull Class<? extends ItemViewHolder<D>> holderClass, D d) {
+        this(null, spanSize, holderClass);
+        if (d != null) {
+            addItem(getDataList().size(), d, false);
+        }
     }
 
     public ItemAdapter(List<D> list, @NonNull Class<? extends ItemViewHolder<D>> holderClass) {

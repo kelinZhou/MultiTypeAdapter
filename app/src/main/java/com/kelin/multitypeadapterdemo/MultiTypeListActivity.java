@@ -66,9 +66,9 @@ public class MultiTypeListActivity extends AppCompatActivity {
                 mMultiTypeAdapter.addAdapter(titleAdapter);
                 adapter = new ItemAdapter<Person>(people.getManList(), 2, ManHolder.class);
                 mMultiTypeAdapter.addAdapter(adapter);
+                mMultiTypeAdapter.notifyRefresh();
             }
         });
-        mMultiTypeAdapter.notifyRefresh();
     }
 
 

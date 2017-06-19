@@ -165,6 +165,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         };
     }
 
+    public RecyclerView getRecyclerView() {
+        return mRecyclerView;
+    }
+
     /**
      * 设置加载更多是否可用。如果有时候你的页面虽然是支持分页加载的，但是特殊情况下你并不希望展示加载中的条目，这时就可以通过
      * 调用此方法禁止加载中条目的显示。

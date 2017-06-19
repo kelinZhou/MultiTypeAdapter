@@ -89,6 +89,23 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     }
 
     /**
+     * 判断两个模型的内容是否相同。
+     * <p>当 {@link #areItemsTheSame(Object, Object)} 方法返回 <code>true</code> 时，此方法才会被调用，这是因为如果两个对象
+     * 的基本特征都是不同的或，就没有进行进一步比较的必要了。
+     * <p>你不必将模型中的所有字段进行比较，只需要将需要展示到UI上的字段进行比较就可以了，你也可以将这个比较放到
+     * {@link #equals(Object)} 方法中去做。
+     *
+     * @param oldItemData 旧的数据模型。
+     * @param newItemDate 新的数据模型。
+     * @return 如果相同则返回 <code color="blue">true</code>, 否则应当返回 <code color="blue">false</code>。
+     * @see #areItemsTheSame(D, D);
+     */
+    @Override
+    public boolean areContentsTheSame(D oldItemData, D newItemDate) {
+        return oldItemData != null && oldItemData.equals(newItemDate);
+    }
+
+    /**
      * 由{@link com.kelin.recycleradapter.SuperAdapter} 调用，用来获取两个对象不同的部分。这个方法只有在
      * {@link #areItemsTheSame(Object, Object)} 方法被调用并返回<code>true</code>后才会被调用。
      * <p>你并不需要将模型中的所有字段进行比较，只需要比较需要展示在界面上的字段就可以了。

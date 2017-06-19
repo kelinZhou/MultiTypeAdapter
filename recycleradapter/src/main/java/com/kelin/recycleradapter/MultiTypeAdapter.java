@@ -112,6 +112,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param floatLayout 一个 {@link FloatLayout} 对象。
      */
     public void setFloatLayout(@NonNull FloatLayout floatLayout) {
+        floatLayout.setBackground(getRecyclerView().getBackground());
         mFloatLayout = floatLayout;
         mFloatViewHelper = new ViewHelper(mFloatLayout);
         setFloatLayoutVisibility(false);

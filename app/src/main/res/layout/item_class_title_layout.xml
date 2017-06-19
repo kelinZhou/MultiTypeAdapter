@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    android:orientation="vertical">
+
+    <RelativeLayout android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="6dp">
+
+        <TextView
+            android:id="@+id/tv_class_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@mipmap/ic_class"
+            android:drawablePadding="8dp"
+            android:drawableStart="@mipmap/ic_class"
+            android:gravity="center_vertical"
+            android:textColor="@color/blue"
+            android:textSize="18sp"
+            tools:text="一年1班"/>
+
+        <TextView
+            android:id="@+id/tv_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:textColor="@color/gray"
+            android:textSize="18sp"
+            tools:text="32 人"/>
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>
