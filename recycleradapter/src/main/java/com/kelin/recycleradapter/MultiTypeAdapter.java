@@ -33,6 +33,7 @@ import java.util.Map;
 
 public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object>> {
 
+    private static final String TAG = "MultiTypeAdapter";
     /**
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
      */
@@ -120,6 +121,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     private void setFloatLayoutVisibility(boolean visible) {
         if (mFloatLayout != null) {
+            Log.i(TAG, "setFloatLayoutVisibility:" + visible);
             mFloatLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
@@ -203,51 +205,73 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
-        ItemAdapter adapter = getAdjacentChildAdapterByPosition(mCurPosition, true, false);
-        if (adapter == null) return;
-        if (adapter.isFloatAble() && dy != 0) {
+        //如果没有设置悬浮控件就不获取子适配器，这用这里的逻辑就不会执行。
+        ItemAdapter adapter = mFloatLayout == null ? null : getAdjacentChildAdapterByPosition(mCurPosition, true, false);
+        if (adapter != null && adapter.isFloatAble() && dy != 0) {
             View view = lm.findViewByPosition(adapter.firstItemPosition);
             if (view != null) {
                 if (isFirstFloatAbleChildAdapter(mCurPosition + 1) && isFloatLayoutShowing()) {
                     setFloatLayoutVisibility(false);
                 } else {
                     if (view.getTop() <= (isFloatLayoutShowing() ? mFloatLayoutHeight : 0)) {
-                        if (view.getTop() <= 0) {
+                        setFloatLayoutVisibility(true);
+                        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+                        int marginTop = 0;
+                        if (layoutParams instanceof ViewGroup.MarginLayoutParams) {
+                            marginTop = ((ViewGroup.MarginLayoutParams) layoutParams).topMargin;
+                        }
+                        if (view.getTop() - marginTop <= 0) {
                             mFloatLayout.setY(0);
                         } else {
                             mFloatLayout.setY(-(mFloatLayoutHeight - view.getTop()));
                         }
-                        setFloatLayoutVisibility(true);
                     } else {
                         mFloatLayout.setY(0);
                     }
                 }
+            } else if (isFloatLayoutShowing()) {
+                mFloatLayout.setY(0);
             }
         }
 
-
-        if (mCurPosition != lm.findFirstVisibleItemPosition()) {
-            mCurPosition = lm.findFirstVisibleItemPosition();
-            Log.i("-------", "onRecyclerViewScrolled: mCurPosition=" + mCurPosition);
-            ItemAdapter itemAdapter;
-            if (dy < 0) {
-                itemAdapter = getAdjacentChildAdapterByPosition(mCurPosition + 1, false, true);
-            } else {
-                itemAdapter = getChildAdapterByPosition(mCurPosition);
-            }
-            if (itemAdapter != null && itemAdapter.isFloatAble() && mLastBindPosition != itemAdapter.firstItemPosition) {
+        //当速度快到一定程度的时候这个position可能会有间隔。而间隔的条目在极端情况下可能是最后一个需要绑定悬浮数据的条目。
+        int first = lm.findFirstVisibleItemPosition();
+        if (mCurPosition != first) {
+            int max = Math.max(mCurPosition, first);
+            int min = Math.min(mCurPosition, first);
+            //如果本次的位置和上一次的位置不是相邻的，那么就循环将跳过的位置进行更新。否则直接更新。
+            if (max - min > 1) {
                 if (dy < 0) {
-                    mFloatLayout.setY(-mFloatLayoutHeight);
+                    for (int i = max - 1; i >= min; i--) {
+                        updateFloatLayout(dy, i);
+                    }
+                } else {
+                    for (int i = min + 1; i <= max; i++) {
+                        updateFloatLayout(dy, i);
+                    }
                 }
-                mLastBindPosition = itemAdapter.firstItemPosition;
-                updateFloatLayout(itemAdapter);
+            } else {
+                updateFloatLayout(dy, first);
             }
+            mCurPosition = first;
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void updateFloatLayout(ItemAdapter itemAdapter) {
-        itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
+    private void updateFloatLayout(int dy, int first) {
+        ItemAdapter itemAdapter;
+        if (dy < 0) {
+            itemAdapter = getAdjacentChildAdapterByPosition(first + 1, false, true);
+        } else {
+            itemAdapter = getChildAdapterByPosition(first);
+        }
+        if (itemAdapter != null && itemAdapter.isFloatAble() && mLastBindPosition != itemAdapter.firstItemPosition) {
+            if (dy < 0) {
+                mFloatLayout.setY(-mFloatLayoutHeight);
+            }
+            mLastBindPosition = itemAdapter.firstItemPosition;
+            itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -258,6 +282,10 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
         ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
+        if (mFloatLayout != null && position == 0 && itemAdapter.isFloatAble()) {
+            setFloatLayoutVisibility(true);
+            itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
+        }
     }
 
     @Override
