@@ -1,12 +1,15 @@
 package com.kelin.recycleradapter;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -61,7 +64,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     /**
      * 用来记录上一次被绑定数的悬浮条的位置。
      */
-    private int mLastBindPosition = 0xFFFF_FFFF;
+    private int mLastBindPosition;
     /**
      * 为悬浮条绑定数据的帮助者。
      */
@@ -113,15 +116,18 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param floatLayout 一个 {@link FloatLayout} 对象。
      */
     public void setFloatLayout(@NonNull FloatLayout floatLayout) {
-        floatLayout.setBackground(getRecyclerView().getBackground());
+        Drawable background = getRecyclerView().getBackground();
         mFloatLayout = floatLayout;
+        ColorDrawable bg = (ColorDrawable) (background == null ? ((ViewGroup) getRecyclerView().getParent()).getBackground() : background);
+        int color = bg.getColor();
+        GradientDrawable drawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{color, Color.alpha(0)});
+        mFloatLayout.setBackground(drawable);
         mFloatViewHelper = new ViewHelper(mFloatLayout);
         setFloatLayoutVisibility(false);
     }
 
     private void setFloatLayoutVisibility(boolean visible) {
         if (mFloatLayout != null) {
-            Log.i(TAG, "setFloatLayoutVisibility:" + visible);
             mFloatLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
@@ -173,7 +179,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         for (ItemAdapter adapter : mPool.acquireAll()) {
             if (adapter.getRootViewType() == viewType) {
                 holder = adapter.onCreateViewHolder(parent, viewType);
-                if (adapter.isFloatAble() && mFloatLayout != null && mFloatLayout.isEmpty()) {
+                if (mFloatLayout != null && adapter.isFloatAble()) {
                     mFloatLayout.setFloatContent(viewType, new FloatLayout.OnSizeChangedListener() {
                         @Override
                         public void onSizeChanged(int width, int height) {

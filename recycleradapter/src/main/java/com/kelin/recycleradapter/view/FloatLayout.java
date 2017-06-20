@@ -36,7 +36,6 @@ public class FloatLayout extends FrameLayout {
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
         if (mOnSizeMeasuredCallback != null) {
             mOnSizeMeasuredCallback.onSizeChanged(w, h);
         }
