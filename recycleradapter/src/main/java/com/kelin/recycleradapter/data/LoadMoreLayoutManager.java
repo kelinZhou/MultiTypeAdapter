@@ -82,6 +82,10 @@ public class LoadMoreLayoutManager {
         mCurState = STATE_LOAD;
     }
 
+    public boolean isLoadState() {
+        return mCurState == STATE_LOAD;
+    }
+
     public @LayoutRes int getCurStateLayoutId() {
         switch (mCurState) {
             case STATE_LOAD:

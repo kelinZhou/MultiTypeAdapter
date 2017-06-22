@@ -114,7 +114,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
-                if (isLoadMoreUsable()) {
+                if (isLoadMoreUsable() && mLoadMoreLayoutManager.isLoadState()) {
                     if (mLoadMoreLayoutManager.isInTheLoadMore() || mLoadMoreLayoutManager.isNoMoreState()) return;
                     int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
                     int targetPosition = getDataList().size() - mLoadMoreLayoutManager.getLoadMoreOffset();
@@ -324,6 +324,17 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     }
 
     /**
+     * 开始加载更多。
+     */
+    private void reloadMore() {
+        if (mLoadMoreCallback != null) {
+            Log.i("MultiTypeAdapter", "开始加载更多");
+            mLoadMoreLayoutManager.setInTheLoadMore(true);
+            mLoadMoreCallback.onReloadMore();
+        }
+    }
+
+    /**
      * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
      */
     public void setLoadMoreFinished() {
@@ -515,6 +526,11 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
          * 加载更多时的回调。
          */
         public abstract void onLoadMore();
+
+        /**
+         * 重新加载更多时的回调。当上一次加载更多失败点击重试后会执行此方法，而不会执行 {@link #onLoadMore()} 方法。
+         */
+        public abstract void onReloadMore();
     }
 
     class LoadMoreRetryClickListener implements View.OnClickListener {
@@ -522,7 +538,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         public void onClick(View v) {
             mLoadMoreLayoutManager.setLoadState();
             notifyItemChanged(getItemCount() - 1);
-            startLoadMore();
+            reloadMore();
         }
     }
 }

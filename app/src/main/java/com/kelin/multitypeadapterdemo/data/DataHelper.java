@@ -22,8 +22,9 @@ public class DataHelper {
     private Random mRandom;
     private List<String> names;
     private ArrayList<String> countryList;
+    private boolean mError;
 
-    private static class Instance{
+    private static class Instance {
         static DataHelper instance = new DataHelper();
     }
 
@@ -106,6 +107,32 @@ public class DataHelper {
         });
     }
 
+    public void release() {
+        mError = false;
+    }
+
+    public Observable<List<Person>> getPersons(final int page, final int pageSize) {
+        return Observable.create(new Observable.OnSubscribe<List<Person>>() {
+            @Override
+            public void call(Subscriber<? super List<Person>> subscriber) {
+                subscriber.onStart();
+                if (page == 2 && !mError) {
+                    mError = true;
+                    subscriber.onError(new RuntimeException());
+                } else {
+                    List<Person> list = new ArrayList<Person>(10);
+                    //下面这一行模拟最后一页，是以返回数据不满足pageSize认定最后一页。
+                    int size = page <= 5 ? pageSize : pageSize / 2;
+                    for (int i = 0; i < size; i++) {
+                        list.add(new Person(icons.get(mRandom.nextInt(icons.size())), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, Person.Sex.UNKNOWN));
+                    }
+                    subscriber.onNext(list);
+                }
+                subscriber.onCompleted();
+            }
+        });
+    }
+
     public Observable<People> getManAndWoman() {
         return Observable.create(new Observable.OnSubscribe<People>() {
             @Override
@@ -134,7 +161,7 @@ public class DataHelper {
         return Observable.create(new Observable.OnSubscribe<List<Classs>>() {
             @Override
             public void call(Subscriber<? super List<Classs>> subscriber) {
-                String[] c = new String[]{"一年1班", "一年2班", "一年3班","二年1班", "二年2班", "三年1班", "三年2班", "三年3班","四年1班", "四年2班", "四年3班","五年1班", "五年2班", "六年1班", "六年2班", "六年3班","文学班", "地理班", "舞蹈班","编程班"};
+                String[] c = new String[]{"一年1班", "一年2班", "一年3班", "二年1班", "二年2班", "三年1班", "三年2班", "三年3班", "四年1班", "四年2班", "四年3班", "五年1班", "五年2班", "六年1班", "六年2班", "六年3班", "文学班", "地理班", "舞蹈班", "编程班"};
                 List<Classs> classList = new ArrayList<Classs>(20);
                 int count;
                 int location;
