@@ -7,4 +7,5 @@
     <color name="gray">#d6d1d3</color>
     <color name="white">#FFF</color>
     <color name="blue">#2789b6</color>
+    <color name="color_list_item_click_bg">#3000</color>
 </resources>

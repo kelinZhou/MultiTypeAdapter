@@ -10,6 +10,7 @@
                   android:layout_height="100dp"
                   android:gravity="center_vertical"
                   android:orientation="horizontal"
+                  android:background="@drawable/selector_recycler_item_bg"
                   android:padding="6dp">
         <ImageView
             android:id="@+id/iv_avatar"

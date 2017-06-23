@@ -126,6 +126,34 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         setFloatLayoutVisibility(false);
     }
 
+    /**
+     * 获取子适配器 {@link ItemAdapter} 的数量。
+     * @return 返回已经被Add进来的所有的 {@link ItemAdapter} 的数量。
+     * @see #addAdapter(ItemAdapter[])
+     */
+    public int getChildCount() {
+        return mPool.size();
+    }
+
+    /**
+     * 根据索引获取 {@link ItemAdapter}。
+     * @param index 要获取的索引。
+     * @return 返回已经被Add进来的指定索引的 {@link ItemAdapter}。
+     * @see #addAdapter(ItemAdapter[])
+     */
+    public ItemAdapter getChildAt(int index) {
+        return mPool.acquireAll().get(index);
+    }
+
+    /**
+     * 获取所有的 {@link ItemAdapter}。
+     * @return 返回已经被Add进来的所有的 {@link ItemAdapter}。
+     * @see #addAdapter(ItemAdapter[])
+     */
+    public List<ItemAdapter> getAllChild() {
+        return mPool.acquireAll();
+    }
+
     private void setFloatLayoutVisibility(boolean visible) {
         if (mFloatLayout != null) {
             mFloatLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -137,7 +165,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     /**
-     * 添加条目适配器。
+     * 添加条目适配器 {@link ItemAdapter}。
      *
      * @param adapters {@link ItemAdapter} 对象。
      * @see ItemAdapter#ItemAdapter(Class)

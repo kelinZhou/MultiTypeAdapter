@@ -8,6 +8,7 @@
 
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
+                  android:background="@drawable/selector_recycler_item_bg"
                   android:gravity="center_horizontal"
                   android:orientation="vertical"
                   android:padding="6dp">

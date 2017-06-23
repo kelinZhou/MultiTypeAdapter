@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setTitle("MultiTypeAdapterDemo");
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         List<MainItemEntry> entryList = new ArrayList<>();
         entryList.add(new MainItemEntry(R.mipmap.img_single, "单条目列表"));

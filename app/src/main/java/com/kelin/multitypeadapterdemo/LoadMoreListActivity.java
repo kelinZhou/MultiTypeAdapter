@@ -87,7 +87,13 @@ public class LoadMoreListActivity extends AppCompatActivity {
 
             @Override
             public void onError(Throwable e) {
-                mMultiTypeAdapter.setLoadMoreFailed();
+                if (mMultiTypeAdapter.getItemCount() <= 10) {
+                    //设置LoadMore不可用，因为如果当前总数据不足以显示一屏幕则会出现一只显示加载中却总也触发不了LoadMore的bug。
+                    mMultiTypeAdapter.setLoadMoreUsable(false);
+                } else {
+                    mMultiTypeAdapter.setLoadMoreUsable(true);
+                    mMultiTypeAdapter.setLoadMoreFailed();
+                }
             }
 
             @Override

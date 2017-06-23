@@ -371,7 +371,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     @Override
     public int getItemCount() {
-        return getDataList().size() + (mLoadMoreLayoutManager == null || mLoadMoreLayoutManager.noCurStateLayoutId() ? 0 : 1);
+        return getDataList().size() + (!isLoadMoreUsable() || mLoadMoreLayoutManager.noCurStateLayoutId() ? 0 : 1);
     }
 
     @Override
