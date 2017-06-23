@@ -10,6 +10,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -29,8 +30,10 @@ import java.util.List;
 
 abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
 
-    static final String HEADER_DATA_FLAG = "com.kelin.recycleradapter.header_data_flag";
-    static final String FOOTER_DATA_FLAG = "com.kelin.recycleradapter.footer_data_flag";
+    /**
+     * 列表为空时的条目类型。
+     */
+    protected static final int TYPE_EMPTY_ITEM = 0x0000_00f0;
     /**
      * 当前页面的数据集。
      */
@@ -63,6 +66,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 加载更多的布局信息对象。
      */
     LoadMoreLayoutManager mLoadMoreLayoutManager;
+    /**
+     * 列表为空时的布局。
+     */
+    private View mEmptyLayout;
 
     /**
      * 构造方法。
@@ -239,15 +246,11 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @return 返回当前条目的占屏值。
      */
     protected int getItemSpan(int position) {
-        if (isLoadMoreItem(position) || HEADER_DATA_FLAG.equals(getObject(position)) || FOOTER_DATA_FLAG.equals(getObject(position))) {
+        if (isLoadMoreItem(position)) {
             return getTotalSpanSize();
         } else {
             return getItemSpanSize(position);
         }
-    }
-
-    boolean isLoadMoreItem(int position) {
-        return isLoadMoreUsable() && !mLoadMoreLayoutManager.noCurStateLayoutId() && position == getItemCount() - 1;
     }
 
     protected abstract int getItemSpanSize(int position);
@@ -294,6 +297,36 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
         mLoadMoreLayoutManager = layoutInfo;
         mLoadMoreCallback = callback;
+    }
+
+    /**
+     * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder#ItemViewHolder(View)} 构造方法，
+     * 否则会出错。
+     * @param emptyLayout 列表为空时的布局ID。
+     * @return 返回这个布局ID被Inflater后的View。
+     * @see ItemViewHolder#ItemViewHolder(View)
+     */
+    public View setEmptyView(@LayoutRes int emptyLayout) {
+        View emptyView = LayoutInflater.from(mRecyclerView.getContext()).inflate(emptyLayout, mRecyclerView, false);
+        setEmptyView(emptyView);
+        return emptyView;
+    }
+
+    /**
+     * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder#ItemViewHolder(View)} 构造方法，
+     * 否则会出错。
+     * @param emptyLayout 列表为空时的布局。
+     * @see ItemViewHolder#ItemViewHolder(View)
+     */
+    public void setEmptyView(View emptyLayout) {
+        mEmptyLayout = emptyLayout;
+    }
+
+    /**
+     * 获取当前的列表为空时的布局。
+     */
+    public View getEmptyView() {
+        return mEmptyLayout;
     }
 
     /**
@@ -371,13 +404,23 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     @Override
     public int getItemCount() {
-        return getDataList().size() + (!isLoadMoreUsable() || mLoadMoreLayoutManager.noCurStateLayoutId() ? 0 : 1);
+        int size = getDataList().size();
+        return size == 0 ? mEmptyLayout == null ? 0 : 1 : size + (!isLoadMoreUsable() || mLoadMoreLayoutManager.noCurStateLayoutId() ? 0 : 1);
     }
 
     @Override
     public final int getItemViewType(int position) {
+        if (isEmptyItem(position)) return TYPE_EMPTY_ITEM;
         if (isLoadMoreItem(position)) return mLoadMoreLayoutManager.getCurStateLayoutId();
         return  getItemType(position);
+    }
+
+    protected boolean isEmptyItem(int position) {
+        return position == 0 && mEmptyLayout != null && getItemCount() == 1;
+    }
+
+    boolean isLoadMoreItem(int position) {
+        return isLoadMoreUsable() && !mLoadMoreLayoutManager.noCurStateLayoutId() && position == getItemCount() - 1;
     }
 
     protected abstract int getItemType(int position);
@@ -387,6 +430,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
+        if (isEmptyItem(position)) return;
+        if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
         holder.onBindPartData(position, getObject(position), payloads);
     }
 

@@ -10,12 +10,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.kelin.recycleradapter.holder.CommonNoDataViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
-import com.kelin.recycleradapter.holder.LoadMoreViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.Orientation;
 import com.kelin.recycleradapter.interfaces.Pool;
@@ -189,8 +190,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     @SuppressWarnings("unchecked")
     @Override
     public ItemViewHolder<Object> onCreateViewHolder(ViewGroup parent, int viewType) {
+        if (viewType == TYPE_EMPTY_ITEM) {
+            return new CommonNoDataViewHolder(getEmptyView());
+        }
         if (mLoadMoreLayoutManager != null && viewType == mLoadMoreLayoutManager.getCurStateLayoutId()) {
-            LoadMoreViewHolder loadMoreViewHolder = new LoadMoreViewHolder(parent, viewType);
+            CommonNoDataViewHolder loadMoreViewHolder = new CommonNoDataViewHolder(LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false));
             if (mLoadMoreLayoutManager.isRetryState()) {
                 if (mLoadMoreRetryClickListener == null) {
                     mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
@@ -229,7 +233,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     public void onViewRecycled(ItemViewHolder<Object> holder) {
-        if (holder instanceof LoadMoreViewHolder) {
+        if (holder instanceof CommonNoDataViewHolder) {
             return;
         }
         int position = holder.getLayoutPosition();
@@ -311,9 +315,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
-        if (holder instanceof LoadMoreViewHolder) {
-            return;
-        }
+        if (isEmptyItem(position)) return;
+        if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
         ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
         if (mFloatLayout != null && position == 0 && itemAdapter.isFloatAble()) {

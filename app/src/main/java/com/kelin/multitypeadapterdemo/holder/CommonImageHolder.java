@@ -1,7 +1,6 @@
 package com.kelin.multitypeadapterdemo.holder;
 
-import android.support.annotation.LayoutRes;
-import android.view.ViewGroup;
+import android.view.View;
 
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.recycleradapter.holder.ItemLayout;
@@ -16,8 +15,8 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
 @ItemLayout(R.layout.item_common_image_layout)
 public class CommonImageHolder extends ItemViewHolder<Integer> {
 
-    protected CommonImageHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        super(parent, itemRootViewId);
+    protected CommonImageHolder(View itemView) {
+        super(itemView);
     }
 
     @Override

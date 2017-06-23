@@ -1,7 +1,6 @@
 package com.kelin.multitypeadapterdemo.holder;
 
-import android.support.annotation.LayoutRes;
-import android.view.ViewGroup;
+import android.view.View;
 
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.multitypeadapterdemo.data.Classs;
@@ -20,8 +19,8 @@ import java.util.Locale;
 @ItemLayout(R.layout.item_class_title_layout)
 public class ClassHolder extends ItemViewHolder<Classs> {
 
-    protected ClassHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        super(parent, itemRootViewId);
+    protected ClassHolder(View itemView) {
+        super(itemView);
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.kelin.multitypeadapterdemo.holder;
 
-import android.support.annotation.LayoutRes;
-import android.view.ViewGroup;
+import android.view.View;
 
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.multitypeadapterdemo.data.Person;
@@ -19,8 +18,8 @@ import java.util.Locale;
 @ItemLayout(R.layout.item_person_layout)
 public class ManHolder extends ItemViewHolder<Person> {
 
-    protected ManHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        super(parent, itemRootViewId);
+    protected ManHolder(View itemView) {
+        super(itemView);
     }
 
     @Override

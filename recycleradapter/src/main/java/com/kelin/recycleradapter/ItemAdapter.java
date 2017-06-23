@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -464,10 +465,11 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     @Override
     public ItemViewHolder<D> onCreateViewHolder(ViewGroup parent, int viewType) {
         ItemViewHolder<D> viewHolder;
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);
         try {
-            Constructor<? extends ItemViewHolder<D>> constructor = mHolderClass.getDeclaredConstructor(ViewGroup.class, int.class);
+            Constructor<? extends ItemViewHolder<D>> constructor = mHolderClass.getDeclaredConstructor(View.class);
             constructor.setAccessible(true);
-            viewHolder = constructor.newInstance(parent, viewType);
+            viewHolder = constructor.newInstance(itemView);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

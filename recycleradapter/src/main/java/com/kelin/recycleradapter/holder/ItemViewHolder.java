@@ -7,16 +7,13 @@ import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,8 +33,8 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
 
     private final SparseArray<View> mViews;
 
-    protected ItemViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        super(LayoutInflater.from(parent.getContext()).inflate(itemRootViewId, parent, false));
+    protected ItemViewHolder(View itemView) {
+        super(itemView);
         mViews = new SparseArray<>();
     }
 

@@ -5,6 +5,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -83,21 +84,25 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     public VH onCreateViewHolder(ViewGroup parent, int viewType) {
-        //这里没有使用LoadMoreViewHolder是因为做了泛型限定，只能返回VH，所以这里使用了VH作为LoadMoreViewHolder。只是给的布局不同了而已。
+        VH holder;
+        View itemView = viewType == TYPE_EMPTY_ITEM ? getEmptyView() : LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);
         try {
-            Constructor<? extends VH> constructor = mHolderClass.getDeclaredConstructor(ViewGroup.class, int.class);
+            Constructor<? extends VH> constructor = mHolderClass.getDeclaredConstructor(View.class);
             constructor.setAccessible(true);
-            mViewHolder = constructor.newInstance(parent, viewType);
+            holder = constructor.newInstance(itemView);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (mViewHolder != null) {
-            bindItemClickEvent(mViewHolder);
-            return mViewHolder;
+        if (viewType != TYPE_EMPTY_ITEM) {
+            if (holder != null) {
+                mViewHolder = holder;
+                bindItemClickEvent(holder);
 
-        } else {
-            throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+            } else {
+                throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
+            }
         }
+        return holder;
     }
 
     private void bindItemClickEvent(VH viewHolder) {
@@ -118,12 +123,6 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
                 }
             }
         }
-    }
-
-    @Override
-    public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
-        if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
-        holder.onBindPartData(position, getObject(holder.getLayoutPosition()), payloads);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.kelin.multitypeadapterdemo.holder;
 
-import android.support.annotation.LayoutRes;
-import android.view.ViewGroup;
+import android.view.View;
 
 import com.kelin.multitypeadapterdemo.R;
 import com.kelin.multitypeadapterdemo.data.MainItemEntry;
@@ -17,8 +16,8 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
 @ItemLayout(R.layout.item_main_item_layout)
 public class MainItemHolder extends ItemViewHolder<MainItemEntry> {
 
-    protected MainItemHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        super(parent, itemRootViewId);
+    protected MainItemHolder(View itemView) {
+        super(itemView);
     }
 
     @Override

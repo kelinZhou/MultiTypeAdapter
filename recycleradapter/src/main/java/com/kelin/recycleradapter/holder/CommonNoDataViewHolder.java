@@ -1,7 +1,6 @@
 package com.kelin.recycleradapter.holder;
 
-import android.support.annotation.LayoutRes;
-import android.view.ViewGroup;
+import android.view.View;
 
 /**
  * 描述 加载更多时的ViewHolder。
@@ -9,10 +8,10 @@ import android.view.ViewGroup;
  * 创建时间 2017/4/26  下午5:51
  * 版本 v 1.0.0
  */
-public class LoadMoreViewHolder extends ItemViewHolder<Object> {
+public class CommonNoDataViewHolder extends ItemViewHolder<Object> {
 
-    public LoadMoreViewHolder(ViewGroup parent, @LayoutRes int itemRootViewId) {
-        super(parent, itemRootViewId);
+    public CommonNoDataViewHolder(View itemView) {
+        super(itemView);
     }
 
     @Override
