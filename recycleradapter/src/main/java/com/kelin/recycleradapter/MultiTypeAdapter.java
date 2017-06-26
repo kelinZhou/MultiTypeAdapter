@@ -309,7 +309,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             mLastBindPosition = itemAdapter.firstItemPosition;
             ItemViewHolder binder = itemAdapter.getFloatLayoutBinder();
             binder.onBindFloatLayoutData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
-            mFloatLayout.bindEvent(binder, itemAdapter, mFloatViewHelper, position);
+            mFloatLayout.bindEvent(binder, itemAdapter, mFloatViewHelper, itemAdapter.firstItemPosition);
         }
     }
 
