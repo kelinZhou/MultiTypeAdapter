@@ -20,7 +20,6 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.Orientation;
 import com.kelin.recycleradapter.interfaces.Pool;
-import com.kelin.recycleradapter.view.FloatLayout;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -209,7 +208,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
         ItemViewHolder holder = null;
         for (ItemAdapter adapter : mPool.acquireAll()) {
-            if (adapter.getRootViewType() == viewType) {
+            if (adapter.getItemViewType() == viewType) {
                 holder = adapter.onCreateViewHolder(parent, viewType);
                 if (mFloatLayout != null && adapter.isFloatAble()) {
                     mFloatLayout.setFloatContent(viewType, new FloatLayout.OnSizeChangedListener() {
@@ -296,19 +295,21 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     @SuppressWarnings("unchecked")
-    private void updateFloatLayout(int dy, int first) {
+    private void updateFloatLayout(int dy, int position) {
         ItemAdapter itemAdapter;
         if (dy < 0) {
-            itemAdapter = getAdjacentChildAdapterByPosition(first + 1, false, true);
+            itemAdapter = getAdjacentChildAdapterByPosition(position + 1, false, true);
         } else {
-            itemAdapter = getChildAdapterByPosition(first);
+            itemAdapter = getChildAdapterByPosition(position);
         }
         if (itemAdapter != null && itemAdapter.isFloatAble() && mLastBindPosition != itemAdapter.firstItemPosition) {
             if (dy < 0) {
                 mFloatLayout.setY(-mFloatLayoutHeight);
             }
             mLastBindPosition = itemAdapter.firstItemPosition;
-            itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
+            ItemViewHolder binder = itemAdapter.getFloatLayoutBinder();
+            binder.onBindFloatLayoutData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
+            mFloatLayout.bindEvent(binder, itemAdapter, mFloatViewHelper, position);
         }
     }
 
@@ -321,13 +322,15 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
         if (mFloatLayout != null && position == 0 && itemAdapter.isFloatAble()) {
             setFloatLayoutVisibility(true);
-            itemAdapter.onBindFloatViewData(mFloatViewHelper, itemAdapter.firstItemPosition, getObject(itemAdapter.firstItemPosition));
+            ItemViewHolder binder = itemAdapter.getFloatLayoutBinder();
+            binder.onBindFloatLayoutData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
+            mFloatLayout.bindEvent(binder, itemAdapter, mFloatViewHelper, position);
         }
     }
 
     @Override
     public int getItemType(int position) {
-        return mPool.acquireFromLayoutPosition(position).getRootViewType();
+        return mPool.acquireFromLayoutPosition(position).getItemViewType();
     }
 
     @Override

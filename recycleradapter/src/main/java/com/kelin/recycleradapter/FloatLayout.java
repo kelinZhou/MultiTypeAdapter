@@ -1,4 +1,4 @@
-package com.kelin.recycleradapter.view;
+package com.kelin.recycleradapter;
 
 import android.content.Context;
 import android.support.annotation.AttrRes;
@@ -9,6 +9,9 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.ViewHelper;
 
 /**
  * 描述 用来显示悬浮条目的布局容器。
@@ -21,6 +24,7 @@ public class FloatLayout extends FrameLayout {
 
     private ViewGroup mFloatLayout;
     private OnSizeChangedListener mOnSizeMeasuredCallback;
+    private OnBindEventListener mOnBindEventListener;
 
     public FloatLayout(@NonNull Context context) {
         this(context, null);
@@ -45,11 +49,11 @@ public class FloatLayout extends FrameLayout {
         return mFloatLayout == null;
     }
 
-    public void setFloatContent(@LayoutRes int floatContentId, OnSizeChangedListener callback) {
+    void setFloatContent(@LayoutRes int floatContentId, OnSizeChangedListener callback) {
         setFloatContent((ViewGroup) LayoutInflater.from(getContext()).inflate(floatContentId, this, false), callback);
     }
 
-    public void setFloatContent(ViewGroup floatContent, OnSizeChangedListener callback) {
+    void setFloatContent(ViewGroup floatContent, OnSizeChangedListener callback) {
         if (floatContent != null) {
             mOnSizeMeasuredCallback = callback;
             removeAllViews();
@@ -60,12 +64,42 @@ public class FloatLayout extends FrameLayout {
         }
     }
 
-    public interface OnSizeChangedListener {
+    public void setOnBindEventListener(OnBindEventListener listener) {
+        mOnBindEventListener = listener;
+    }
+
+    /**
+     * 给悬浮控件绑定事件。
+     *
+     * @param curHolder   当前悬浮的ViewHolder。
+     * @param itemAdapter 当前悬浮的 {@link ItemAdapter}。
+     * @param viewHelper  view的帮助类。
+     * @param position    当前的列表索引。
+     */
+    void bindEvent(ItemViewHolder curHolder, ItemAdapter itemAdapter, ViewHelper viewHelper, int position) {
+        if (mOnBindEventListener != null) {
+            mOnBindEventListener.onBindEvent(curHolder, itemAdapter, viewHelper, position);
+        }
+    }
+
+    interface OnSizeChangedListener {
         /**
          * 当宽高被测量出来以后的回调。
-         * @param width 测量到的宽度。
+         *
+         * @param width  测量到的宽度。
          * @param height 测量到的高度。
          */
         void onSizeChanged(int width, int height);
+    }
+
+    public interface OnBindEventListener {
+        /**
+         * 当需要给悬浮控件绑定事件的时候调用。
+         *
+         * @param curHolder   当前悬浮的ViewHolder。
+         * @param itemAdapter 当前悬浮的 {@link ItemAdapter}。
+         * @param viewHelper  view的帮助类。
+         */
+        void onBindEvent(ItemViewHolder curHolder, ItemAdapter itemAdapter, ViewHelper viewHelper, int position);
     }
 }

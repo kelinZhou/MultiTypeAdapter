@@ -55,6 +55,10 @@ public class ViewHelper implements ViewOperation {
         return (T) view;
     }
 
+    public View getRootView() {
+        return rootView;
+    }
+
     @Override
     public void setBackGround(Drawable drawable, @IdRes int... viewIds) {
         if (viewIds != null && viewIds.length > 0) {

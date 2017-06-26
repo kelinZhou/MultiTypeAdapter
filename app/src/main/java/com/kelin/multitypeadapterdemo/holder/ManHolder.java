@@ -23,11 +23,6 @@ public class ManHolder extends ItemViewHolder<Person> {
     }
 
     @Override
-    public int[] onGetNeedListenerChildViewIds() {
-        return new int[]{R.id.btnDelete};
-    }
-
-    @Override
     public void onBindData(int position, Person person) {
         setImageResource(R.id.iv_avatar, person.getAvatar());
         setText(R.id.tv_name, String.format("姓名：%s", person.getName()));

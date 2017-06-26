@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
         entryList.add(new MainItemEntry(R.mipmap.img_multi, "多条目列表"));
         entryList.add(new MainItemEntry(R.mipmap.img_float, "悬浮条列表"));
         entryList.add(new MainItemEntry(R.mipmap.img_load_more, "分页加载"));
+        entryList.add(new MainItemEntry(R.mipmap.img_empty, "EmptyView列表"));
         SingleTypeAdapter<MainItemEntry, MainItemHolder> adapter = new SingleTypeAdapter<>(recyclerView, entryList, MainItemHolder.class);
         recyclerView.setAdapter(adapter);
         adapter.setItemEventListener(new SingleTypeAdapter.OnItemEventListener<MainItemEntry, SingleTypeAdapter<MainItemEntry, MainItemHolder>>() {
@@ -43,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case R.mipmap.img_load_more:
                         LoadMoreListActivity.startAction(MainActivity.this);
+                        break;
+                    case R.mipmap.img_empty:
+                        EmptyListActivity.startAction(MainActivity.this);
                         break;
                 }
             }

@@ -3,9 +3,7 @@ package com.kelin.multitypeadapterdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
-import android.view.MenuItem;
 
 import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.People;
@@ -24,7 +22,7 @@ import rx.functions.Action1;
  * 创建时间 2016/12/6  下午6:23
  * 版本 v 1.0.0
  */
-public class MultiTypeListActivity extends AppCompatActivity {
+public class MultiTypeListActivity extends BaseActivity {
 
     private MultiTypeAdapter mMultiTypeAdapter;
 
@@ -40,9 +38,8 @@ public class MultiTypeListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("多条目列表");
-        setContentView(R.layout.activity_multi_type_list);
+        setContentView(R.layout.include_common_list_layout);
 
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
@@ -55,28 +52,17 @@ public class MultiTypeListActivity extends AppCompatActivity {
         DataHelper.getInstance().getManAndWoman().subscribe(new Action1<People>() {
             @Override
             public void call(People people) {
-                ItemAdapter<Integer> titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class);
-                titleAdapter.addItem(0, people.getWomanListImage());
+                ItemAdapter<Integer> titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getWomanListImage());
                 mMultiTypeAdapter.addAdapter(titleAdapter);
                 ItemAdapter<Person> adapter = new ItemAdapter<Person>(people.getWomanList(), 1, ManHolder2.class);
                 mMultiTypeAdapter.addAdapter(adapter);
 
-                titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class);
-                titleAdapter.addItem(0, people.getManListImage());
+                titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getManListImage());
                 mMultiTypeAdapter.addAdapter(titleAdapter);
                 adapter = new ItemAdapter<Person>(people.getManList(), 2, ManHolder.class);
                 mMultiTypeAdapter.addAdapter(adapter);
                 mMultiTypeAdapter.notifyRefresh();
             }
         });
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

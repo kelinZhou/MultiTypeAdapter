@@ -36,8 +36,13 @@ public class ClassHolder extends ItemViewHolder<Classs> {
     }
 
     @Override
-    public void onBindFloatLayoutData(ViewHelper viewHelper, int position, Classs classs) {
+    public void onBindFloatLayoutData(ViewHelper viewHelper, Classs classs) {
         viewHelper.setText(R.id.tv_class_name, classs.getClassName());
         viewHelper.setText(R.id.tv_count, String.format(Locale.CHINA, "%d 人", classs.getCount()));
+    }
+
+    @Override
+    public int[] onGetNeedListenerChildViewIds() {
+        return new int[]{R.id.tv_show_more};
     }
 }

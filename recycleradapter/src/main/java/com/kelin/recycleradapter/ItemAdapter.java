@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
-import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.AdapterEdit;
 import com.kelin.recycleradapter.interfaces.ChildEventBindInterceptor;
 
@@ -96,7 +95,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private ChildEventBindInterceptor mEventInterceptor;
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
-        this(holderClass,null);
+        this(holderClass, null);
     }
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass, D d) {
@@ -253,7 +252,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     /**
      * 批量增加Item。
      *
-     * @param positionStart 批量增加的其实位置。
+     * @param positionStart 批量增加的起始位置。
      * @param datum         要增加Item。
      * @param refresh       是否在增加完成后刷新条目。
      */
@@ -449,9 +448,8 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * @return 返回跟布局的资源ID。
      */
     @Override
-    public
     @LayoutRes
-    int getRootViewType() {
+    public int getItemViewType() {
         return mRootLayoutId;
     }
 
@@ -508,7 +506,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         if (isFloatAble && mFloatLayoutBinder == null) {
             mFloatLayoutBinder = holder;
         }
-        holder.onBindPartData(position, getItemObject(holder), payloads);
+        holder.onBindPartData(position, getObject(position), payloads);
     }
 
     /**
@@ -544,10 +542,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         return null;
     }
 
-    private D getItemObject(ItemViewHolder<D> holder) {
-        return getItemObject(holder.getLayoutPosition());
-    }
-
     private D getItemObject(int parentPosition) {
         return (D) mParentAdapter.getObject(parentPosition);
     }
@@ -562,7 +556,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
                 int position = viewHolder.getLayoutPosition();
                 int adapterPosition = getAdapterPosition(viewHolder);
 
-                D object = getItemObject(viewHolder);
+                D object = getItemObject(position);
                 if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
                     mItemEventListener.onItemClick(position, object, adapterPosition);
                 } else {
@@ -577,7 +571,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
             @Override
             public boolean onLongClick(View v) {
                 if (mItemEventListener != null) {
-                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder), getAdapterPosition(viewHolder));
+                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder.getLayoutPosition()), getAdapterPosition(viewHolder));
                 }
                 return true;
             }
@@ -624,8 +618,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     private void mapNotifyItemInserted(int position) {
-        if (mParentAdapter != null)
-            mParentAdapter.notifyItemInserted(position + firstItemPosition);
+        if (mParentAdapter != null) mParentAdapter.notifyItemInserted(position + firstItemPosition);
     }
 
     private void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
@@ -691,8 +684,8 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-    void onBindFloatViewData(ViewHelper viewHelper, int position, D d) {
-        mFloatLayoutBinder.onBindFloatLayoutData(viewHelper, position - firstItemPosition, d);
+    public ItemViewHolder getFloatLayoutBinder() {
+        return mFloatLayoutBinder;
     }
 
     public boolean isFloatAble() {
@@ -701,6 +694,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     /**
      * 设置条目子控件事件绑定的拦截器。
+     *
      * @param interceptor 子控件事件绑定的拦截器。
      */
     public void setEventInterceptor(ChildEventBindInterceptor interceptor) {

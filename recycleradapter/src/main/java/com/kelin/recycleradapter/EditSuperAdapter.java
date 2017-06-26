@@ -78,7 +78,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * @return 返回跟布局的资源ID。
      */
     @Override
-    public @LayoutRes int getRootViewType() {
+    public @LayoutRes int getItemViewType() {
         return mRootLayoutId;
     }
 
@@ -127,7 +127,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     public int getItemType(int position) {
-        return getRootViewType();
+        return getItemViewType();
     }
 
     @Override
@@ -417,9 +417,10 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     public void clear(boolean refresh) {
         if (!isEmptyList()) {
             List<D> dataList = getDataList();
+            int itemCount = dataList.size();
             dataList.clear();
             if (refresh) {
-                notifyItemRangeRemoved(0, dataList.size());
+                notifyItemRangeRemoved(0, itemCount);
             }
         }
     }

@@ -3,9 +3,7 @@ package com.kelin.multitypeadapterdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
-import android.view.MenuItem;
 
 import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.Person;
@@ -22,7 +20,7 @@ import rx.functions.Action1;
  * 创建时间 2016/12/6  下午5:53
  * 版本 v 1.0.0
  */
-public class SingleTypeListActivity extends AppCompatActivity {
+public class SingleTypeListActivity extends BaseActivity {
 
     private SingleTypeAdapter<Person, ManHolder> mAdapter;
 
@@ -38,9 +36,8 @@ public class SingleTypeListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("单条目列表");
-        setContentView(R.layout.activity_single_type_list);
+        setContentView(R.layout.include_common_list_layout);
 
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
@@ -57,13 +54,5 @@ public class SingleTypeListActivity extends AppCompatActivity {
                 mAdapter.notifyRefresh();
             }
         });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

@@ -25,6 +25,8 @@
 
         <activity android:name=".FloatListActivity"/>
 
+        <activity android:name=".EmptyListActivity"/>
+
     </application>
 
 </manifest>

@@ -19,7 +19,7 @@ import android.widget.TextView;
 
 import com.kelin.recycleradapter.callback.NotifyCallback;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
-import com.kelin.recycleradapter.view.FloatLayout;
+import com.kelin.recycleradapter.FloatLayout;
 
 import java.util.List;
 
@@ -36,10 +36,6 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     protected ItemViewHolder(View itemView) {
         super(itemView);
         mViews = new SparseArray<>();
-    }
-
-    public @IdRes int[] onGetNeedListenerChildViewIds(){
-        return null;
     }
 
     /**
@@ -68,8 +64,18 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
      * <p>如果你重写了该方法并返回的ViewId包含在 {@link #onGetNeedListenerChildViewIds()} 返回的数组里，则条目点击事件会被触发，子控件点击不会被触发。
      * @return 返回你希望触发条目点击事件的ViewId。
      */
-    public @IdRes int getItemClickViewId() {
+    @IdRes
+    public int getItemClickViewId() {
         return 0;
+    }
+
+    /**
+     * 获取需要绑定事件子控件的ViewIds。
+     * @return 返回需要绑定事件的子控件的ViewId数组。
+     */
+    @IdRes
+    public int[] onGetNeedListenerChildViewIds(){
+        return null;
     }
 
     /**
@@ -261,12 +267,11 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
      *      <p>如果你没有找到你所希望提供的方法操作View该怎么办呢？放心，你仍然可以通过 {@link ViewHelper#getView(int)} 方法获取到你所关心的
      *      View然后对他们进行你所需要的操作。
      * @param viewHelper {@link ViewHelper} View相关操作的帮助对象。
-     * @param position 当前的索引位置。
      * @param d 需要绑定的数据模型。
      *
      * @see FloatLayout
      */
-    public void onBindFloatLayoutData(ViewHelper viewHelper, int position, D d) {}
+    public void onBindFloatLayoutData(ViewHelper viewHelper, D d) {}
 
     /**
      * 由 {@link RecyclerView.Adapter} 调用，当该方法被调用的时候说明当前的ViewHolder已经可以被复用，

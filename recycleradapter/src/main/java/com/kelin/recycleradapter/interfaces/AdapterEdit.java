@@ -162,7 +162,7 @@ public interface AdapterEdit<D, VH extends ItemViewHolder<D>> {
      * 获取条目类型。
      * @return 返回跟布局的资源ID。
      */
-    @LayoutRes int getRootViewType();
+    @LayoutRes int getItemViewType();
 
     /**
      * 当需要创建ViewHolder的时候调用。

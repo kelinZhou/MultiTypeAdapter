@@ -3,9 +3,7 @@ package com.kelin.multitypeadapterdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
-import android.view.MenuItem;
 
 import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.Person;
@@ -24,7 +22,7 @@ import rx.Subscriber;
  * 创建时间 2016/12/6  下午6:23
  * 版本 v 1.0.0
  */
-public class LoadMoreListActivity extends AppCompatActivity {
+public class LoadMoreListActivity extends BaseActivity {
 
     public static final int PAGE_SIZE = 10;
 
@@ -44,9 +42,8 @@ public class LoadMoreListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("分页加载");
-        setContentView(R.layout.activity_load_more_list);
+        setContentView(R.layout.include_common_list_layout);
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mMultiTypeAdapter = new MultiTypeAdapter(recyclerView);
         recyclerView.setAdapter(mMultiTypeAdapter);
@@ -107,15 +104,6 @@ public class LoadMoreListActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
