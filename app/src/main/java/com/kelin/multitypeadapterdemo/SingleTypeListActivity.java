@@ -22,8 +22,6 @@ import rx.functions.Action1;
  */
 public class SingleTypeListActivity extends BaseActivity {
 
-    private SingleTypeAdapter<Person, ManHolder> mAdapter;
-
     /**
      * 启动自身，可通过其他Activity调用此方法来启动SingleTypeListActivity。
      *
@@ -33,12 +31,14 @@ public class SingleTypeListActivity extends BaseActivity {
         activityContext.startActivity(new Intent(activityContext, SingleTypeListActivity.class));
     }
 
+
+    private SingleTypeAdapter<Person, ManHolder> mAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("单条目列表");
         setContentView(R.layout.include_common_list_layout);
-
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mAdapter = new SingleTypeAdapter<>(recyclerView, ManHolder.class);

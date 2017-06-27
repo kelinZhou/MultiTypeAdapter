@@ -24,8 +24,6 @@ import rx.functions.Action1;
  */
 public class MultiTypeListActivity extends BaseActivity {
 
-    private MultiTypeAdapter mMultiTypeAdapter;
-
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
      *
@@ -35,32 +33,42 @@ public class MultiTypeListActivity extends BaseActivity {
         activityContext.startActivity(new Intent(activityContext, MultiTypeListActivity.class));
     }
 
+
+    private MultiTypeAdapter mMultiTypeAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("多条目列表");
         setContentView(R.layout.include_common_list_layout);
-
-
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mMultiTypeAdapter = new MultiTypeAdapter(recyclerView, 2);
+
+        mMultiTypeAdapter = new MultiTypeAdapter(recyclerView, 2);  //构建一个最多可将屏幕分为两份的多类型适配器。
         recyclerView.setAdapter(mMultiTypeAdapter);
-        loadData();
+        loadData();  //加载数据
     }
 
     private void loadData() {
+        //模拟从网络获取数据。
         DataHelper.getInstance().getManAndWoman().subscribe(new Action1<People>() {
             @Override
             public void call(People people) {
-                ItemAdapter<Integer> titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getWomanListImage());
-                mMultiTypeAdapter.addAdapter(titleAdapter);
-                ItemAdapter<Person> adapter = new ItemAdapter<Person>(people.getWomanList(), 1, ManHolder2.class);
-                mMultiTypeAdapter.addAdapter(adapter);
+                ItemAdapter<Integer> titleAdapter; //用来加载显示头的子适配器。
+                ItemAdapter<Person> personAdapter; //用来显示条目的适配器
+                //创建女生的头的子适配器。
+                titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getWomanListImage());
+                //创建用来显示女生列表的子适配器。
+                personAdapter = new ItemAdapter<Person>(people.getWomanList(), 1, ManHolder2.class);
+                //将两个子适配器添加到多类型适配器中。
+                mMultiTypeAdapter.addAdapter(titleAdapter, personAdapter);
 
+                //在创建一个男生的头的子适配器。
                 titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getManListImage());
-                mMultiTypeAdapter.addAdapter(titleAdapter);
-                adapter = new ItemAdapter<Person>(people.getManList(), 2, ManHolder.class);
-                mMultiTypeAdapter.addAdapter(adapter);
+                //在创建一个用来显示男生列表的子适配器。
+                personAdapter = new ItemAdapter<Person>(people.getManList(), 2, ManHolder.class);
+                //将两个子适配器添加到多类型适配器中。
+                mMultiTypeAdapter.addAdapter(titleAdapter, personAdapter);
+
+                //刷新列表
                 mMultiTypeAdapter.notifyRefresh();
             }
         });
