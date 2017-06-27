@@ -3,6 +3,7 @@ package com.kelin.recycleradapter;
 import android.database.Observable;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -12,8 +13,11 @@ import android.view.ViewGroup;
 
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
+import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.AdapterEdit;
 import com.kelin.recycleradapter.interfaces.ChildEventBindInterceptor;
+import com.kelin.recycleradapter.interfaces.Item;
+import com.kelin.recycleradapter.interfaces.ViewOperation;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -92,7 +96,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private boolean isVisible;
     private ItemViewHolder<D> mFloatLayoutBinder;
     private boolean isFloatAble;
-    private ChildEventBindInterceptor mEventInterceptor;
+    private ChildEventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -472,7 +476,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
             throw new RuntimeException(e);
         }
         if (viewHolder != null) {
-            bindItemClickEvent(viewHolder);
+            bindItemClickEvent(null, viewHolder);
             return viewHolder;
 
         } else {
@@ -547,17 +551,18 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     @SuppressWarnings("unchecked")
-    private View.OnClickListener onGetClickListener(final ItemViewHolder<D> viewHolder) {
+    private View.OnClickListener onGetClickListener(final Item item, final ItemViewHolder viewHolder) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mItemEventListener == null) return;
-                mItemEventListener.adapter = mParentAdapter.getChildAdapterByPosition(viewHolder.getLayoutPosition());
-                int position = viewHolder.getLayoutPosition();
-                int adapterPosition = getAdapterPosition(viewHolder);
+                int position = item.getLayoutPosition();
+                ItemAdapter<D> itemAdapter = mParentAdapter.getChildAdapterByPosition(position);
+                int adapterPosition = position - itemAdapter.firstItemPosition;
+                D object = itemAdapter.getObject(adapterPosition);
+                mItemEventListener.adapter = itemAdapter;
 
-                D object = getItemObject(position);
-                if (v.getId() == viewHolder.itemView.getId() || v.getId() == viewHolder.getItemClickViewId()) {
+                if (v.getId() == item.getItemView().getId() || v.getId() == viewHolder.getItemClickViewId()) {
                     mItemEventListener.onItemClick(position, object, adapterPosition);
                 } else {
                     mItemEventListener.onItemChildClick(position, object, v, adapterPosition);
@@ -571,15 +576,15 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
             @Override
             public boolean onLongClick(View v) {
                 if (mItemEventListener != null) {
-                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder.getLayoutPosition()), getAdapterPosition(viewHolder));
+                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder.getLayoutPosition()), getAdapterPosition(viewHolder.getLayoutPosition()));
                 }
                 return true;
             }
         };
     }
 
-    private int getAdapterPosition(ItemViewHolder<D> holder) {
-        return mParentAdapter.getItemAdapterPosition(holder.getLayoutPosition());
+    private int getAdapterPosition(int layoutPosition) {
+        return mParentAdapter.getItemAdapterPosition(layoutPosition);
     }
 
     void setParent(MultiTypeAdapter parent) {
@@ -594,13 +599,21 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         return isEmptyList() ? null : getObject(0).getClass();
     }
 
-    private void bindItemClickEvent(ItemViewHolder<D> viewHolder) {
-        View.OnClickListener onClickListener = onGetClickListener(viewHolder);
-
+    private void bindItemClickEvent(@Nullable ViewHelper viewHelper, @NonNull ItemViewHolder<D> viewHolder) {
+        Item item;
+        ViewOperation operation;
+        if (viewHelper == null) {
+            item = viewHolder;
+            operation = viewHolder;
+        } else {
+            item = (Item) viewHelper.getRootView();
+            operation = viewHelper;
+        }
+        View.OnClickListener onClickListener = onGetClickListener(item, viewHolder);
         if (viewHolder.clickable()) {
             View clickView;
-            if (viewHolder.getItemClickViewId() == 0 || (clickView = viewHolder.getView(viewHolder.getItemClickViewId())) == null) {
-                clickView = viewHolder.itemView;
+            if (viewHolder.getItemClickViewId() == 0 || (clickView = operation.getView(viewHolder.getItemClickViewId())) == null) {
+                clickView = item.getItemView();
             }
             clickView.setOnClickListener(onClickListener);
             clickView.setOnLongClickListener(onGetLongClickListener(viewHolder));
@@ -609,8 +622,8 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         if (childViewIds != null && childViewIds.length > 0) {
             View v;
             for (int viewId : childViewIds) {
-                v = viewHolder.getView(viewId);
-                if (v != null && (mEventInterceptor == null || !mEventInterceptor.onInterceptor(v))) {
+                v = operation.getView(viewId);
+                if (v != null && (mEventInterceptor == null || !mEventInterceptor.onInterceptor(v, item))) {
                     v.setOnClickListener(onClickListener);
                 }
             }
@@ -684,10 +697,6 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-    public ItemViewHolder getFloatLayoutBinder() {
-        return mFloatLayoutBinder;
-    }
-
     public boolean isFloatAble() {
         return isFloatAble;
     }
@@ -699,6 +708,11 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      */
     public void setEventInterceptor(ChildEventBindInterceptor interceptor) {
         mEventInterceptor = interceptor;
+    }
+
+    public void onBindFloatViewData(ViewHelper floatViewHelper, D d) {
+        mFloatLayoutBinder.onBindFloatLayoutData(floatViewHelper, d);
+        bindItemClickEvent(floatViewHelper, mFloatLayoutBinder);
     }
 
     /**

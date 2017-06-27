@@ -12,11 +12,9 @@ import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.Person;
 import com.kelin.multitypeadapterdemo.holder.ClassHolder;
 import com.kelin.multitypeadapterdemo.holder.ManHolder;
+import com.kelin.recycleradapter.FloatLayout;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
-import com.kelin.recycleradapter.FloatLayout;
-import com.kelin.recycleradapter.holder.ItemViewHolder;
-import com.kelin.recycleradapter.holder.ViewHelper;
 
 import java.util.List;
 
@@ -32,7 +30,6 @@ public class FloatListActivity extends BaseActivity {
 
     private MultiTypeAdapter mMultiTypeAdapter;
     private RecyclerView mRecyclerView;
-    private FloatLayout mFloatLayout;
 
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
@@ -50,28 +47,10 @@ public class FloatListActivity extends BaseActivity {
 
         setContentView(R.layout.activity_float_list);
 
-        mFloatLayout = (FloatLayout) findViewById(R.id.fl_float_layout);
-        mFloatLayout.setOnBindEventListener(new FloatLayout.OnBindEventListener() {
-
-            @Override
-            public void onBindEvent(ItemViewHolder curHolder, final ItemAdapter itemAdapter, ViewHelper viewHelper, final int position) {
-                View.OnClickListener l = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (v.getId() == mFloatLayout.getId()) {
-                            Snackbar.make(mRecyclerView, "悬浮条目被点击：position=" + position + "|class=" + ((Classs) mMultiTypeAdapter.getObject(position)).getClassName(), 2000).show();
-                        } else if (v.getId() == R.id.tv_show_more) {
-                            Snackbar.make(mRecyclerView, "您点击了悬浮条目的更多：position=" + position + "|class=" + ((Classs) mMultiTypeAdapter.getObject(position)).getClassName(), 2000).show();
-                        }
-                    }
-                };
-                viewHelper.getRootView().setOnClickListener(l);
-                viewHelper.getView(R.id.tv_show_more).setOnClickListener(l);
-            }
-        });
+        FloatLayout floatLayout = (FloatLayout) findViewById(R.id.fl_float_layout);
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView);
-        mMultiTypeAdapter.setFloatLayout(mFloatLayout);
+        mMultiTypeAdapter.setFloatLayout(floatLayout);
         mRecyclerView.setAdapter(mMultiTypeAdapter);
         loadData();
     }

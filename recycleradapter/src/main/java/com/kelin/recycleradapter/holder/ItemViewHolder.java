@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.kelin.recycleradapter.callback.NotifyCallback;
+import com.kelin.recycleradapter.interfaces.Item;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
 import com.kelin.recycleradapter.FloatLayout;
 
@@ -29,7 +30,7 @@ import java.util.List;
  * 创建时间 2017/1/19  下午12:15
  * 版本 v 1.0.0
  */
-public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implements NotifyCallback<D>, ViewOperation {
+public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implements NotifyCallback<D>, ViewOperation, Item {
 
     private final SparseArray<View> mViews;
 
@@ -288,5 +289,10 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
      */
     public boolean clickable() {
         return true;
+    }
+
+    @Override
+    public View getItemView() {
+        return itemView;
     }
 }

@@ -242,7 +242,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
-        //如果没有设置悬浮控件就不获取子适配器，这用这里的逻辑就不会执行。
+        //如果没有设置悬浮控件就不获取子适配器，这这里的逻辑就不会执行。
         ItemAdapter adapter = mFloatLayout == null ? null : getAdjacentChildAdapterByPosition(mCurPosition, true, false);
         if (adapter != null && adapter.isFloatAble() && dy != 0) {
             View view = lm.findViewByPosition(adapter.firstItemPosition);
@@ -307,9 +307,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 mFloatLayout.setY(-mFloatLayoutHeight);
             }
             mLastBindPosition = itemAdapter.firstItemPosition;
-            ItemViewHolder binder = itemAdapter.getFloatLayoutBinder();
-            binder.onBindFloatLayoutData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
-            mFloatLayout.bindEvent(binder, itemAdapter, mFloatViewHelper, itemAdapter.firstItemPosition);
+            mFloatLayout.setLayoutPosition(position);
+            itemAdapter.onBindFloatViewData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
         }
     }
 
@@ -321,10 +320,9 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
         if (mFloatLayout != null && position == 0 && itemAdapter.isFloatAble()) {
+            mFloatLayout.setLayoutPosition(position);
             setFloatLayoutVisibility(true);
-            ItemViewHolder binder = itemAdapter.getFloatLayoutBinder();
-            binder.onBindFloatLayoutData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
-            mFloatLayout.bindEvent(binder, itemAdapter, mFloatViewHelper, position);
+            itemAdapter.onBindFloatViewData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
         }
     }
 
