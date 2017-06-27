@@ -6,11 +6,11 @@
 
 ### 效果图
 ###### 单条目列表
-
+![loadMore](materials/gif_single_type_list.gif)
 ###### 多条目列表
-
+![loadMore](materials/gif_multi_type_list.gif)
 ###### 悬浮吸顶条目列表
-
+![loadMore](materials/gif_float_list.gif)
 ###### 分页加载
 ![loadMore](materials/gif_load_more_list.gif)
 ###### EmptyView列表
