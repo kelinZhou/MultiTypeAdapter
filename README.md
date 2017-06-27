@@ -6,7 +6,7 @@
 
 #### 单条目列表
 ![loadMore](materials/gif_single_type_list.gif)
-###### 核心代码
+###### 实现代码
 ```
 private SingleTypeAdapter<Person, ManHolder> mAdapter;
 
@@ -34,7 +34,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 ```
 #### 多条目列表
 ![loadMore](materials/gif_multi_type_list.gif)
-###### 核心代码
+###### 实现代码
 ```
     private MultiTypeAdapter mMultiTypeAdapter;
     @Override
@@ -171,7 +171,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 ```
 #### EmptyView列表
 ![empty](materials/gif_empty_view_list.gif)
-###### 核心代码
+###### 实现代码
 ```
     private SingleTypeAdapter<Person, ManHolder> mAdapter;
     @Override
