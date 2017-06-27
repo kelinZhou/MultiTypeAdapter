@@ -84,6 +84,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 ![loadMore](materials/gif_float_list.gif)
 #### 分页加载
 ![loadMore](materials/gif_load_more_list.gif)
+###### 实现代码
 ```
     /**
      * 定义每页的数量。
@@ -225,7 +226,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 
 
 
-
+* * *
 ### License
 ```
 MIT License
