@@ -482,8 +482,12 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param list 数据集合。
      */
     public void setDataList(List<D> list) {
-        mDataList = list != null ? list : new ArrayList<D>();
-        mTempList = new ArrayList<>(mDataList);
+        mDataList = list;
+        if (mTempList == null) {
+            mTempList = new ArrayList<>();
+        } else {
+            mTempList.clear();
+        }
     }
 
     /**
@@ -576,8 +580,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
         /**
          * 重新加载更多时的回调。当上一次加载更多失败点击重试后会执行此方法，而不会执行 {@link #onLoadMore()} 方法。
+         * 这里是将该方法重新指向了 {@link #onLoadMore()} 方法，因为有可能你不需要关心这个方法。如果你需要关心这个方法，
+         * 则可以通过重写该方法将默认实现覆盖。
          */
-        public abstract void onReloadMore();
+        public void onReloadMore(){onLoadMore();}
     }
 
     class LoadMoreRetryClickListener implements View.OnClickListener {
