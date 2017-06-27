@@ -4,15 +4,16 @@
     针对RecyclerVeiw的适配器的封装，可以令你简单优雅的实现一些常用功能。
     *例如：*单条目列表、多条目列表、悬浮列表、分页加载、Empty列表以及各种针对条目的事件的监听。
 
-### 单条目列表
+### 效果图
+###### 单条目列表
 
-### 多条目列表
+###### 多条目列表
 
-### 悬浮吸顶条目列表
+###### 悬浮吸顶条目列表
 
-### 分页加载
+###### 分页加载
 ![loadMore](materials/gif_load_more_list.gif)
-### EmptyView列表
+###### EmptyView列表
 ![empty](materials/gif_empty_view_list.gif)
 
 
