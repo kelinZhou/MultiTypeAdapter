@@ -61,7 +61,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     /**
      * 加载更多的回调。
      */
-    private MultiTypeAdapter.LoadMoreCallback mLoadMoreCallback;
+    private OnLoadMoreListener mLoadMoreListener;
     /**
      * 加载更多的布局信息对象。
      */
@@ -259,10 +259,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 设置加载更多时显示的布局。
      * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
      * @param retryLayoutId 加载更多失败时显示的布局。
-     * @param callback 加载更多的回调。
+     * @param listener 加载更多被触发的监听。
      */
-    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        setLoadMoreView(loadMoreLayoutId, retryLayoutId, 0, callback);
+    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @NonNull OnLoadMoreListener listener) {
+        setLoadMoreView(loadMoreLayoutId, retryLayoutId, 0, listener);
     }
 
     /**
@@ -270,10 +270,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
      * @param retryLayoutId 加载更多失败时显示的布局。
      * @param noMoreDataLayoutId 没有更多数据时显示的布局。
-     * @param callback 加载更多的回调。
+     * @param listener 加载更多被触发的监听。
      */
-    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        setLoadMoreView(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, 0, callback);
+    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @NonNull OnLoadMoreListener listener) {
+        setLoadMoreView(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, 0, listener);
     }
 
     /**
@@ -283,20 +283,20 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param noMoreDataLayoutId 没有更多数据时显示的布局。
      * @param offset 加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
      *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
-     * @param callback 加载更多的回调。
+     * @param listener 加载更多被触发的监听。
      */
-    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
-        setLoadMoreView(new LoadMoreLayoutManager(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, offset), callback);
+    public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset, @NonNull OnLoadMoreListener listener) {
+        setLoadMoreView(new LoadMoreLayoutManager(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, offset), listener);
     }
 
     /**
      * 设置加载更多时显示的布局。
      * @param layoutInfo LoadMore布局信息对象。
-     * @param callback 加载更多的回调。
+     * @param listener 加载更多被触发的监听。
      */
-    public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull MultiTypeAdapter.LoadMoreCallback callback) {
+    public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull OnLoadMoreListener listener) {
         mLoadMoreLayoutManager = layoutInfo;
-        mLoadMoreCallback = callback;
+        mLoadMoreListener = listener;
     }
 
     /**
@@ -349,10 +349,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 开始加载更多。
      */
     private void startLoadMore() {
-        if (mLoadMoreCallback != null) {
+        if (mLoadMoreListener != null) {
             Log.i("MultiTypeAdapter", "开始加载更多");
             mLoadMoreLayoutManager.setInTheLoadMore(true);
-            mLoadMoreCallback.onLoadMore();
+            mLoadMoreListener.onLoadMore();
         }
     }
 
@@ -360,10 +360,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 开始加载更多。
      */
     private void reloadMore() {
-        if (mLoadMoreCallback != null) {
+        if (mLoadMoreListener != null) {
             Log.i("MultiTypeAdapter", "开始加载更多");
             mLoadMoreLayoutManager.setInTheLoadMore(true);
-            mLoadMoreCallback.onReloadMore();
+            mLoadMoreListener.onReloadMore();
         }
     }
 
@@ -571,7 +571,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     /**
      * 加载更多的回调对象。
      */
-    public abstract static class LoadMoreCallback{
+    public abstract static class OnLoadMoreListener {
 
         /**
          * 加载更多时的回调。
