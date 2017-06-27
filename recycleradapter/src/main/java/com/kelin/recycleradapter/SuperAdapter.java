@@ -463,8 +463,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param bundle 将不同的内容存放到该参数中。
      */
     protected abstract void getChangePayload(D oldItemData, D newItemData, Bundle bundle);
+
     /**
-     * 刷新RecyclerView。
+     * 刷新RecyclerView。如果你需要刷新列表最好调用该方法，而不应该调用 {@link #notifyDataSetChanged()} 方法，该方法是
+     * 通过Google提供的 {@link DiffUtil} 工具类进行数据比较然后映射到对应的 notifyItem***() 方法的。
      */
     public void notifyRefresh() {
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(mDiffUtilCallback);
