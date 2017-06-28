@@ -18,8 +18,8 @@ public interface Item {
     int getLayoutPosition();
 
     /**
-     * 获取跟布局的
-     * @return
+     * 获取跟布局的View。
+     * @return 返回条目跟布局的View。
      */
     View getItemView();
 }

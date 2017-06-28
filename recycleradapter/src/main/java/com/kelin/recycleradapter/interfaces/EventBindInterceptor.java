@@ -11,7 +11,7 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
  * 版本 v 1.0.0
  */
 
-public interface ChildEventBindInterceptor {
+public interface EventBindInterceptor {
     /**
      * 当需要给 {@link ItemViewHolder} 的 {@link ItemViewHolder#onGetNeedListenerChildViewIds()} 返回的View绑定事件时调用。
      * 如果你想对这个控件设置特殊的监听则可以通过该方法进行拦截，然后设置你所需要的监听，因为适配器默认只是实现点击监听。
@@ -23,7 +23,7 @@ public interface ChildEventBindInterceptor {
      * <p>  这个拦截只能拦截条目中的子View的点击事件，不能拦截条目点击事件。如果你不希望触发某个类型的条目点击事件则可以通过覆盖
      * {@link ItemViewHolder}的{@link ItemViewHolder#clickable()}方法进行拦截。
      *
-     * @param v              要绑定的View。
+     * @param v    要绑定的View。
      * @param item 当前的 {@link Item} 对象。
      * @return 是否拦截绑定，如果拦截则不会对其进行绑定点击事件，否则将会为其绑定点击事件。
      */

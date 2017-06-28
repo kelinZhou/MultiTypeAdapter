@@ -13,6 +13,8 @@ import android.widget.LinearLayout;
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.AdapterEdit;
+import com.kelin.recycleradapter.interfaces.EventBindInterceptor;
+import com.kelin.recycleradapter.interfaces.EventInterceptor;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.lang.reflect.Constructor;
@@ -28,7 +30,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> implements AdapterEdit<D, VH> {
+public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends SuperAdapter<D, VH> implements AdapterEdit<D, VH>, EventInterceptor {
 
     /**
      * 当前适配器中的ViewHolder对象。
@@ -46,6 +48,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      * 用来记录当前适配器中条目的占屏比。
      */
     private int mItemSpanSize;
+    private EventBindInterceptor mEventInterceptor;
 
     public EditSuperAdapter(@NonNull RecyclerView recyclerView, List<D> list, Class<? extends VH> holderClass) {
         this(recyclerView, 1, 1, list, holderClass);
@@ -105,6 +108,16 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         return holder;
     }
 
+    /**
+     * 设置事件绑定拦截器。
+     *
+     * @param interceptor {@link EventBindInterceptor} 拦截器对象。
+     */
+    @Override
+    public void setEventInterceptor(EventBindInterceptor interceptor) {
+        mEventInterceptor = interceptor;
+    }
+
     private void bindItemClickEvent(VH viewHolder) {
         View.OnClickListener onClickListener = onGetClickListener(viewHolder);
 
@@ -118,7 +131,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         if (childViewIds != null && childViewIds.length > 0) {
             for (int viewId : childViewIds) {
                 View v = viewHolder.getView(viewId);
-                if (v != null) {
+                if (v != null && (mEventInterceptor == null || !mEventInterceptor.onInterceptor(v, viewHolder))) {
                     v.setOnClickListener(onClickListener);
                 }
             }

@@ -15,7 +15,8 @@ import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.AdapterEdit;
-import com.kelin.recycleradapter.interfaces.ChildEventBindInterceptor;
+import com.kelin.recycleradapter.interfaces.EventBindInterceptor;
+import com.kelin.recycleradapter.interfaces.EventInterceptor;
 import com.kelin.recycleradapter.interfaces.Item;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
 
@@ -32,7 +33,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
+public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>>, EventInterceptor {
 
     private static final String TAG = "ItemAdapter";
     /**
@@ -87,7 +88,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     /**
      * 用来拦截事件绑定的拦截器。
      */
-    private ChildEventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。
+    private EventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -711,11 +712,12 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     /**
-     * 设置条目子控件事件绑定的拦截器。
+     * 设置事件绑定拦截器。
      *
-     * @param interceptor 子控件事件绑定的拦截器。
+     * @param interceptor {@link EventBindInterceptor} 拦截器对象。
      */
-    public void setEventInterceptor(ChildEventBindInterceptor interceptor) {
+    @Override
+    public void setEventInterceptor(EventBindInterceptor interceptor) {
         mEventInterceptor = interceptor;
     }
 
