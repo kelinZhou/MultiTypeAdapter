@@ -96,7 +96,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     private boolean isVisible;
     private ItemViewHolder<D> mFloatLayoutBinder;
     private boolean isFloatAble;
-    private ChildEventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。
+    private ChildEventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。 还有悬浮条目的长按事件的设置没有处理。
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -134,6 +134,17 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         setDataList(list);
     }
 
+    /**
+     * 将当前适配器设置为可悬浮的，并不是所有的 {@link ItemAdapter} 都适用该方法，必须满足以下条件：
+     * <P>1.spanSize 必须是 {@link #SPAN_SIZE_FULL_SCREEN} 也就是说当前 {@link ItemAdapter} 中的 {@link ItemViewHolder} 必须是
+     * 占满全屏的。
+     * <p>2.当前的条目数量必须为1，也就是 {@link #getItemCount()} 方法的返回值必须是1。
+     * <p>除此之外您还必须执行 {@link MultiTypeAdapter#setFloatLayout(FloatLayout)} 方法。
+     *
+     * @param floatAble 是否可以悬浮，默认为false。
+     * @see #getItemSpanSize(int)
+     * @see #getItemCount()
+     */
     public void setFloatAble(boolean floatAble) {
         isFloatAble = floatAble;
     }
@@ -522,7 +533,9 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     /**
-     * 获取条目的占屏比。
+     * 获取条目的占屏比。这个方法的返回值是您在构造该对象时通过构造方法: {@link #ItemAdapter(int, Class)}、
+     * {@link #ItemAdapter(int, Class, Object)}、{@link #ItemAdapter(List, int, Class)} 中的 spanSize参数设置进来的。
+     * 如果您不是调用这几个构造方法构造的该对象，那么这个方法的返回值则为 {@link #SPAN_SIZE_FULL_SCREEN}。
      *
      * @param position 当前的条目的位置。
      * @return 返回当前条目的占屏比。
@@ -571,14 +584,16 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         };
     }
 
-    private View.OnLongClickListener onGetLongClickListener(final ItemViewHolder<D> viewHolder) {
+    private View.OnLongClickListener onGetLongClickListener(final Item item) {
         return new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 if (mItemEventListener != null) {
-                    mItemEventListener.onItemLongClick(viewHolder.getLayoutPosition(), getItemObject(viewHolder.getLayoutPosition()), getAdapterPosition(viewHolder.getLayoutPosition()));
+                    int layoutPosition = item.getLayoutPosition();
+                    mItemEventListener.onItemLongClick(layoutPosition, getItemObject(layoutPosition), getAdapterPosition(layoutPosition));
+                    return true;
                 }
-                return true;
+                return false;
             }
         };
     }
@@ -616,7 +631,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
                 clickView = item.getItemView();
             }
             clickView.setOnClickListener(onClickListener);
-            clickView.setOnLongClickListener(onGetLongClickListener(viewHolder));
+            clickView.setOnLongClickListener(onGetLongClickListener(item));
         }
         int[] childViewIds = viewHolder.onGetNeedListenerChildViewIds();
         if (childViewIds != null && childViewIds.length > 0) {
@@ -795,7 +810,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     public static abstract class OnItemEventListener<D> {
         private ItemAdapter<D> adapter;
 
-        protected ItemAdapter<D> getAdapter() {
+        protected final ItemAdapter<D> getAdapter() {
             return adapter;
         }
 

@@ -108,14 +108,31 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      */
     public MultiTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
         super(recyclerView, totalSpanSize, orientation);
+        ViewGroup parent = (ViewGroup) recyclerView.getParent();
+        int childCount = parent.getChildCount();
+        if (childCount > 1) {
+            for (int i = 0; i < childCount; i++) {
+                View childAt = parent.getChildAt(i);
+                if (childAt instanceof FloatLayout) {
+                    attachFloatLayout((FloatLayout) childAt);
+                }
+            }
+        }
     }
 
     /**
      * 设置用来显示悬浮条目的布局。
+     * <p>单单调用这个方法并不会出现悬浮效果，您还需要通过 {@link ItemAdapter#setFloatAble(boolean)} 方法将 {@link ItemAdapter}
+     * 设置为可悬浮的。
+
+     * <h1><font color="#619BE5">注意：</font> </h1> {@link FloatLayout} 在xml文件中的的摆放必须满足以下特点：
+     * <p>1.必须和 {@link RecyclerView} 是可重叠关系，也就是说用来承载 {@link RecyclerView} 和 {@link FloatLayout} 的布局容器必须是
+     * 可以允许子View可以重叠的Layout，例如：{@link android.widget.RelativeLayout} 或 {@link android.widget.FrameLayout} 等。
+     * <p>2.由于Android并不是任何时候都允许修改View的层级，所以在xml布局文件中 {@link FloatLayout} 的层级必须在 {@link RecyclerView} 之上。
      *
      * @param floatLayout 一个 {@link FloatLayout} 对象。
      */
-    public void setFloatLayout(@NonNull FloatLayout floatLayout) {
+    private void attachFloatLayout(@NonNull FloatLayout floatLayout) {
         Drawable background = getRecyclerView().getBackground();
         mFloatLayout = floatLayout;
         ColorDrawable bg = (ColorDrawable) (background == null ? ((ViewGroup) getRecyclerView().getParent()).getBackground() : background);

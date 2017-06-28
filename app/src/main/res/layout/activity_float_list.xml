@@ -4,10 +4,13 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent">
 
-    <include layout="@layout/include_common_list_layout"/>
+    <android.support.v7.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <com.kelin.recycleradapter.FloatLayout
-        android:id="@+id/fl_float_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

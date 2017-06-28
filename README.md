@@ -82,6 +82,113 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 ```
 #### 悬浮吸顶条目列表
 ![loadMore](materials/gif_float_list.gif)
+###### 代码实现
+```
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:background="@color/white"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <com.kelin.recycleradapter.FloatLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+</FrameLayout>
+```
+```
+    private MultiTypeAdapter mMultiTypeAdapter;
+    private RecyclerView mRecyclerView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setTitle("悬浮条列表");
+
+        setContentView(R.layout.activity_float_list);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView);
+        mRecyclerView.setAdapter(mMultiTypeAdapter);
+        loadData();
+    }
+
+    private void loadData() {
+        //加载数据。
+        DataHelper.getInstance().getClassList().subscribe(new Action1<List<Classs>>() {
+            @Override
+            public void call(List<Classs> classses) {
+                ItemAdapter<Classs> adapter;
+                for (final Classs classs : classses) {
+                    //构建一个用来显示班级的子Adapter。
+                    adapter = new ItemAdapter<>(ClassHolder.class, classs);
+                    //设置该子Adapter可以悬浮。
+                    adapter.setFloatAble(true);
+                    //设置条目事件监听。
+                    adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<Classs>() {
+                        //当条目被点击。
+                        @Override
+                        public void onItemClick(int position, Classs o, int adapterPosition) {
+                            Snackbar.make(mRecyclerView, "条目被点击：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                        }
+                        //当条目被长按
+                        @Override
+                        public void onItemLongClick(int position, Classs o, int adapterPosition) {
+                            Snackbar.make(mRecyclerView, "条目被长按：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                        }
+                        //当条目中的子控件被点击
+                        @Override
+                        public void onItemChildClick(int position, Classs o, View view, int adapterPosition) {
+                            if (view.getId() == R.id.tv_show_more) {
+                                Snackbar.make(mRecyclerView, "您点击了显示更多：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                            }
+                        }
+                    });
+                    //将子Adapter添加到多类型Adapter中。
+                    mMultiTypeAdapter.addAdapter(adapter, new ItemAdapter<Person>(classs.getStudents(), ManHolder.class));
+                }
+                //刷新列表
+                mMultiTypeAdapter.notifyRefresh();
+            }
+        });
+    }
+```
+```
+@ItemLayout(R.layout.item_class_title_layout)
+public class ClassHolder extends ItemViewHolder<Classs> {
+
+    protected ClassHolder(View itemView) {
+        super(itemView);
+    }
+
+    /**
+     * 绑定数据的时候调用。
+     *
+     * @param position 当前的Item索引。
+     * @param classs   当前索引对应的数据对象。
+     */
+    @Override
+    public void onBindData(int position, Classs classs) {
+        setText(R.id.tv_class_name, classs.getClassName());
+        setText(R.id.tv_count, String.format(Locale.CHINA, "%d 人", classs.getCount()));
+    }
+
+    @Override
+    public void onBindFloatLayoutData(ViewHelper viewHelper, Classs classs) {
+        viewHelper.setText(R.id.tv_class_name, classs.getClassName());
+        viewHelper.setText(R.id.tv_count, String.format(Locale.CHINA, "%d 人", classs.getCount()));
+    }
+
+    @Override
+    public int[] onGetNeedListenerChildViewIds() {
+        return new int[]{R.id.tv_show_more};
+    }
+}
+```
 #### 分页加载
 ![loadMore](materials/gif_load_more_list.gif)
 ###### 实现代码
