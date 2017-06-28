@@ -135,11 +135,18 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     }
 
     /**
-     * 将当前适配器设置为可悬浮的，并不是所有的 {@link ItemAdapter} 都适用该方法，必须满足以下条件：
+     * 将当前{@link ItemAdapter}设置为可悬浮的。
+     *
+     * <h1><font color="#619BE5">注意：</font> </h1>
+     * 并不是所有的 {@link ItemAdapter} 都适用该方法，必须满足以下条件：
      * <P>1.spanSize 必须是 {@link #SPAN_SIZE_FULL_SCREEN} 也就是说当前 {@link ItemAdapter} 中的 {@link ItemViewHolder} 必须是
      * 占满全屏的。
      * <p>2.当前的条目数量必须为1，也就是 {@link #getItemCount()} 方法的返回值必须是1。
-     * <p>除此之外您还必须执行 {@link MultiTypeAdapter#setFloatLayout(FloatLayout)} 方法。
+     * <p>调用了改方法并不一定就会有悬浮吸顶效果，您还要在布局文件中添加  {@link FloatLayout} 控件，
+     * {@link FloatLayout} 在xml文件中的的摆放必须满足以下特点：
+     * <p>1.必须和 {@link RecyclerView} 是可重叠关系，也就是说用来承载 {@link RecyclerView} 和 {@link FloatLayout} 的布局容器必须是
+     * 允许子View可以重叠的Layout，例如：{@link android.widget.RelativeLayout} 或 {@link android.widget.FrameLayout} 等。
+     * <p>2.由于Android并不是任何时候都允许修改View的层级，所以在xml布局文件中 {@link FloatLayout} 的层级必须在 {@link RecyclerView} 之上。
      *
      * @param floatAble 是否可以悬浮，默认为false。
      * @see #getItemSpanSize(int)
@@ -656,11 +663,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     private void mapNotifyItemRemoved(int position) {
         if (mParentAdapter != null) {
-            if (!isEmptyList()) {
-                mParentAdapter.notifyItemRemoved(position + firstItemPosition);
-            } else {
-                mParentAdapter.notifyItemRemoved(position + firstItemPosition);
-            }
+            mParentAdapter.notifyItemRemoved(position + firstItemPosition);
         }
     }
 
@@ -712,7 +715,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         }
     }
 
-    public boolean isFloatAble() {
+    boolean isFloatAble() {
         return isFloatAble;
     }
 
@@ -725,7 +728,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         mEventInterceptor = interceptor;
     }
 
-    public void onBindFloatViewData(ViewHelper floatViewHelper, D d) {
+    void onBindFloatViewData(ViewHelper floatViewHelper, D d) {
         mFloatLayoutBinder.onBindFloatLayoutData(floatViewHelper, d);
         bindItemClickEvent(floatViewHelper, mFloatLayoutBinder);
     }

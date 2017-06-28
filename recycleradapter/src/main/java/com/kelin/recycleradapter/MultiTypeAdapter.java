@@ -121,10 +121,10 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     /**
-     * 设置用来显示悬浮条目的布局。
+     * 关联用来显示悬浮条目的布局。
      * <p>单单调用这个方法并不会出现悬浮效果，您还需要通过 {@link ItemAdapter#setFloatAble(boolean)} 方法将 {@link ItemAdapter}
      * 设置为可悬浮的。
-
+     *
      * <h1><font color="#619BE5">注意：</font> </h1> {@link FloatLayout} 在xml文件中的的摆放必须满足以下特点：
      * <p>1.必须和 {@link RecyclerView} 是可重叠关系，也就是说用来承载 {@link RecyclerView} 和 {@link FloatLayout} 的布局容器必须是
      * 可以允许子View可以重叠的Layout，例如：{@link android.widget.RelativeLayout} 或 {@link android.widget.FrameLayout} 等。
