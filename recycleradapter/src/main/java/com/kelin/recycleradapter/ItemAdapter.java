@@ -33,14 +33,7 @@ import java.util.List;
  */
 
 public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
-    /**
-     * 表示创建头Holder。
-     */
-    private static final int HEADER_HOLDER = 0X0000_0101;
-    /**
-     * 表示创建脚Holder。
-     */
-    private static final int FOOTER_HOLDER = 0X0000_0102;
+
     private static final String TAG = "ItemAdapter";
     /**
      * {@link MultiTypeAdapter} 对象。也是当前Adapter的父级Adapter，是输入RecyclerView的Adapter。
@@ -63,23 +56,10 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      */
     private Class<? extends ItemViewHolder<D>> mHolderClass;
     /**
-     * 用来记录头布局的资源文件ID。
-     */
-    private
-    @LayoutRes
-    int mHeaderLayoutId;
-    /**
-     * 用来记录脚布局的资源文件ID。
-     */
-    private
-    @LayoutRes
-    int mFooterLayoutId;
-    /**
      * 用来记录当前适配器中的布局资源ID。
      */
-    private
     @LayoutRes
-    int mRootLayoutId;
+    private int mItemLayoutId;
     /**
      * 条目事件监听对象。
      */
@@ -92,11 +72,22 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      * 当前页面的数据集。
      */
     private List<D> mDataList;
-
+    /**
+     * 用来记录当前子Adapter是否在屏幕内。
+     */
     private boolean isVisible;
+    /**
+     * 用来绑定悬浮条目数据的Holder。
+     */
     private ItemViewHolder<D> mFloatLayoutBinder;
+    /**
+     * 用来记录当前子Adapter是否是需要被悬浮的。
+     */
     private boolean isFloatAble;
-    private ChildEventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。 还有悬浮条目的长按事件的设置没有处理。
+    /**
+     * 用来拦截事件绑定的拦截器。
+     */
+    private ChildEventBindInterceptor mEventInterceptor;  // TODO: 2017/6/27 这个拦截机制在SuperAdapter中也要有。
 
     public ItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -126,7 +117,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
         mHolderClass = holderClass;
         ItemLayout annotation = holderClass.getAnnotation(ItemLayout.class);
         if (annotation != null) {
-            mRootLayoutId = annotation.value();
+            mItemLayoutId = annotation.value();
         } else {
             throw new RuntimeException("view holder's root layout is not found! You must use \"@ItemLayout(rootLayoutId = @LayoutRes int)\" notes on your ItemViewHolder class");
         }
@@ -136,7 +127,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
 
     /**
      * 将当前{@link ItemAdapter}设置为可悬浮的。
-     *
+     * <p>
      * <h1><font color="#619BE5">注意：</font> </h1>
      * 并不是所有的 {@link ItemAdapter} 都适用该方法，必须满足以下条件：
      * <P>1.spanSize 必须是 {@link #SPAN_SIZE_FULL_SCREEN} 也就是说当前 {@link ItemAdapter} 中的 {@link ItemViewHolder} 必须是
@@ -161,7 +152,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
      *
      * @param visible true表示可见，false表示不可见。
      */
-    void setVisibleState(boolean visible) {
+    private void setVisibleState(boolean visible) {
         isVisible = visible;
     }
 
@@ -472,7 +463,7 @@ public class ItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
     @Override
     @LayoutRes
     public int getItemViewType() {
-        return mRootLayoutId;
+        return mItemLayoutId;
     }
 
     /**
