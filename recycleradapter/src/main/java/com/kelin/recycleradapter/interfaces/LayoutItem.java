@@ -9,7 +9,7 @@ import android.view.View;
  * 版本 v 1.0.0
  */
 
-public interface Item {
+public interface LayoutItem {
 
     /**
      * 获取当前的布局位置。

@@ -1,11 +1,13 @@
 package com.kelin.recycleradapter;
 
 import android.database.Observable;
+import android.support.annotation.CallSuper;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +16,7 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.EventBindInterceptor;
 import com.kelin.recycleradapter.interfaces.EventInterceptor;
-import com.kelin.recycleradapter.interfaces.Item;
+import com.kelin.recycleradapter.interfaces.LayoutItem;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -36,7 +38,6 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      * 表示当前的条目是占满屏幕的。
      */
     public static final int SPAN_SIZE_FULL_SCREEN = SuperAdapter.SPAN_SIZE_FULL_SCREEN;
-
     /**
      * {@link MultiTypeAdapter} 对象。也是当前Adapter的父级Adapter，是输入RecyclerView的Adapter。
      */
@@ -82,6 +83,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      * 用来拦截事件绑定的拦截器。
      */
     private EventBindInterceptor mEventInterceptor;
+    private ClickListenerPool mClickListenerPool;
 
     public SuperItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -237,12 +239,12 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     }
 
     @SuppressWarnings("unchecked")
-    private D getItemObject(int parentPosition) {
-        return (D) mParentAdapter.getObject(parentPosition);
+    private D getItemObject(int layoutPosition) {
+        return (D) mParentAdapter.getObject(layoutPosition);
     }
 
     @SuppressWarnings("unchecked")
-    private View.OnClickListener onGetClickListener(final Item item, final ItemViewHolder viewHolder) {
+    private View.OnClickListener onGetClickListener(final LayoutItem item, final ItemViewHolder viewHolder) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -262,7 +264,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         };
     }
 
-    private View.OnLongClickListener onGetLongClickListener(final Item item) {
+    private View.OnLongClickListener onGetLongClickListener(final LayoutItem item) {
         return new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -280,32 +282,52 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return mParentAdapter.getItemAdapterPosition(layoutPosition);
     }
 
-    void setParent(MultiTypeAdapter parent) {
+    final void setParent(MultiTypeAdapter parent) {
         mParentAdapter = parent;
     }
 
-    Class<?> getItemModelClass() {
+    final Class<?> getItemModelClass() {
         return isEmptyList() ? null : getObject(0).getClass();
     }
 
     final void bindItemClickEvent(@Nullable ViewHelper viewHelper, @NonNull ItemViewHolder<D> viewHolder) {
-        Item item;
+        LayoutItem item;
         ViewOperation operation;
+        boolean isFloatBind;
         if (viewHelper == null) {
             item = viewHolder;
             operation = viewHolder;
+            isFloatBind = false;
         } else {
-            item = (Item) viewHelper.getRootView();
+            item = (LayoutItem) viewHelper.getRootView();
             operation = viewHelper;
+            isFloatBind = true;
         }
-        View.OnClickListener onClickListener = onGetClickListener(item, viewHolder);
+        View.OnClickListener onClickListener;
+        View.OnLongClickListener onLongClickListener;
+        if (isFloatBind) {
+            if (mClickListenerPool == null
+                    || (onClickListener = mClickListenerPool.acquireClick(item.getLayoutPosition())) == null
+                    || (onLongClickListener = mClickListenerPool.acquireLongClick(item.getLayoutPosition())) == null) {
+                onClickListener = onGetClickListener(item, viewHolder);
+                onLongClickListener = onGetLongClickListener(item);
+                if (mClickListenerPool == null) {
+                    mClickListenerPool = new ClickListenerPool();
+                }
+                mClickListenerPool.releaseClickInstance(item.getLayoutPosition(), onClickListener);
+                mClickListenerPool.releaseLongClickInstance(item.getLayoutPosition(), onLongClickListener);
+            }
+        } else {
+            onClickListener = onGetClickListener(item, viewHolder);
+            onLongClickListener = onGetLongClickListener(item);
+        }
         if (viewHolder.clickable()) {
             View clickView;
             if (viewHolder.getItemClickViewId() == 0 || (clickView = operation.getView(viewHolder.getItemClickViewId())) == null) {
                 clickView = item.getItemView();
             }
             clickView.setOnClickListener(onClickListener);
-            clickView.setOnLongClickListener(onGetLongClickListener(item));
+            clickView.setOnLongClickListener(onLongClickListener);
         }
         int[] childViewIds = viewHolder.onGetNeedListenerChildViewIds();
         if (childViewIds != null && childViewIds.length > 0) {
@@ -319,26 +341,26 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         }
     }
 
-    void mapNotifyItemInserted(int position) {
+    final void mapNotifyItemInserted(int position) {
         if (mParentAdapter != null) mParentAdapter.notifyItemInserted(position + firstItemPosition);
     }
 
-    void mapNotifyItemChanged(int position) {
+    final void mapNotifyItemChanged(int position) {
         if (mParentAdapter != null) mParentAdapter.notifyItemChanged(position + firstItemPosition);
     }
 
-    void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
+    final void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition, itemCount);
     }
 
-    void mapNotifyItemRemoved(int position) {
+    final void mapNotifyItemRemoved(int position) {
         if (mParentAdapter != null) {
             mParentAdapter.notifyItemRemoved(position + firstItemPosition);
         }
     }
 
-    void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
+    final void mapNotifyItemRangeRemoved(int positionStart, int itemCount) {
         if (isEmptyList()) {
             positionStart = firstItemPosition;
 
@@ -353,7 +375,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      *
      * @param observer 观察者对象。
      */
-    void registerObserver(AdapterDataObserver observer) {
+    final void registerObserver(AdapterDataObserver observer) {
         mAdapterDataObservable.registerObserver(observer);
     }
 
@@ -362,14 +384,14 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      *
      * @param observer 观察者对象。
      */
-    void unRegisterObserver(AdapterDataObserver observer) {
+    final void unRegisterObserver(AdapterDataObserver observer) {
         mAdapterDataObservable.unregisterObserver(observer);
     }
 
     /**
      * 取消注册所有数据观察者。
      */
-    void unregisterAll() {
+    final void unregisterAll() {
         mAdapterDataObservable.unregisterAll();
     }
 
@@ -379,6 +401,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      * @param holder   当前的ViewHolder对象。
      * @param position 当前的索引。
      */
+    @CallSuper
     void onViewRecycled(ItemViewHolder holder, int position) {
         if (position == getItemCount() - 1) {
             setVisibleState(false);
@@ -392,7 +415,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      * @param interceptor {@link EventBindInterceptor} 拦截器对象。
      */
     @Override
-    public void setEventInterceptor(EventBindInterceptor interceptor) {
+    public final void setEventInterceptor(EventBindInterceptor interceptor) {
         mEventInterceptor = interceptor;
     }
 
@@ -517,5 +540,47 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
          *                        这时该参数的值将会与 position 参数的值不同，该参数的值将表示当前点击的条目在当前子 Adapter 中的位置。
          */
         public abstract void onItemChildClick(int position, D d, View view, int adapterPosition);
+    }
+
+    private class ClickListenerPool {
+
+        SparseArray<View.OnClickListener> clickListeners = new SparseArray<>();
+        SparseArray<View.OnLongClickListener> longClickListeners = new SparseArray<>();
+
+        /**
+         * 根据key获取一个点击监听。
+         *
+         * @param key 要获取的对象的key。
+         */
+        View.OnClickListener acquireClick(int key) {
+            return clickListeners.get(key);
+        }
+
+        /**
+         * 根据key获取一个长按监听。
+         *
+         * @param key 要获取的对象的key。
+         */
+        View.OnLongClickListener acquireLongClick(int key) {
+            return longClickListeners.get(key);
+        }
+
+        /**
+         * 发布一个点击监听到池子中。
+         *
+         * @param instance 要发布的对象。
+         */
+        void releaseClickInstance(int key, View.OnClickListener instance) {
+            clickListeners.put(key, instance);
+        }
+
+        /**
+         * 发布一个长按监听到池子中。
+         *
+         * @param instance 要发布的对象。
+         */
+        void releaseLongClickInstance(int key, View.OnLongClickListener instance) {
+            longClickListeners.put(key, instance);
+        }
     }
 }

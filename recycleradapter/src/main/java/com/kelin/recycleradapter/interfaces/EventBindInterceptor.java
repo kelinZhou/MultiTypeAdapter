@@ -24,8 +24,8 @@ public interface EventBindInterceptor {
      * {@link ItemViewHolder}的{@link ItemViewHolder#clickable()}方法进行拦截。
      *
      * @param v    要绑定的View。
-     * @param item 当前的 {@link Item} 对象。
+     * @param item 当前的 {@link LayoutItem} 对象。
      * @return 是否拦截绑定，如果拦截则不会对其进行绑定点击事件，否则将会为其绑定点击事件。
      */
-    boolean onInterceptor(View v, Item item);
+    boolean onInterceptor(View v, LayoutItem item);
 }

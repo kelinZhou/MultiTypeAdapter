@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.kelin.recycleradapter.interfaces.Item;
+import com.kelin.recycleradapter.interfaces.LayoutItem;
 
 /**
  * 描述 用来显示悬浮条目的布局容器。
@@ -20,7 +20,7 @@ import com.kelin.recycleradapter.interfaces.Item;
  * 版本 v 1.0.0
  */
 
-public class FloatLayout extends FrameLayout implements Item {
+public class FloatLayout extends FrameLayout implements LayoutItem {
 
     private ViewGroup mFloatLayout;
     private OnSizeChangedListener mOnSizeMeasuredCallback;
@@ -62,10 +62,6 @@ public class FloatLayout extends FrameLayout implements Item {
             addView(floatContent);
             mFloatLayout = floatContent;
         }
-    }
-
-    View getFloatContent() {
-        return mFloatLayout;
     }
 
     @Override

@@ -64,4 +64,9 @@ public class FloatItemAdapter<D> extends SuperItemAdapter<D> {
         mFloatLayoutBinder.onBindFloatLayoutData(floatViewHelper, d);
         bindItemClickEvent(floatViewHelper, mFloatLayoutBinder);
     }
+
+    @Override
+    public int getItemCount() {
+        return 1;
+    }
 }
