@@ -83,6 +83,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 #### 悬浮吸顶条目列表
 ![loadMore](materials/gif_float_list.gif)
 ###### 代码实现
+布局文件
 ```
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -102,6 +103,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 
 </FrameLayout>
 ```
+Activity中的代码
 ```
     private MultiTypeAdapter mMultiTypeAdapter;
     private RecyclerView mRecyclerView;
@@ -122,14 +124,12 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
         DataHelper.getInstance().getClassList().subscribe(new Action1<List<Classs>>() {
             @Override
             public void call(List<Classs> classses) {
-                ItemAdapter<Classs> adapter;
+                FloatItemAdapter<Classs> adapter;
                 for (final Classs classs : classses) {
-                    //构建一个用来显示班级的子Adapter。
-                    adapter = new ItemAdapter<>(ClassHolder.class, classs);
-                    //设置该子Adapter可以悬浮。
-                    adapter.setFloatAble(true);
+                    //构建一个用来显示班级的悬浮子Adapter。
+                    adapter = new FloatItemAdapter<Classs>(ClassHolder.class, classs);
                     //设置条目事件监听。
-                    adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<Classs>() {
+                    adapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Classs>() {
                         //当条目被点击。
                         @Override
                         public void onItemClick(int position, Classs o, int adapterPosition) {
@@ -157,6 +157,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
         });
     }
 ```
+ViewHolder中的代码
 ```
 @ItemLayout(R.layout.item_class_title_layout)
 public class ClassHolder extends ItemViewHolder<Classs> {
@@ -189,6 +190,12 @@ public class ClassHolder extends ItemViewHolder<Classs> {
     }
 }
 ```
+*讲解：* 正如你所看到的，实现悬浮效果一共就三步：
+
+1. 在xml布局文件中添加一个*FloatLayout*控件。
+2. 创建*子Adapter*的时候使用*FloatItemAdapter*。
+3. 在ViewHolder中Overwrite```public void onBindFloatLayoutData(ViewHelper viewHelper, Object object)```方法。
+实现上面三步你就可以轻松实现悬浮效果，悬浮条的点击事件会在*OnItemEventListener*的回调，无需对悬浮条目的点击事件进行单独处理，只需要处理你的ViewHolder就可以了。
 #### 分页加载
 ![loadMore](materials/gif_load_more_list.gif)
 ###### 实现代码

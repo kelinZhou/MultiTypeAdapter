@@ -12,8 +12,10 @@ import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.Person;
 import com.kelin.multitypeadapterdemo.holder.ClassHolder;
 import com.kelin.multitypeadapterdemo.holder.ManHolder;
+import com.kelin.recycleradapter.FloatItemAdapter;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
+import com.kelin.recycleradapter.SuperItemAdapter;
 
 import java.util.List;
 
@@ -56,14 +58,12 @@ public class FloatListActivity extends BaseActivity {
         DataHelper.getInstance().getClassList().subscribe(new Action1<List<Classs>>() {
             @Override
             public void call(List<Classs> classses) {
-                ItemAdapter<Classs> adapter;
+                FloatItemAdapter<Classs> adapter;
                 for (final Classs classs : classses) {
-                    //构建一个用来显示班级的子Adapter。
-                    adapter = new ItemAdapter<>(ClassHolder.class, classs);
-                    //设置该子Adapter可以悬浮。
-                    adapter.setFloatAble(true);
+                    //构建一个用来显示班级的悬浮子Adapter。
+                    adapter = new FloatItemAdapter<Classs>(ClassHolder.class, classs);
                     //设置条目事件监听。
-                    adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<Classs>() {
+                    adapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Classs>() {
                         //当条目被点击。
                         @Override
                         public void onItemClick(int position, Classs o, int adapterPosition) {

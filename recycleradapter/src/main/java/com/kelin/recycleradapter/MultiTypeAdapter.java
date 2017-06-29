@@ -14,13 +14,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
 import com.kelin.recycleradapter.holder.CommonNoDataViewHolder;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
 import com.kelin.recycleradapter.interfaces.Orientation;
 import com.kelin.recycleradapter.interfaces.Pool;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,7 +34,6 @@ import java.util.Map;
 
 public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object>> {
 
-    private static final String TAG = "MultiTypeAdapter";
     /**
      * 用来存放不同数据模型的 {@link ItemViewHolder}。不同数据模型的 {@link ItemViewHolder} 只会被存储一份，且是最初创建的那个。
      */
@@ -122,8 +119,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     /**
      * 关联用来显示悬浮条目的布局。
-     * <p>单单调用这个方法并不会出现悬浮效果，您还需要通过 {@link ItemAdapter#setFloatAble(boolean)} 方法将 {@link ItemAdapter}
-     * 设置为可悬浮的。
      *
      * <h1><font color="#619BE5">注意：</font> </h1> {@link FloatLayout} 在xml文件中的的摆放必须满足以下特点：
      * <p>1.必须和 {@link RecyclerView} 是可重叠关系，也就是说用来承载 {@link RecyclerView} 和 {@link FloatLayout} 的布局容器必须是
@@ -144,30 +139,30 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     /**
-     * 获取子适配器 {@link ItemAdapter} 的数量。
-     * @return 返回已经被Add进来的所有的 {@link ItemAdapter} 的数量。
-     * @see #addAdapter(ItemAdapter[])
+     * 获取子适配器 {@link SuperItemAdapter} 的数量。
+     * @return 返回已经被Add进来的所有的 {@link SuperItemAdapter} 的数量。
+     * @see #addAdapter(SuperItemAdapter[])
      */
     public int getChildCount() {
         return mPool.size();
     }
 
     /**
-     * 根据索引获取 {@link ItemAdapter}。
+     * 根据索引获取 {@link SuperItemAdapter}。
      * @param index 要获取的索引。
-     * @return 返回已经被Add进来的指定索引的 {@link ItemAdapter}。
-     * @see #addAdapter(ItemAdapter[])
+     * @return 返回已经被Add进来的指定索引的 {@link SuperItemAdapter}。
+     * @see #addAdapter(SuperItemAdapter[])
      */
-    public ItemAdapter getChildAt(int index) {
+    public SuperItemAdapter getChildAt(int index) {
         return mPool.acquireAll().get(index);
     }
 
     /**
-     * 获取所有的 {@link ItemAdapter}。
-     * @return 返回已经被Add进来的所有的 {@link ItemAdapter}。
-     * @see #addAdapter(ItemAdapter[])
+     * 获取所有的 {@link SuperItemAdapter}。
+     * @return 返回已经被Add进来的所有的 {@link SuperItemAdapter}。
+     * @see #addAdapter(SuperItemAdapter[])
      */
-    public List<ItemAdapter> getAllChild() {
+    public List<SuperItemAdapter> getAllChild() {
         return mPool.acquireAll();
     }
 
@@ -182,17 +177,16 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     /**
-     * 添加条目适配器 {@link ItemAdapter}。
+     * 添加条目适配器 {@link SuperItemAdapter}。
      *
-     * @param adapters {@link ItemAdapter} 对象。
-     * @see ItemAdapter#ItemAdapter(Class)
-     * @see ItemAdapter#ItemAdapter(int, Class)
-     * @see ItemAdapter#ItemAdapter(List, Class)
-     * @see ItemAdapter#ItemAdapter(List, int, Class)
+     * @param adapters {@link SuperItemAdapter} 对象。
+     * @see SuperItemAdapter#SuperItemAdapter(Class)
+     * @see SuperItemAdapter#SuperItemAdapter(Class, Object)
+     * @see SuperItemAdapter#SuperItemAdapter(List, Class)
      */
     @SuppressWarnings("unchecked")
-    public MultiTypeAdapter addAdapter(@NonNull ItemAdapter... adapters) {
-        for (ItemAdapter adapter : adapters) {
+    public MultiTypeAdapter addAdapter(@NonNull SuperItemAdapter... adapters) {
+        for (SuperItemAdapter adapter : adapters) {
             adapter.registerObserver(mAdapterDataObserver);
             mPool.release(adapter);
             adapter.firstItemPosition = getDataList().size();
@@ -224,10 +218,10 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             return loadMoreViewHolder;
         }
         ItemViewHolder holder = null;
-        for (ItemAdapter adapter : mPool.acquireAll()) {
+        for (SuperItemAdapter adapter : mPool.acquireAll()) {
             if (adapter.getItemViewType() == viewType) {
                 holder = adapter.onCreateViewHolder(parent, viewType);
-                if (mFloatLayout != null && adapter.isFloatAble()) {
+                if (mFloatLayout != null && isFloatAdapter(adapter)) {
                     mFloatLayout.setFloatContent(viewType, new FloatLayout.OnSizeChangedListener() {
                         @Override
                         public void onSizeChanged(int width, int height) {
@@ -247,22 +241,26 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         throw new RuntimeException("the viewType: " + viewType + " not found !");
     }
 
+    private boolean isFloatAdapter(SuperItemAdapter adapter) {
+        return adapter instanceof FloatItemAdapter;
+    }
+
     @Override
     public void onViewRecycled(ItemViewHolder<Object> holder) {
         if (holder instanceof CommonNoDataViewHolder) {
             return;
         }
         int position = holder.getLayoutPosition();
-        ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
+        SuperItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onViewRecycled(holder, position - itemAdapter.firstItemPosition);
     }
 
     @Override
     protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
         //如果没有设置悬浮控件就不获取子适配器，这这里的逻辑就不会执行。
-        ItemAdapter adapter = mFloatLayout == null ? null : getAdjacentChildAdapterByPosition(mCurPosition, true, false);
-        if (adapter != null && adapter.isFloatAble() && dy != 0) {
-            View view = lm.findViewByPosition(adapter.firstItemPosition);
+        SuperItemAdapter itemAdapter = mFloatLayout == null ? null : getAdjacentChildAdapterByPosition(mCurPosition, true, false);
+        if (itemAdapter != null && isFloatAdapter(itemAdapter) && dy != 0) {
+            View view = lm.findViewByPosition(itemAdapter.firstItemPosition);
             if (view != null) {
                 if (isFirstFloatAbleChildAdapter(mCurPosition + 1) && isFloatLayoutShowing()) {
                     setFloatLayoutVisibility(false);
@@ -313,19 +311,19 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @SuppressWarnings("unchecked")
     private void updateFloatLayout(int dy, int position) {
-        ItemAdapter itemAdapter;
+        SuperItemAdapter itemAdapter;
         if (dy < 0) {
             itemAdapter = getAdjacentChildAdapterByPosition(position + 1, false, true);
         } else {
             itemAdapter = getChildAdapterByPosition(position);
         }
-        if (itemAdapter != null && itemAdapter.isFloatAble() && mLastBindPosition != itemAdapter.firstItemPosition) {
+        if (itemAdapter != null && isFloatAdapter(itemAdapter) && mLastBindPosition != itemAdapter.firstItemPosition) {
             if (dy < 0) {
                 mFloatLayout.setY(-mFloatLayoutHeight);
             }
             mLastBindPosition = itemAdapter.firstItemPosition;
             mFloatLayout.setLayoutPosition(position);
-            itemAdapter.onBindFloatViewData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
+            ((FloatItemAdapter)itemAdapter).onBindFloatViewData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
         }
     }
 
@@ -334,12 +332,12 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
         if (isEmptyItem(position)) return;
         if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
-        ItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
+        SuperItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
-        if (mFloatLayout != null && position == 0 && itemAdapter.isFloatAble()) {
+        if (mFloatLayout != null && position == 0 && isFloatAdapter(itemAdapter)) {
             mFloatLayout.setLayoutPosition(position);
             setFloatLayoutVisibility(true);
-            itemAdapter.onBindFloatViewData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
+            ((FloatItemAdapter)itemAdapter).onBindFloatViewData(mFloatViewHelper, getObject(itemAdapter.firstItemPosition));
         }
     }
 
@@ -350,12 +348,12 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
     @Override
     protected int getItemSpanSize(int position) {
-        ItemAdapter adapter = getChildAdapterByPosition(position);
+        SuperItemAdapter adapter = getChildAdapterByPosition(position);
 
         if (adapter == null) return getTotalSpanSize();
 
         int itemSpanSize = adapter.getItemSpanSize(position);
-        return itemSpanSize == ItemAdapter.SPAN_SIZE_FULL_SCREEN || itemSpanSize > getTotalSpanSize() ? getTotalSpanSize() : itemSpanSize;
+        return itemSpanSize == SuperItemAdapter.SPAN_SIZE_FULL_SCREEN || itemSpanSize > getTotalSpanSize() ? getTotalSpanSize() : itemSpanSize;
     }
 
     /**
@@ -364,7 +362,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param position 当前的索引位置。
      * @return 返回对应的适配器。
      */
-    ItemAdapter getChildAdapterByPosition(int position) {
+    SuperItemAdapter getChildAdapterByPosition(int position) {
         return mPool.acquireFromLayoutPosition(position);
     }
 
@@ -429,13 +427,13 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param floatAble 是否获取可悬浮的。
      */
     @CheckResult
-    private ItemAdapter getAdjacentChildAdapterByPosition(int position, boolean next, boolean floatAble) {
-        ItemAdapter adapter;
-        ItemAdapter lastFloatAbleAdapter = null;
+    private SuperItemAdapter getAdjacentChildAdapterByPosition(int position, boolean next, boolean floatAble) {
+        SuperItemAdapter adapter;
+        SuperItemAdapter lastFloatAbleAdapter = null;
         boolean isContinue = false;
         for (int i = 0; i < mPool.size(); i++) {
             adapter = mPool.acquire(i);
-            if (isContinue && adapter.isFloatAble()) {
+            if (isContinue && isFloatAdapter(adapter)) {
                 return adapter;
             }
             if (adapter.firstItemPosition <= position && adapter.lastItemPosition >= position) {
@@ -461,7 +459,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                     }
                 }
             } else {
-                if (adapter.isFloatAble()) {
+                if (isFloatAdapter(adapter)) {
                     lastFloatAbleAdapter = adapter;
                 }
             }
@@ -475,21 +473,21 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param position 要判断的位置。
      */
     private boolean isFirstFloatAbleChildAdapter(int position) {
-        ItemAdapter itemAdapter = mPool.acquireFirstFloatAbleChild();
+        SuperItemAdapter itemAdapter = mPool.acquireFirstFloatAbleChild();
         return itemAdapter != null && itemAdapter.firstItemPosition <= position && itemAdapter.lastItemPosition >= position;
     }
 
-    private class ItemAdapterDataObserver extends ItemAdapter.AdapterDataObserver {
+    private class ItemAdapterDataObserver extends SuperItemAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, ItemAdapter adapter) {
+        protected void add(int position, Object o, SuperItemAdapter adapter) {
             getDataList().add(position + adapter.firstItemPosition, o);
             getOldDataList().add(position + adapter.firstItemPosition, o);
             updateFirstAndLastPosition(adapter, 1, true);
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection dataList, ItemAdapter adapter) {
+        protected void addAll(int firstPosition, Collection dataList, SuperItemAdapter adapter) {
             boolean addAll = getDataList().addAll(firstPosition + adapter.firstItemPosition, dataList);
             boolean oldAddAll = getOldDataList().addAll(firstPosition + adapter.firstItemPosition, dataList);
             if (addAll && oldAddAll) {
@@ -498,7 +496,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
 
         @Override
-        protected void remove(Object o, ItemAdapter adapter) {
+        protected void remove(Object o, SuperItemAdapter adapter) {
             boolean remove = getDataList().remove(o);
             boolean oldRemove = getOldDataList().remove(o);
             if (remove && oldRemove) {
@@ -507,7 +505,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
 
         @Override
-        protected void removeAll(Collection dataList, ItemAdapter adapter) {
+        protected void removeAll(Collection dataList, SuperItemAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
             boolean oldRemoveAll = getOldDataList().removeAll(dataList);
             if (removeAll && oldRemoveAll) {
@@ -515,7 +513,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             }
         }
 
-        private void updateFirstAndLastPosition(ItemAdapter current, int updateSize, boolean isAdd) {
+        private void updateFirstAndLastPosition(SuperItemAdapter current, int updateSize, boolean isAdd) {
             if (isAdd) {
                 int index = mPool.indexOf(current) + 1;
                 current.lastItemPosition += updateSize;
@@ -545,12 +543,12 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     /**
      * 子Adapter的对象池。
      */
-    private class ChildAdapterPool implements Pool<ItemAdapter> {
+    private class ChildAdapterPool implements Pool<SuperItemAdapter> {
 
         /**
          * 用来存放所有的子条目对象。
          */
-        private List<ItemAdapter> adapters = new ArrayList<>();
+        private List<SuperItemAdapter> adapters = new ArrayList<>();
 
 
         /**
@@ -559,16 +557,16 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
          * @param position 要获取的对象的位置。
          */
         @Override
-        public ItemAdapter acquire(int position) {
+        public SuperItemAdapter acquire(int position) {
             return adapters.get(position);
         }
 
         /**
          * 获取第一个可悬浮的子Adapter。
          */
-        ItemAdapter acquireFirstFloatAbleChild() {
-            for (ItemAdapter adapter : adapters) {
-                if (adapter.isFloatAble()) {
+        SuperItemAdapter acquireFirstFloatAbleChild() {
+            for (SuperItemAdapter adapter : adapters) {
+                if (isFloatAdapter(adapter)) {
                     return adapter;
                 }
             }
@@ -580,17 +578,17 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
          *
          * @param layoutPosition 要获取的对象的布局位置。
          */
-        ItemAdapter acquireFromLayoutPosition(int layoutPosition) {
-            for (ItemAdapter adapter : adapters) {
+        SuperItemAdapter acquireFromLayoutPosition(int layoutPosition) {
+            for (SuperItemAdapter adapter : adapters) {
                 if (adapter.firstItemPosition <= layoutPosition && adapter.lastItemPosition >= layoutPosition) {
                     return adapter;
                 }
             }
-            throw new RuntimeException("ItemAdapter not found from layout position: " + layoutPosition);
+            throw new RuntimeException("SuperItemAdapter not found from layout position: " + layoutPosition);
         }
 
         @Override
-        public void release(ItemAdapter instance) {
+        public void release(SuperItemAdapter instance) {
             adapters.add(instance);
         }
 
@@ -608,7 +606,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
          * @param instance 要获取位置的对象。
          */
         @Override
-        public int indexOf(ItemAdapter instance) {
+        public int indexOf(SuperItemAdapter instance) {
             return adapters.indexOf(instance);
         }
 
@@ -618,7 +616,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
          * @param instance 要移除的对象。
          */
         @Override
-        public void remove(ItemAdapter instance) {
+        public void remove(SuperItemAdapter instance) {
             adapters.remove(instance);
         }
 
@@ -626,7 +624,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
          * 获取全部对象。
          */
         @Override
-        public List<ItemAdapter> acquireAll() {
+        public List<SuperItemAdapter> acquireAll() {
             return adapters;
         }
     }

@@ -80,8 +80,8 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
      *
      * @return 返回跟布局的资源ID。
      */
-    @Override
-    public @LayoutRes int getItemViewType() {
+    @LayoutRes
+    private int getItemViewType() {
         return mRootLayoutId;
     }
 

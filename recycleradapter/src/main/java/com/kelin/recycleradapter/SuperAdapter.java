@@ -31,9 +31,13 @@ import java.util.List;
 abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
 
     /**
+     * 表示当前的条目是占满屏幕的。
+     */
+    public static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
+    /**
      * 列表为空时的条目类型。
      */
-    protected static final int TYPE_EMPTY_ITEM = 0x0000_00f0;
+    static final int TYPE_EMPTY_ITEM = 0x0000_00f0;
     /**
      * 当前页面的数据集。
      */
