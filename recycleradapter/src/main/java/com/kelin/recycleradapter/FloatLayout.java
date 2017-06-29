@@ -60,6 +60,7 @@ public class FloatLayout extends FrameLayout implements LayoutItem {
             ViewGroup parent = (ViewGroup) floatContent.getParent();
             if (parent != null) parent.removeView(floatContent);
             addView(floatContent);
+            floatContent.requestLayout();
             mFloatLayout = floatContent;
         }
     }

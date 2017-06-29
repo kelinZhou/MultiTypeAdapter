@@ -171,9 +171,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     private void setFloatLayoutVisibility(boolean visible) {
-        if (mFloatLayout != null) {
-            mFloatLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
-        }
+        mFloatLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     private boolean isFloatLayoutShowing() {
