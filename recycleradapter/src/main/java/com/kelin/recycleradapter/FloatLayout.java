@@ -60,7 +60,7 @@ public class FloatLayout extends FrameLayout implements LayoutItem {
             ViewGroup parent = (ViewGroup) floatContent.getParent();
             if (parent != null) parent.removeView(floatContent);
             addView(floatContent);
-            floatContent.requestLayout();
+            floatContent.requestLayout();  //7.0上必须要调用这段代码，否则view不会被绘制。
             mFloatLayout = floatContent;
         }
     }

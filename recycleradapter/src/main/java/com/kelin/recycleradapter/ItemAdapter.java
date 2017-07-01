@@ -330,11 +330,10 @@ public class ItemAdapter<D> extends SuperItemAdapter<D> implements AdapterEdit<D
      * {@link #ItemAdapter(int, Class, Object)}、{@link #ItemAdapter(List, int, Class)} 中的 spanSize参数设置进来的。
      * 如果您不是调用这几个构造方法构造的该对象，那么这个方法的返回值则为 {@link #SPAN_SIZE_FULL_SCREEN}。
      *
-     * @param position 当前的条目的位置。
      * @return 返回当前条目的占屏比。
      */
     @Override
-    public int getItemSpanSize(int position) {
+    public int getItemSpanSize() {
         return mItemSpanSize;
     }
 }

@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -140,6 +141,61 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     /**
+     * 设置条目拖拽是否可用。
+     *
+     * @param moveEnable   拖动条目是否可用。true表示可以通过拖拽改变条目位置，false表示不可以。即使你将该参数设置为true
+     *                     也并不代表你任何时候都可以进行拖拽改变条目位置。例如你想要拖拽的子Adapter中只有一条数据，即使整
+     *                     个列表有很多数据也是不可以的。不允许将一个子Adapter中的数据拖拽到另一个子Adapter中去，更不允许
+     *                     两个不同类型的子Adapter中的条目进行拖拽。
+     * @param swipedEnable 滑动删除是否可用。true表示可以通过滑动删除条目，false表示不可以。
+     */
+    @Override
+    public void setItemDragEnable(boolean moveEnable, boolean swipedEnable) {
+        super.setItemDragEnable(moveEnable, swipedEnable);
+    }
+
+    @Override
+    protected int getItemMovementFlags(RecyclerView recyclerView, ItemViewHolder viewHolder) {
+        int layoutPosition = viewHolder.getLayoutPosition();
+        SuperItemAdapter itemAdapter = getChildAdapterByPosition(layoutPosition);
+        if (itemAdapter.getItemCount() == 1) {
+            return ItemTouchHelper.Callback.makeMovementFlags(0, viewHolder.getSwipedEnable() ? ItemTouchHelper.START | ItemTouchHelper.END : 0);
+        }
+        int dragFlags = 0;
+        int swipeFlags = 0;
+        int itemSpanSize = itemAdapter.getItemSpanSize();
+        int totalSpanSize = getTotalSpanSize();
+        if (mDragEnable) {
+            dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+            if (itemSpanSize < totalSpanSize) {
+                dragFlags |= ItemTouchHelper.START | ItemTouchHelper.END;
+            }
+        }
+        if (mSwipedEnable && viewHolder.getSwipedEnable() && itemSpanSize >= totalSpanSize) {
+            swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+        }
+        return ItemTouchHelper.Callback.makeMovementFlags(dragFlags, swipeFlags);
+    }
+
+    @Override
+    public boolean onItemMove(int fromPosition, int toPosition) {
+        if (mDragEnable) {
+            SuperItemAdapter itemAdapter = getChildAdapterByPosition(fromPosition);
+            return toPosition >= itemAdapter.firstItemPosition && toPosition <= itemAdapter.lastItemPosition && itemAdapter.onItemMove(fromPosition - itemAdapter.firstItemPosition, toPosition - itemAdapter.firstItemPosition) && super.onItemMove(fromPosition, toPosition);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void onItemDismiss(int position) {
+        if (mSwipedEnable) {
+            SuperItemAdapter itemAdapter = getChildAdapterByPosition(position);
+            itemAdapter.onItemDismiss(position - itemAdapter.firstItemPosition);
+        }
+    }
+
+    /**
      * 获取子适配器 {@link SuperItemAdapter} 的数量。
      *
      * @return 返回已经被Add进来的所有的 {@link SuperItemAdapter} 的数量。
@@ -191,6 +247,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         for (SuperItemAdapter adapter : adapters) {
             adapter.registerObserver(mAdapterDataObserver);
             mPool.release(adapter);
+            adapter.isAdded = true;
             adapter.firstItemPosition = getDataList().size();
             addDataList(adapter.getDataList());
             adapter.lastItemPosition = getDataList().size() - 1;
@@ -206,7 +263,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param child 要移除的子Adapter。
      * @return 移除成功返回true，否则返回false。
      */
-    private boolean removeAdapter(@NonNull SuperItemAdapter child) {
+    public boolean removeAdapter(@NonNull SuperItemAdapter child) {
         return removeAdapter(child, true);
     }
 
@@ -217,7 +274,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @param refresh 移除成功后是否刷新页面。
      * @return 移除成功返回true，否则返回false。
      */
-    private boolean removeAdapter(@NonNull SuperItemAdapter child, boolean refresh) {
+    public boolean removeAdapter(@NonNull SuperItemAdapter child, boolean refresh) {
+        child.isAdded = false;
         getDataList().removeAll(child.getDataList());
         getOldDataList().removeAll(child.getDataList());
         boolean remove = mPool.remove(child);
@@ -281,6 +339,9 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             return;
         }
         int position = holder.getLayoutPosition();
+        if (position < 0) {
+            return;
+        }
         SuperItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onViewRecycled(holder, position - itemAdapter.firstItemPosition);
     }
@@ -382,7 +443,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
         if (adapter == null) return getTotalSpanSize();
 
-        int itemSpanSize = adapter.getItemSpanSize(position);
+        int itemSpanSize = adapter.getItemSpanSize();
         return itemSpanSize == SuperItemAdapter.SPAN_SIZE_FULL_SCREEN || itemSpanSize > getTotalSpanSize() ? getTotalSpanSize() : itemSpanSize;
     }
 
@@ -558,6 +619,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 if (current.isEmptyList()) {
                     current.unregisterAll();
                     removeAdapter(current, false);
+                    current.isAdded = false;
                 } else {
                     index += 1;
                 }

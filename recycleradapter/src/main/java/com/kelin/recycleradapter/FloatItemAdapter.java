@@ -56,7 +56,7 @@ public class FloatItemAdapter<D> extends SuperItemAdapter<D> {
     }
 
     @Override
-    public int getItemSpanSize(int position) {
+    public int getItemSpanSize() {
         return SPAN_SIZE_FULL_SCREEN;
     }
 

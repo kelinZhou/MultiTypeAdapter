@@ -295,4 +295,13 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     public View getItemView() {
         return itemView;
     }
+
+    /**
+     * 如果你通过 {@link com.kelin.recycleradapter.SuperAdapter#setItemDragEnable(boolean, boolean)} 方法设置了RecyclerView
+     * 可以侧滑删除的话，那么表示所有的条目都是可以被删除的。如果你有些条目不希望被删除，则可以从写该方法并返回false。
+     * @return 是否允许侧滑删除。
+     */
+    public boolean getSwipedEnable() {
+        return true;
+    }
 }

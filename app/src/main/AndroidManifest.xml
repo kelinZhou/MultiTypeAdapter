@@ -27,6 +27,8 @@
 
         <activity android:name=".EmptyListActivity"/>
 
+        <activity android:name=".DragListActivity"/>
+
     </application>
 
 </manifest>

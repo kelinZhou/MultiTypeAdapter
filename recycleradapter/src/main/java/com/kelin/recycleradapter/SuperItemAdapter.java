@@ -21,6 +21,7 @@ import com.kelin.recycleradapter.interfaces.ViewOperation;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -53,7 +54,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     /**
      * 适配器数据的观察者对象。
      */
-    protected AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable();
+    AdapterDataObservable mAdapterDataObservable = new AdapterDataObservable();
     /**
      * 用来存放ViewHolder的字节码对象。
      */
@@ -70,7 +71,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     /**
      * 当前页面的数据集。
      */
-    protected List<D> mDataList;
+    List<D> mDataList;
     /**
      * 用来记录当前子Adapter是否在屏幕内。
      */
@@ -84,6 +85,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      */
     private EventBindInterceptor mEventInterceptor;
     private ClickListenerPool mClickListenerPool;
+    boolean isAdded;
 
     public SuperItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -118,6 +120,15 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
                 mDataList = new ArrayList<D>();
             }
         }
+    }
+
+    /**
+     * 是否已经被添加到 {@link MultiTypeAdapter} 中了。
+     * @return 返回true表示当前依然在 {@link MultiTypeAdapter} 中，false表示已经从 {@link MultiTypeAdapter} 中移除了。
+     * 通常情况下如果被移除了说明这个子Adapter中已经没有了数据。
+     */
+    public boolean isAdded() {
+        return isAdded;
     }
 
     /**
@@ -222,7 +233,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return getDataList().size();
     }
 
-    public abstract int getItemSpanSize(int position);
+    public abstract int getItemSpanSize();
 
     /**
      * 获取指定位置的对象。
@@ -306,9 +317,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         View.OnClickListener onClickListener;
         View.OnLongClickListener onLongClickListener;
         if (isFloatBind) {
-            if (mClickListenerPool == null
-                    || (onClickListener = mClickListenerPool.acquireClick(item.getLayoutPosition())) == null
-                    || (onLongClickListener = mClickListenerPool.acquireLongClick(item.getLayoutPosition())) == null) {
+            if (mClickListenerPool == null || (onClickListener = mClickListenerPool.acquireClick(item.getLayoutPosition())) == null || (onLongClickListener = mClickListenerPool.acquireLongClick(item.getLayoutPosition())) == null) {
                 onClickListener = onGetClickListener(item, viewHolder);
                 onLongClickListener = onGetLongClickListener(item);
                 if (mClickListenerPool == null) {
@@ -417,6 +426,19 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     @Override
     public final void setEventInterceptor(EventBindInterceptor interceptor) {
         mEventInterceptor = interceptor;
+    }
+
+    boolean onItemMove(int fromPosition, int toPosition) {
+        Collections.swap(mDataList, fromPosition, toPosition);
+        return true;
+    }
+
+    void onItemDismiss(int position) {
+        boolean remove = mDataList.size() > position;
+        if (remove) {
+            mAdapterDataObservable.remove(mDataList.remove(position));
+            mapNotifyItemRemoved(position);
+        }
     }
 
     /**

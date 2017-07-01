@@ -34,4 +34,9 @@ public class CommonImageHolder extends ItemViewHolder<Integer> {
     public void onBindData(int position, Integer integer) {
         setImageResource(R.id.iv_title_image, integer);
     }
+
+    @Override
+    public boolean getSwipedEnable() {
+        return false;
+    }
 }
