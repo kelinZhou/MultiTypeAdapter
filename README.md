@@ -97,6 +97,7 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <!--要实现悬浮必须在RecyclerView的相同节点放置一个FloatLayout控件，并且一般情况下你不需要对这个控件findViewById。-->
     <com.kelin.recycleradapter.FloatLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
