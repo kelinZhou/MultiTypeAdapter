@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.kelin.recycleradapter.callback.ItemDragResultListener;
 import com.kelin.recycleradapter.data.LoadMoreLayoutManager;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
@@ -31,7 +32,7 @@ import java.util.List;
  */
 
 public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
-
+    private static final String TAG = "SuperAdapter";
     /**
      * 表示当前的条目是占满屏幕的。
      */
@@ -81,10 +82,6 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     private int mOrientation;
     /**
-     * {@link ItemTouchHelper} 的回调。
-     */
-    private ItemTouchCallback mItemTouchCallback;
-    /**
      * 记录侧滑删除是否可用。
      */
     boolean mSwipedEnable;
@@ -92,6 +89,11 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 记录条目拖拽是否可用。
      */
     boolean mDragEnable;
+    /**
+     * 条目拖拽完成后的监听。
+     */
+    private ItemDragResultListener<D> mItemDragResultListener;
+    private ItemTouchHelper mItemTouchHelper;
 
     /**
      * 构造方法。
@@ -203,14 +205,28 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      *                     是可以滑动删除的，除非你滑动的 {@link ItemViewHolder} 复写了 {@link ItemViewHolder#getSwipedEnable()}
      *                     方法并返回了false。
      */
-    public void setItemDragEnable(boolean moveEnable, boolean swipedEnable) { // TODO: 2017/6/30 这里让调用者传入监听。
-        if (mItemTouchCallback == null && (moveEnable || swipedEnable)) {
-            mItemTouchCallback = new ItemTouchCallback();
-            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(mItemTouchCallback);
-            itemTouchHelper.attachToRecyclerView(mRecyclerView);
+    public void setItemDragEnable(boolean moveEnable, boolean swipedEnable) {
+        setItemDragEnable(moveEnable, swipedEnable, null);
+    }
+
+    /**
+     * 设置条目拖拽是否可用。
+     *
+     * @param moveEnable   拖动条目是否可用。true表示可以通过拖拽改变条目位置，false表示不可以。
+     * @param swipedEnable 滑动删除是否可用。true表示可以通过滑动删除条目，false表示不可以。如果你设置了true则一般情况下
+     *                     是可以滑动删除的，除非你滑动的 {@link ItemViewHolder} 复写了 {@link ItemViewHolder#getSwipedEnable()}
+     *                     方法并返回了false。
+     * @param listener     条目拖拽结果的监听。
+     */
+    public void setItemDragEnable(boolean moveEnable, boolean swipedEnable, ItemDragResultListener<D> listener) {
+        if (mItemTouchHelper == null && (moveEnable || swipedEnable)) {
+            ItemTouchCallback itemTouchCallback = new ItemTouchCallback();
+            mItemTouchHelper = new ItemTouchHelper(itemTouchCallback);
+            mItemTouchHelper.attachToRecyclerView(mRecyclerView);
         }
         mDragEnable = moveEnable;
         mSwipedEnable = swipedEnable;
+        mItemDragResultListener = listener;
     }
 
     protected int getItemMovementFlags(RecyclerView recyclerView, ItemViewHolder viewHolder) {
@@ -657,6 +673,10 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
         return null;
     }
 
+    final void startDrag(ItemViewHolder viewHolder) {
+        mItemTouchHelper.startDrag(viewHolder);
+    }
+
     /**
      * 加载更多的回调对象。
      */
@@ -687,6 +707,9 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     private class ItemTouchCallback extends ItemTouchHelper.Callback {
+        private D mD;
+        private int mLastActionPosition;
+        private int mLastActionState;
 
         @Override
         public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
@@ -701,6 +724,37 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             onItemDismiss(viewHolder.getLayoutPosition());
+        }
+
+        @Override
+        public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+            super.onSelectedChanged(viewHolder, actionState);
+            //因为ACTION_STATE_IDLE这个状态时ViewHolder为null所以下面用switch，避免空指针。
+            // 而且ACTION_STATE_IDLE状态是也不需要记录。否则clearView方法中就拿不到这个状态，因为这个方法是先于clearView方法执行的。
+            switch (actionState) {
+                case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
+                case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
+                    mLastActionPosition = viewHolder.getLayoutPosition();
+                    mLastActionState = actionState;
+                    mD = getObject(mLastActionPosition);
+                    break;
+            }
+        }
+
+        @Override
+        public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+            super.clearView(recyclerView, viewHolder);
+            if (mItemDragResultListener != null && mLastActionPosition != viewHolder.getLayoutPosition()) {
+                switch (mLastActionState) {
+                    case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
+                        mItemDragResultListener.onItemMoved(mLastActionPosition, viewHolder.getLayoutPosition(), mD);
+                        break;
+                    case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
+                        //这个用mLastActionPosition这个参数是应为在这里获取的viewHolder.getLayoutPosition()跟原来的position不一样，有偏差，偏差为1。
+                        mItemDragResultListener.onItemDismissed(mLastActionPosition, mD);
+                        break;
+                }
+            }
         }
     }
 }

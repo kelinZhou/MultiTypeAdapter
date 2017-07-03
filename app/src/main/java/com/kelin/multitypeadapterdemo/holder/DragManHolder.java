@@ -10,28 +10,18 @@ import com.kelin.recycleradapter.holder.ItemViewHolder;
 import java.util.Locale;
 
 /**
+ * 描述 我的Holder
  * 创建人 kelin
- * 创建时间 2017/6/19  下午5:32
+ * 创建时间 2016/12/2  下午5:42
  * 版本 v 1.0.0
  */
-@ItemLayout(R.layout.item_person_layout2)
-public class ManHolder2 extends ItemViewHolder<Person> {
+@ItemLayout(R.layout.item_person_drag_layout)
+public class DragManHolder extends ItemViewHolder<Person> {
 
-    protected ManHolder2(View itemView) {
+    protected DragManHolder(View itemView) {
         super(itemView);
     }
 
-    @Override
-    public boolean areContentsTheSame(Person oldItemData, Person newItemDate) {
-        return oldItemData.equals(newItemDate);
-    }
-
-    /**
-     * 绑定数据的时候调用。
-     *
-     * @param position 当前的Item索引。
-     * @param person   当前索引对应的数据对象。
-     */
     @Override
     public void onBindData(int position, Person person) {
         setImageResource(R.id.iv_avatar, person.getAvatar());
@@ -39,6 +29,10 @@ public class ManHolder2 extends ItemViewHolder<Person> {
         setText(R.id.tv_age, String.format(Locale.CHINA, "年龄：%d 岁", person.getAge()));
         setText(R.id.tv_height, String.format(Locale.CHINA, "身高：%d CM", person.getHeight()));
         setText(R.id.tv_weight, String.format(Locale.CHINA, "体重：%d Kg", person.getWeight()));
-        setText(R.id.tv_country, String.format("国家：%s", person.getCountry()));
+    }
+
+    @Override
+    public int getDragHandleViewId() {
+        return R.id.iv_handle;
     }
 }

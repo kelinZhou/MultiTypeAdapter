@@ -9,8 +9,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
@@ -18,6 +20,7 @@ import com.kelin.recycleradapter.interfaces.EventBindInterceptor;
 import com.kelin.recycleradapter.interfaces.EventInterceptor;
 import com.kelin.recycleradapter.interfaces.LayoutItem;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,14 +80,16 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      */
     private boolean isVisible;
     /**
-     * 用来绑定悬浮条目数据的Holder。
-     */
-    private ItemViewHolder<D> mFloatLayoutBinder;
-    /**
      * 用来拦截事件绑定的拦截器。
      */
     private EventBindInterceptor mEventInterceptor;
+    /**
+     * 用来存放悬浮条目的点击事件监听。
+     */
     private ClickListenerPool mClickListenerPool;
+    /**
+     * 用来记录是否已经被添加。
+     */
     boolean isAdded;
 
     public SuperItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
@@ -259,17 +264,18 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mItemEventListener == null) return;
-                int position = item.getLayoutPosition();
-                SuperItemAdapter<D> itemAdapter = mParentAdapter.getChildAdapterByPosition(position);
-                int adapterPosition = position - itemAdapter.firstItemPosition;
-                D object = itemAdapter.getObject(adapterPosition);
-                mItemEventListener.adapter = itemAdapter;
+                if (mItemEventListener != null){
+                    int position = item.getLayoutPosition();
+                    SuperItemAdapter<D> itemAdapter = mParentAdapter.getChildAdapterByPosition(position);
+                    int adapterPosition = position - itemAdapter.firstItemPosition;
+                    D object = itemAdapter.getObject(adapterPosition);
+                    mItemEventListener.adapter = itemAdapter;
 
-                if (v.getId() == item.getItemView().getId() || v.getId() == viewHolder.getItemClickViewId()) {
-                    mItemEventListener.onItemClick(position, object, adapterPosition);
-                } else {
-                    mItemEventListener.onItemChildClick(position, object, v, adapterPosition);
+                    if (v.getId() == item.getItemView().getId() || v.getId() == viewHolder.getItemClickViewId()) {
+                        mItemEventListener.onItemClick(position, object, adapterPosition);
+                    } else {
+                        mItemEventListener.onItemChildClick(position, object, v, adapterPosition);
+                    }
                 }
             }
         };
@@ -301,7 +307,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return isEmptyList() ? null : getObject(0).getClass();
     }
 
-    final void bindItemClickEvent(@Nullable ViewHelper viewHelper, @NonNull ItemViewHolder<D> viewHolder) {
+    final void bindItemClickEvent(@Nullable ViewHelper viewHelper, @NonNull final ItemViewHolder<D> viewHolder) {
         LayoutItem item;
         ViewOperation operation;
         boolean isFloatBind;
@@ -348,6 +354,19 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
                 }
             }
         }
+
+        //悬浮条目不允许拖拽，只有item==viewHolder才不是悬浮条的监听。
+        if (viewHelper == null && viewHolder.getDragHandleViewId() != 0) {
+            viewHolder.getView(viewHolder.getDragHandleViewId()).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (v.getId() == viewHolder.getDragHandleViewId()) {
+                        mParentAdapter.startDrag(viewHolder);
+                    }
+                    return false;
+                }
+            });
+        }
     }
 
     final void mapNotifyItemInserted(int position) {
@@ -361,6 +380,11 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     final void mapNotifyItemRangeInserted(int positionStart, int itemCount) {
         if (mParentAdapter != null)
             mParentAdapter.notifyItemRangeInserted(positionStart + firstItemPosition, itemCount);
+    }
+
+    private void mapNotifyItemMove(int fromPosition, int toPosition) {
+        if (mParentAdapter != null)
+            mParentAdapter.notifyItemMoved(fromPosition + firstItemPosition, toPosition + firstItemPosition);
     }
 
     final void mapNotifyItemRemoved(int position) {
@@ -430,6 +454,8 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
 
     boolean onItemMove(int fromPosition, int toPosition) {
         Collections.swap(mDataList, fromPosition, toPosition);
+        mAdapterDataObservable.move(fromPosition, toPosition);
+        mapNotifyItemMove(fromPosition, toPosition);
         return true;
     }
 
@@ -458,6 +484,12 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
             }
         }
 
+        void move(int fromPosition, int toPosition) {
+            for (int i = mObservers.size() - 1; i >= 0; i--) {
+                mObservers.get(i).move(fromPosition, toPosition, SuperItemAdapter.this);
+            }
+        }
+
         void remove(Object d) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {
                 mObservers.get(i).remove(d, SuperItemAdapter.this);
@@ -474,7 +506,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     /**
      * 当前适配器的数据观察者对象。
      */
-    static abstract class AdapterDataObserver {
+    interface AdapterDataObserver {
         /**
          * 列表中新增了数据。
          *
@@ -482,7 +514,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
          * @param object   新增的数据。
          * @param adapter  当前被观察的Adapter对象。
          */
-        protected abstract void add(int position, Object object, SuperItemAdapter adapter);
+        void add(int position, Object object, SuperItemAdapter adapter);
 
         /**
          * 列表中批量新增了数据。
@@ -491,7 +523,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
          * @param dataList      新增的数据集合。
          * @param adapter       当前被观察的Adapter对象。
          */
-        protected abstract void addAll(int firstPosition, Collection dataList, SuperItemAdapter adapter);
+        void addAll(int firstPosition, Collection dataList, SuperItemAdapter adapter);
 
         /**
          * 删除了列表中的数据。
@@ -499,7 +531,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
          * @param object  被删除的数据。
          * @param adapter 当前被观察的Adapter对象。
          */
-        protected abstract void remove(Object object, SuperItemAdapter adapter);
+        void remove(Object object, SuperItemAdapter adapter);
 
         /**
          * 批量删除了列表中的数据。
@@ -507,7 +539,15 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
          * @param dataList 被删除的数据集合。
          * @param adapter  当前被观察的Adapter对象。
          */
-        protected abstract void removeAll(Collection dataList, SuperItemAdapter adapter);
+        void removeAll(Collection dataList, SuperItemAdapter adapter);
+
+        /**
+         * 列表中的数据位置被移动。
+         * @param fromPosition 移动前的位置。
+         * @param toPosition 移动后的位置。
+         * @param adapter  当前被观察的Adapter对象。
+         */
+        void move(int fromPosition, int toPosition, SuperItemAdapter adapter);
     }
 
     /**

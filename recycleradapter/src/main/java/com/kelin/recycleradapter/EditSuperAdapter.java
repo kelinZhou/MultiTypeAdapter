@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -118,7 +119,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
         mEventInterceptor = interceptor;
     }
 
-    private void bindItemClickEvent(VH viewHolder) {
+    private void bindItemClickEvent(final VH viewHolder) {
         View.OnClickListener onClickListener = onGetClickListener(viewHolder);
 
         View clickView;
@@ -135,6 +136,20 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
                     v.setOnClickListener(onClickListener);
                 }
             }
+        }
+
+
+        //悬浮条目不允许拖拽，只有item==viewHolder才不是悬浮条的监听。
+        if (viewHolder.getDragHandleViewId() != 0) {
+            viewHolder.getView(viewHolder.getDragHandleViewId()).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (v.getId() == viewHolder.getDragHandleViewId()) {
+                        startDrag(viewHolder);
+                    }
+                    return false;
+                }
+            });
         }
     }
 

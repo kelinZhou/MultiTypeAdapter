@@ -254,9 +254,7 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     }
 
     /**
-     * 当需要绑定悬浮控件的数据的时候调用。如果你通过
-     * {@link com.kelin.recycleradapter.MultiTypeAdapter#setFloatLayout(FloatLayout) MultiTypeAdapter.setFloatLayout(FloatLayout)}
-     * 方法设置了悬浮控件的话，就可以通过复写该方法为你的悬浮控件绑定数据了。
+     * 当需要绑定悬浮控件的数据的时候调用。
      * <p>
      * 你要绑定数据的控件的 {@link IdRes} 资源Id名称都是和你ViewHolder中的资源Id名称相同的。
      * <p>例如:你ViewHolder中通过 <code>setText(R.id.tv_title, user.getUserName())</code> 这样的方式给一个TextView设置Text,
@@ -303,5 +301,10 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
      */
     public boolean getSwipedEnable() {
         return true;
+    }
+
+    @IdRes
+    public int getDragHandleViewId() {
+        return 0;
     }
 }

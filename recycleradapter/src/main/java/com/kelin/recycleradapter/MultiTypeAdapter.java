@@ -23,6 +23,7 @@ import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,7 +182,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     public boolean onItemMove(int fromPosition, int toPosition) {
         if (mDragEnable) {
             SuperItemAdapter itemAdapter = getChildAdapterByPosition(fromPosition);
-            return toPosition >= itemAdapter.firstItemPosition && toPosition <= itemAdapter.lastItemPosition && itemAdapter.onItemMove(fromPosition - itemAdapter.firstItemPosition, toPosition - itemAdapter.firstItemPosition) && super.onItemMove(fromPosition, toPosition);
+            return toPosition >= itemAdapter.firstItemPosition && toPosition <= itemAdapter.lastItemPosition && itemAdapter.onItemMove(fromPosition - itemAdapter.firstItemPosition, toPosition - itemAdapter.firstItemPosition);
         } else {
             return false;
         }
@@ -568,17 +569,17 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return itemAdapter != null && itemAdapter.firstItemPosition <= position && itemAdapter.lastItemPosition >= position;
     }
 
-    private class ItemAdapterDataObserver extends SuperItemAdapter.AdapterDataObserver {
+    private class ItemAdapterDataObserver implements SuperItemAdapter.AdapterDataObserver {
 
         @Override
-        protected void add(int position, Object o, SuperItemAdapter adapter) {
+        public void add(int position, Object o, SuperItemAdapter adapter) {
             getDataList().add(position + adapter.firstItemPosition, o);
             getOldDataList().add(position + adapter.firstItemPosition, o);
             updateFirstAndLastPosition(adapter, 1, true);
         }
 
         @Override
-        protected void addAll(int firstPosition, Collection dataList, SuperItemAdapter adapter) {
+        public void addAll(int firstPosition, Collection dataList, SuperItemAdapter adapter) {
             boolean addAll = getDataList().addAll(firstPosition + adapter.firstItemPosition, dataList);
             boolean oldAddAll = getOldDataList().addAll(firstPosition + adapter.firstItemPosition, dataList);
             if (addAll && oldAddAll) {
@@ -587,7 +588,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
 
         @Override
-        protected void remove(Object o, SuperItemAdapter adapter) {
+        public void remove(Object o, SuperItemAdapter adapter) {
             boolean remove = getDataList().remove(o);
             boolean oldRemove = getOldDataList().remove(o);
             if (remove && oldRemove) {
@@ -596,12 +597,18 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
 
         @Override
-        protected void removeAll(Collection dataList, SuperItemAdapter adapter) {
+        public void removeAll(Collection dataList, SuperItemAdapter adapter) {
             boolean removeAll = getDataList().removeAll(dataList);
             boolean oldRemoveAll = getOldDataList().removeAll(dataList);
             if (removeAll && oldRemoveAll) {
                 updateFirstAndLastPosition(adapter, dataList.size(), false);
             }
+        }
+
+        @Override
+        public void move(int fromPosition, int toPosition, SuperItemAdapter adapter) {
+            Collections.swap(getDataList(), adapter.firstItemPosition + fromPosition, adapter.firstItemPosition + toPosition);
+            Collections.swap(getOldDataList(), adapter.firstItemPosition + fromPosition, adapter.firstItemPosition + toPosition);
         }
 
         private void updateFirstAndLastPosition(SuperItemAdapter current, int updateSize, boolean isAdd) {
