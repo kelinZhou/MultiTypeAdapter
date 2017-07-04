@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
@@ -228,6 +227,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
             setVisibleState(true);
             Log.i(TAG, "onViewRecycled: 条目被显示并绑定数据。AdapterPosition=" + position);
         }
+        holder.mEventListener = mItemEventListener;
         holder.onBindPartData(position, getObject(position), payloads);
     }
 
@@ -264,30 +264,32 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mItemEventListener != null){
+                if (viewHolder.mEventListener != null){
                     int position = item.getLayoutPosition();
                     SuperItemAdapter<D> itemAdapter = mParentAdapter.getChildAdapterByPosition(position);
                     int adapterPosition = position - itemAdapter.firstItemPosition;
                     D object = itemAdapter.getObject(adapterPosition);
-                    mItemEventListener.adapter = itemAdapter;
+                    viewHolder.mEventListener.adapter = itemAdapter;
 
                     if (v.getId() == item.getItemView().getId() || v.getId() == viewHolder.getItemClickViewId()) {
-                        mItemEventListener.onItemClick(position, object, adapterPosition);
+                        viewHolder.mEventListener.onItemClick(position, object, adapterPosition);
                     } else {
-                        mItemEventListener.onItemChildClick(position, object, v, adapterPosition);
+                        viewHolder.mEventListener.onItemChildClick(position, object, v, adapterPosition);
                     }
                 }
             }
         };
     }
 
+    @SuppressWarnings("unchecked")
     private View.OnLongClickListener onGetLongClickListener(final LayoutItem item) {
         return new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                if (mItemEventListener != null) {
+                OnItemEventListener<D> listener = item instanceof ItemViewHolder ? ((ItemViewHolder) item).mEventListener : mItemEventListener;
+                if (listener != null) {
                     int layoutPosition = item.getLayoutPosition();
-                    mItemEventListener.onItemLongClick(layoutPosition, getItemObject(layoutPosition), getAdapterPosition(layoutPosition));
+                    listener.onItemLongClick(layoutPosition, getItemObject(layoutPosition), getAdapterPosition(layoutPosition));
                     return true;
                 }
                 return false;
@@ -453,7 +455,19 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     }
 
     boolean onItemMove(int fromPosition, int toPosition) {
-        Collections.swap(mDataList, fromPosition, toPosition);
+        if (getItemSpanSize() == mParentAdapter.getTotalSpanSize()) {
+            Collections.swap(mDataList, fromPosition, toPosition);
+        } else {
+            if (fromPosition < toPosition) {
+                for (int i = fromPosition; i < toPosition; i++) {
+                    Collections.swap(mDataList, i, i + 1);
+                }
+            } else {
+                for (int i = fromPosition; i > toPosition; i--) {
+                    Collections.swap(mDataList, i, i - 1);
+                }
+            }
+        }
         mAdapterDataObservable.move(fromPosition, toPosition);
         mapNotifyItemMove(fromPosition, toPosition);
         return true;

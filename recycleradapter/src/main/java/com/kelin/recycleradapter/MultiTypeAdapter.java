@@ -607,8 +607,26 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
         @Override
         public void move(int fromPosition, int toPosition, SuperItemAdapter adapter) {
-            Collections.swap(getDataList(), adapter.firstItemPosition + fromPosition, adapter.firstItemPosition + toPosition);
-            Collections.swap(getOldDataList(), adapter.firstItemPosition + fromPosition, adapter.firstItemPosition + toPosition);
+            fromPosition += adapter.firstItemPosition;
+            toPosition += adapter.firstItemPosition;
+            if (getTotalSpanSize() > 1) {
+                List<Object> dataList = getDataList();
+                List<Object> oldDataList = getOldDataList();
+                if (fromPosition < toPosition) {
+                    for (int i = fromPosition; i < toPosition; i++) {
+                        Collections.swap(dataList, i, i + 1);
+                        Collections.swap(oldDataList, i, i + 1);
+                    }
+                } else {
+                    for (int i = fromPosition; i > toPosition; i--) {
+                        Collections.swap(dataList, i, i - 1);
+                        Collections.swap(oldDataList, i, i - 1);
+                    }
+                }
+            } else {
+                Collections.swap(getDataList(), fromPosition, toPosition);
+                Collections.swap(getOldDataList(), fromPosition, toPosition);
+            }
         }
 
         private void updateFirstAndLastPosition(SuperItemAdapter current, int updateSize, boolean isAdd) {

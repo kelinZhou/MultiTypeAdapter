@@ -241,7 +241,19 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
 
     protected boolean onItemMove(int fromPosition, int toPosition) {
         if (mDragEnable) {
-            Collections.swap(mDataList, fromPosition, toPosition);
+            if (getTotalSpanSize() > 1) {
+                if (fromPosition < toPosition) {
+                    for (int i = fromPosition; i < toPosition; i++) {
+                        Collections.swap(mDataList, i, i + 1);
+                    }
+                } else {
+                    for (int i = fromPosition; i > toPosition; i--) {
+                        Collections.swap(mDataList, i, i - 1);
+                    }
+                }
+            } else {
+                Collections.swap(mDataList, fromPosition, toPosition);
+            }
             notifyItemMoved(fromPosition, toPosition);
             return true;
         } else {
@@ -732,11 +744,11 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
             //因为ACTION_STATE_IDLE这个状态时ViewHolder为null所以下面用switch，避免空指针。
             // 而且ACTION_STATE_IDLE状态是也不需要记录。否则clearView方法中就拿不到这个状态，因为这个方法是先于clearView方法执行的。
             switch (actionState) {
-                case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
                 case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
+                    mD = getObject(mLastActionPosition);
+                case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
                     mLastActionPosition = viewHolder.getLayoutPosition();
                     mLastActionState = actionState;
-                    mD = getObject(mLastActionPosition);
                     break;
             }
         }
@@ -747,7 +759,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
             if (mItemDragResultListener != null && mLastActionPosition != viewHolder.getLayoutPosition()) {
                 switch (mLastActionState) {
                     case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
-                        mItemDragResultListener.onItemMoved(mLastActionPosition, viewHolder.getLayoutPosition(), mD);
+                        mItemDragResultListener.onItemMoved(mLastActionPosition, viewHolder.getLayoutPosition(), getObject(viewHolder.getLayoutPosition()));
                         break;
                     case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
                         //这个用mLastActionPosition这个参数是应为在这里获取的viewHolder.getLayoutPosition()跟原来的position不一样，有偏差，偏差为1。

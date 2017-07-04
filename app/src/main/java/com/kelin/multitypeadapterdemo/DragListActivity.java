@@ -7,6 +7,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.Spanned;
+import android.view.View;
 
 import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.People;
@@ -16,6 +17,7 @@ import com.kelin.multitypeadapterdemo.holder.DragManHolder;
 import com.kelin.multitypeadapterdemo.holder.DragManHolder2;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
+import com.kelin.recycleradapter.SuperItemAdapter;
 import com.kelin.recycleradapter.callback.ItemDragResultListener;
 
 import rx.functions.Action1;
@@ -72,6 +74,17 @@ public class DragListActivity extends BaseActivity {
                 ItemAdapter<Person> personAdapter; //用来显示条目的适配器
                 //创建女生的头的子适配器。
                 titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getWomanListImage());
+                titleAdapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Integer>() {
+                    @Override
+                    public void onItemClick(int position, Integer integer, int adapterPosition) {
+                        mMultiTypeAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onItemChildClick(int position, Integer integer, View view, int adapterPosition) {
+
+                    }
+                });
                 //创建用来显示女生列表的子适配器。
                 personAdapter = new ItemAdapter<Person>(people.getWomanList(), 2, DragManHolder.class);
                 //将两个子适配器添加到多类型适配器中。
@@ -79,6 +92,17 @@ public class DragListActivity extends BaseActivity {
 
                 //在创建一个男生的头的子适配器。
                 titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getManListImage());
+                titleAdapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Integer>() {
+                    @Override
+                    public void onItemClick(int position, Integer integer, int adapterPosition) {
+                        mMultiTypeAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onItemChildClick(int position, Integer integer, View view, int adapterPosition) {
+
+                    }
+                });
                 //在创建一个用来显示男生列表的子适配器。
                 personAdapter = new ItemAdapter<Person>(people.getManList(), 1, DragManHolder2.class);
                 //将两个子适配器添加到多类型适配器中。
