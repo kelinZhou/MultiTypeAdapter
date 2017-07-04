@@ -9,16 +9,19 @@ import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.kelin.recycleradapter.callback.ItemDragResultListener;
 import com.kelin.recycleradapter.data.LoadMoreLayoutManager;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,12 +31,16 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
-
+public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerView.Adapter<VH> {
+    private static final String TAG = "SuperAdapter";
+    /**
+     * 表示当前的条目是占满屏幕的。
+     */
+    public static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
     /**
      * 列表为空时的条目类型。
      */
-    protected static final int TYPE_EMPTY_ITEM = 0x0000_00f0;
+    static final int TYPE_EMPTY_ITEM = 0x0000_00f0;
     /**
      * 当前页面的数据集。
      */
@@ -70,6 +77,23 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 列表为空时的布局。
      */
     private View mEmptyLayout;
+    /**
+     * 用来记录当前列表的方向。
+     */
+    private int mOrientation;
+    /**
+     * 记录侧滑删除是否可用。
+     */
+    boolean mSwipedEnable;
+    /**
+     * 记录条目拖拽是否可用。
+     */
+    boolean mDragEnable;
+    /**
+     * 条目拖拽完成后的监听。
+     */
+    private ItemDragResultListener<D> mItemDragResultListener;
+    private ItemTouchHelper mItemTouchHelper;
 
     /**
      * 构造方法。
@@ -87,9 +111,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * <P>初始化适配器并设置布局管理器，您不许要再对 {@link RecyclerView} 设置布局管理器。
      * <p>例如：{@link RecyclerView#setLayoutManager(RecyclerView.LayoutManager)} 方法不应该在被调用，否者可能会出现您不希望看到的效果。
      *
-     * @param recyclerView 您要绑定的 {@link RecyclerView} 对象。
+     * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
-     *
      */
     public SuperAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize) {
         this(recyclerView, totalSpanSize, LinearLayout.VERTICAL);
@@ -102,7 +125,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      *
      * @param recyclerView  您要绑定的 {@link RecyclerView} 对象。
      * @param totalSpanSize 总的占屏比，通俗来讲就是 {@link RecyclerView} 的宽度被均分成了多少份。该值的范围是1~100之间的数(包含)。
-     * @param orientation 列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
+     * @param orientation   列表的方向，该参数的值只能是{@link LinearLayout#HORIZONTAL} or {@link LinearLayout#VERTICAL}的其中一个。
      */
     public SuperAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Orientation int orientation) {
         if (totalSpanSize < 1 || totalSpanSize > 100) {
@@ -110,6 +133,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         }
         mTotalSpanSize = totalSpanSize;
         mRecyclerView = recyclerView;
+        mOrientation = orientation;
         initLayoutManager(recyclerView, orientation, mTotalSpanSize);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -122,7 +146,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
                 if (isLoadMoreUsable() && mLoadMoreLayoutManager.isLoadState()) {
-                    if (mLoadMoreLayoutManager.isInTheLoadMore() || mLoadMoreLayoutManager.isNoMoreState()) return;
+                    if (mLoadMoreLayoutManager.isInTheLoadMore() || mLoadMoreLayoutManager.isNoMoreState())
+                        return;
                     int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
                     int targetPosition = getDataList().size() - mLoadMoreLayoutManager.getLoadMoreOffset();
                     if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
@@ -172,8 +197,72 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
         };
     }
 
+    /**
+     * 设置条目拖拽是否可用。
+     *
+     * @param moveEnable   拖动条目是否可用。true表示可以通过拖拽改变条目位置，false表示不可以。
+     * @param swipedEnable 滑动删除是否可用。true表示可以通过滑动删除条目，false表示不可以。如果你设置了true则一般情况下
+     *                     是可以滑动删除的，除非你滑动的 {@link ItemViewHolder} 复写了 {@link ItemViewHolder#getSwipedEnable()}
+     *                     方法并返回了false。
+     */
+    public void setItemDragEnable(boolean moveEnable, boolean swipedEnable) {
+        setItemDragEnable(moveEnable, swipedEnable, null);
+    }
+
+    /**
+     * 设置条目拖拽是否可用。
+     *
+     * @param moveEnable   拖动条目是否可用。true表示可以通过拖拽改变条目位置，false表示不可以。
+     * @param swipedEnable 滑动删除是否可用。true表示可以通过滑动删除条目，false表示不可以。如果你设置了true则一般情况下
+     *                     是可以滑动删除的，除非你滑动的 {@link ItemViewHolder} 复写了 {@link ItemViewHolder#getSwipedEnable()}
+     *                     方法并返回了false。
+     * @param listener     条目拖拽结果的监听。
+     */
+    public void setItemDragEnable(boolean moveEnable, boolean swipedEnable, ItemDragResultListener<D> listener) {
+        if (mItemTouchHelper == null && (moveEnable || swipedEnable)) {
+            ItemTouchCallback itemTouchCallback = new ItemTouchCallback();
+            mItemTouchHelper = new ItemTouchHelper(itemTouchCallback);
+            mItemTouchHelper.attachToRecyclerView(mRecyclerView);
+        }
+        mDragEnable = moveEnable;
+        mSwipedEnable = swipedEnable;
+        mItemDragResultListener = listener;
+    }
+
+    protected int getItemMovementFlags(RecyclerView recyclerView, ItemViewHolder viewHolder) {
+        int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END;
+
+        int swipeFlags = 0;
+        if (viewHolder.getSwipedEnable()) {
+            swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+        }
+        return ItemTouchHelper.Callback.makeMovementFlags(dragFlags, swipeFlags);
+    }
+
+    protected boolean onItemMove(int fromPosition, int toPosition) {
+        if (mDragEnable) {
+            Collections.swap(mDataList, fromPosition, toPosition);
+            notifyItemMoved(fromPosition, toPosition);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected void onItemDismiss(int position) {
+        if (mSwipedEnable) {
+            mDataList.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
+    }
+
+    @Orientation
+    public int getOrientation() {
+        return mOrientation;
     }
 
     /**
@@ -181,6 +270,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * 调用此方法禁止加载中条目的显示。
      * <p>例如：当你的总条目不足以显示一页的时候（假如你每页数据是20条，但是你总数据一共才5条），这时候你就可以通过调用这个方法
      * 禁止加载中条目的显示。
+     *
      * @param usable true表示可用，false表示不可用。
      */
     public void setLoadMoreUsable(boolean usable) {
@@ -199,15 +289,15 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     /**
      * 初始化布局管理器。并设置给 {@link RecyclerView}。
      */
-    protected void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
+    private void initLayoutManager(@NonNull RecyclerView recyclerView, @Orientation int orientation, int totalSpanSize) {
         if (totalSpanSize > 1) {
-            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), totalSpanSize, orientation, false)
-            {
+            GridLayoutManager lm = new GridLayoutManager(recyclerView.getContext(), totalSpanSize, orientation, false) {
                 @Override
                 public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
                     try {
                         super.onLayoutChildren(recycler, state);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             };
             lm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
@@ -223,7 +313,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
                 public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
                     try {
                         super.onLayoutChildren(recycler, state);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             };
         }
@@ -257,9 +348,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 设置加载更多时显示的布局。
+     *
      * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
-     * @param retryLayoutId 加载更多失败时显示的布局。
-     * @param listener 加载更多被触发的监听。
+     * @param retryLayoutId    加载更多失败时显示的布局。
+     * @param listener         加载更多被触发的监听。
      */
     public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @NonNull OnLoadMoreListener listener) {
         setLoadMoreView(loadMoreLayoutId, retryLayoutId, 0, listener);
@@ -267,10 +359,11 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 设置加载更多时显示的布局。
-     * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
-     * @param retryLayoutId 加载更多失败时显示的布局。
+     *
+     * @param loadMoreLayoutId   加载更多时显示的布局的资源ID。
+     * @param retryLayoutId      加载更多失败时显示的布局。
      * @param noMoreDataLayoutId 没有更多数据时显示的布局。
-     * @param listener 加载更多被触发的监听。
+     * @param listener           加载更多被触发的监听。
      */
     public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @NonNull OnLoadMoreListener listener) {
         setLoadMoreView(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, 0, listener);
@@ -278,12 +371,13 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 设置加载更多时显示的布局。
-     * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
-     * @param retryLayoutId 加载更多失败时显示的布局。
+     *
+     * @param loadMoreLayoutId   加载更多时显示的布局的资源ID。
+     * @param retryLayoutId      加载更多失败时显示的布局。
      * @param noMoreDataLayoutId 没有更多数据时显示的布局。
-     * @param offset 加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
-     *                       但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
-     * @param listener 加载更多被触发的监听。
+     * @param offset             加载更多触发位置的偏移值。偏移范围只能是1-10之间的数值。正常情况下是loadMoreLayout显示的时候就开始触发，
+     *                           但如果设置了该值，例如：2，那么就是在loadMoreLayout之前的两个位置的时候开始触发。
+     * @param listener           加载更多被触发的监听。
      */
     public void setLoadMoreView(@LayoutRes int loadMoreLayoutId, @LayoutRes int retryLayoutId, @LayoutRes int noMoreDataLayoutId, @Size(min = 1, max = 10) int offset, @NonNull OnLoadMoreListener listener) {
         setLoadMoreView(new LoadMoreLayoutManager(loadMoreLayoutId, retryLayoutId, noMoreDataLayoutId, offset), listener);
@@ -291,8 +385,9 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 设置加载更多时显示的布局。
+     *
      * @param layoutInfo LoadMore布局信息对象。
-     * @param listener 加载更多被触发的监听。
+     * @param listener   加载更多被触发的监听。
      */
     public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull OnLoadMoreListener listener) {
         mLoadMoreLayoutManager = layoutInfo;
@@ -302,6 +397,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     /**
      * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder#ItemViewHolder(View)} 构造方法，
      * 否则会出错。
+     *
      * @param emptyLayout 列表为空时的布局ID。
      * @return 返回这个布局ID被Inflater后的View。
      * @see ItemViewHolder#ItemViewHolder(View)
@@ -315,6 +411,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     /**
      * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder#ItemViewHolder(View)} 构造方法，
      * 否则会出错。
+     *
      * @param emptyLayout 列表为空时的布局。
      * @see ItemViewHolder#ItemViewHolder(View)
      */
@@ -331,19 +428,23 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 当列表的滚动状态被改变的时候执行的回调方法。
+     *
      * @param recyclerView 当前被滚动的 {@link RecyclerView} 对象。
-     * @param newState 当前的滚动状态。
+     * @param newState     当前的滚动状态。
      */
-    protected void onRecyclerViewScrollStateChanged(RecyclerView recyclerView, int newState) {}
+    protected void onRecyclerViewScrollStateChanged(RecyclerView recyclerView, int newState) {
+    }
 
     /**
      * 当列表被滚的时候执行的回调方法。
+     *
      * @param recyclerView 当前正在滚动中的 {@link RecyclerView} 对象。
-     * @param dx x轴的偏移值。
-     * @param dy y轴的偏移值。
-     * @param lm 当前 {@link RecyclerView} 的布局管理器LayoutManager。
+     * @param dx           x轴的偏移值。
+     * @param dy           y轴的偏移值。
+     * @param lm           当前 {@link RecyclerView} 的布局管理器LayoutManager。
      */
-    protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {}
+    protected void onRecyclerViewScrolled(RecyclerView recyclerView, int dx, int dy, LinearLayoutManager lm) {
+    }
 
     /**
      * 开始加载更多。
@@ -412,7 +513,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     public final int getItemViewType(int position) {
         if (isEmptyItem(position)) return TYPE_EMPTY_ITEM;
         if (isLoadMoreItem(position)) return mLoadMoreLayoutManager.getCurStateLayoutId();
-        return  getItemType(position);
+        return getItemType(position);
     }
 
     protected boolean isEmptyItem(int position) {
@@ -426,7 +527,8 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
     protected abstract int getItemType(int position);
 
     @Override
-    public final void onBindViewHolder(VH holder, int position) {}
+    public final void onBindViewHolder(VH holder, int position) {
+    }
 
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
@@ -442,6 +544,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 判断两个位置的Item是否相同。
+     *
      * @param oldItemData 旧的Item数据。
      * @param newItemData 新的Item数据。
      * @return 相同返回true，不同返回false。
@@ -450,6 +553,7 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 判断两个位置的Item的内容是否相同。
+     *
      * @param oldItemData 旧的Item数据。
      * @param newItemData 新的Item数据。
      * @return 相同返回true，不同返回false。
@@ -458,9 +562,10 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
 
     /**
      * 获取两个位置的Item的内容不同之处。
+     *
      * @param oldItemData 旧的Item数据。
      * @param newItemData 新的Item数据。
-     * @param bundle 将不同的内容存放到该参数中。
+     * @param bundle      将不同的内容存放到该参数中。
      */
     protected abstract void getChangePayload(D oldItemData, D newItemData, Bundle bundle);
 
@@ -561,11 +666,15 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
      * @param position 要获取对象对应的条目索引。
      * @return 返回 {@link D} 对象。
      */
-    D getOldObject(int position) {
+    private D getOldObject(int position) {
         if (mTempList.size() > position && position >= 0) {
             return mTempList.get(position);
         }
         return null;
+    }
+
+    final void startDrag(ItemViewHolder viewHolder) {
+        mItemTouchHelper.startDrag(viewHolder);
     }
 
     /**
@@ -583,7 +692,9 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
          * 这里是将该方法重新指向了 {@link #onLoadMore()} 方法，因为有可能你不需要关心这个方法。如果你需要关心这个方法，
          * 则可以通过重写该方法将默认实现覆盖。
          */
-        public void onReloadMore(){onLoadMore();}
+        public void onReloadMore() {
+            onLoadMore();
+        }
     }
 
     class LoadMoreRetryClickListener implements View.OnClickListener {
@@ -592,6 +703,58 @@ abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends RecyclerVie
             mLoadMoreLayoutManager.setLoadState();
             notifyItemChanged(getItemCount() - 1);
             reloadMore();
+        }
+    }
+
+    private class ItemTouchCallback extends ItemTouchHelper.Callback {
+        private D mD;
+        private int mLastActionPosition;
+        private int mLastActionState;
+
+        @Override
+        public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+            return getItemMovementFlags(recyclerView, (ItemViewHolder) viewHolder);
+        }
+
+        @Override
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+            return onItemMove(viewHolder.getLayoutPosition(), target.getLayoutPosition());
+        }
+
+        @Override
+        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            onItemDismiss(viewHolder.getLayoutPosition());
+        }
+
+        @Override
+        public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+            super.onSelectedChanged(viewHolder, actionState);
+            //因为ACTION_STATE_IDLE这个状态时ViewHolder为null所以下面用switch，避免空指针。
+            // 而且ACTION_STATE_IDLE状态是也不需要记录。否则clearView方法中就拿不到这个状态，因为这个方法是先于clearView方法执行的。
+            switch (actionState) {
+                case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
+                case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
+                    mLastActionPosition = viewHolder.getLayoutPosition();
+                    mLastActionState = actionState;
+                    mD = getObject(mLastActionPosition);
+                    break;
+            }
+        }
+
+        @Override
+        public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+            super.clearView(recyclerView, viewHolder);
+            if (mItemDragResultListener != null && mLastActionPosition != viewHolder.getLayoutPosition()) {
+                switch (mLastActionState) {
+                    case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
+                        mItemDragResultListener.onItemMoved(mLastActionPosition, viewHolder.getLayoutPosition(), mD);
+                        break;
+                    case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
+                        //这个用mLastActionPosition这个参数是应为在这里获取的viewHolder.getLayoutPosition()跟原来的position不一样，有偏差，偏差为1。
+                        mItemDragResultListener.onItemDismissed(mLastActionPosition, mD);
+                        break;
+                }
+            }
         }
     }
 }

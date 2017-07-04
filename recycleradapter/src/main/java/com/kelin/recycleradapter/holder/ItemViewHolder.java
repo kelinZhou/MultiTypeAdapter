@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.kelin.recycleradapter.callback.NotifyCallback;
+import com.kelin.recycleradapter.interfaces.LayoutItem;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
 import com.kelin.recycleradapter.FloatLayout;
 
@@ -29,7 +30,7 @@ import java.util.List;
  * 创建时间 2017/1/19  下午12:15
  * 版本 v 1.0.0
  */
-public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implements NotifyCallback<D>, ViewOperation {
+public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implements NotifyCallback<D>, ViewOperation, LayoutItem {
 
     private final SparseArray<View> mViews;
 
@@ -253,9 +254,7 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
     }
 
     /**
-     * 当需要绑定悬浮控件的数据的时候调用。如果你通过
-     * {@link com.kelin.recycleradapter.MultiTypeAdapter#setFloatLayout(FloatLayout) MultiTypeAdapter.setFloatLayout(FloatLayout)}
-     * 方法设置了悬浮控件的话，就可以通过复写该方法为你的悬浮控件绑定数据了。
+     * 当需要绑定悬浮控件的数据的时候调用。
      * <p>
      * 你要绑定数据的控件的 {@link IdRes} 资源Id名称都是和你ViewHolder中的资源Id名称相同的。
      * <p>例如:你ViewHolder中通过 <code>setText(R.id.tv_title, user.getUserName())</code> 这样的方式给一个TextView设置Text,
@@ -288,5 +287,24 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
      */
     public boolean clickable() {
         return true;
+    }
+
+    @Override
+    public View getItemView() {
+        return itemView;
+    }
+
+    /**
+     * 如果你通过 {@link com.kelin.recycleradapter.SuperAdapter#setItemDragEnable(boolean, boolean)} 方法设置了RecyclerView
+     * 可以侧滑删除的话，那么表示所有的条目都是可以被删除的。如果你有些条目不希望被删除，则可以从写该方法并返回false。
+     * @return 是否允许侧滑删除。
+     */
+    public boolean getSwipedEnable() {
+        return true;
+    }
+
+    @IdRes
+    public int getDragHandleViewId() {
+        return 0;
     }
 }

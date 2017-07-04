@@ -1,11 +1,13 @@
 # MultiTypeAdapter
 
-###### 它最大的特点就是不需要你继承Adapter并重写Adapter中的方法。大大的节省你的开发时间提高你的改法效率。
+###### 它最大的特点就是不需要你继承Adapter并重写Adapter中的方法。大大的节省你的开发时间提高你的开发效率。
+* * *
 
-### 简介
+## 简介
     针对RecyclerVeiw的适配器的封装，可以令你简单优雅的实现一些常用功能。
-    例如：单条目列表、多条目列表、悬浮列表、分页加载、Empty列表以及各种针对条目的事件的监听。
+    例如：多条目列表、悬浮列表、分页加载等，以及各种针对条目的事件的监听。
 
+## 效果 & 实现
 #### 单条目列表
 ![loadMore](materials/gif_single_type_list.gif)
 ###### 实现代码
@@ -80,8 +82,125 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
 ```
 #### 悬浮吸顶条目列表
 ![loadMore](materials/gif_float_list.gif)
+###### 代码实现
+布局文件
+```
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:background="@color/white"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <!--要实现悬浮必须在RecyclerView的相同节点放置一个FloatLayout控件，
+        并且一般情况下你不需要findViewById操作，也不需要指定尺寸及Visibility。-->
+    <com.kelin.recycleradapter.FloatLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+</FrameLayout>
+```
+Activity中的代码
+```
+    private MultiTypeAdapter mMultiTypeAdapter;
+    private RecyclerView mRecyclerView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setTitle("悬浮条列表");
+
+        setContentView(R.layout.activity_float_list);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView);
+        mRecyclerView.setAdapter(mMultiTypeAdapter);
+        loadData();
+    }
+
+    private void loadData() {
+        //加载数据。
+        DataHelper.getInstance().getClassList().subscribe(new Action1<List<Classs>>() {
+            @Override
+            public void call(List<Classs> classses) {
+                FloatItemAdapter<Classs> adapter;
+                for (final Classs classs : classses) {
+                    //构建一个用来显示班级的悬浮子Adapter。
+                    adapter = new FloatItemAdapter<Classs>(ClassHolder.class, classs);
+                    //设置条目事件监听。
+                    adapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Classs>() {
+                        //当条目被点击。
+                        @Override
+                        public void onItemClick(int position, Classs o, int adapterPosition) {
+                            Snackbar.make(mRecyclerView, "条目被点击：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                        }
+                        //当条目被长按
+                        @Override
+                        public void onItemLongClick(int position, Classs o, int adapterPosition) {
+                            Snackbar.make(mRecyclerView, "条目被长按：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                        }
+                        //当条目中的子控件被点击
+                        @Override
+                        public void onItemChildClick(int position, Classs o, View view, int adapterPosition) {
+                            if (view.getId() == R.id.tv_show_more) {
+                                Snackbar.make(mRecyclerView, "您点击了显示更多：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                            }
+                        }
+                    });
+                    //将子Adapter添加到多类型Adapter中。
+                    mMultiTypeAdapter.addAdapter(adapter, new ItemAdapter<Person>(classs.getStudents(), ManHolder.class));
+                }
+                //刷新列表
+                mMultiTypeAdapter.notifyRefresh();
+            }
+        });
+    }
+```
+ViewHolder中的代码
+```
+@ItemLayout(R.layout.item_class_title_layout)
+public class ClassHolder extends ItemViewHolder<Classs> {
+
+    protected ClassHolder(View itemView) {
+        super(itemView);
+    }
+
+    /**
+     * 绑定数据的时候调用。
+     *
+     * @param position 当前的Item索引。
+     * @param classs   当前索引对应的数据对象。
+     */
+    @Override
+    public void onBindData(int position, Classs classs) {
+        setText(R.id.tv_class_name, classs.getClassName());
+        setText(R.id.tv_count, String.format(Locale.CHINA, "%d 人", classs.getCount()));
+    }
+
+    @Override
+    public void onBindFloatLayoutData(ViewHelper viewHelper, Classs classs) {
+        viewHelper.setText(R.id.tv_class_name, classs.getClassName());
+        viewHelper.setText(R.id.tv_count, String.format(Locale.CHINA, "%d 人", classs.getCount()));
+    }
+
+    @Override
+    public int[] onGetNeedListenerChildViewIds() {
+        return new int[]{R.id.tv_show_more};
+    }
+}
+```
+*讲解：* 正如你所看到的，实现悬浮效果一共就三步：
+
+1. 在xml布局文件中添加一个*FloatLayout*控件。
+2. 创建*子Adapter*的时候使用*FloatItemAdapter*。
+3. 在ViewHolder中Overwrite```public void onBindFloatLayoutData(ViewHelper viewHelper, Object object)```方法。
+实现上面三步你就可以轻松实现悬浮效果，悬浮条的点击事件会在*OnItemEventListener*的回调，无需对悬浮条目的点击事件进行单独处理，只需要处理你的ViewHolder就可以了。
 #### 分页加载
 ![loadMore](materials/gif_load_more_list.gif)
+###### 实现代码
 ```
     /**
      * 定义每页的数量。
@@ -220,10 +339,69 @@ private SingleTypeAdapter<Person, ManHolder> mAdapter;
         return super.onOptionsItemSelected(item);
     }
 ```
+#### Drag&Swiped
+![drag](materials/gif_drag_list.gif)
+###### 实现代码
+```
+    private RecyclerView mRecyclerView;
+    private MultiTypeAdapter mMultiTypeAdapter;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setTitle("Drag&Swiped列表");
+        setContentView(R.layout.include_common_list_layout);
 
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView, 2);  //构建一个最多可将屏幕分为两份的多类型适配器。
+        //设置move和swiped可用，并监听拖拽结果。
+        mMultiTypeAdapter.setItemDragEnable(true, true, new ItemDragResultListener<Object>() {
+            @Override
+            public void onItemMoved(int fromPosition, int toPosition, Object o) {
+                Person object = (Person) o;
+                Spanned html = Html.fromHtml("将 <font color=\"#1682FB\">" + object.getName() + "</font> 从位置：" + fromPosition + " 移动到了 " + toPosition);
+                Snackbar.make(mRecyclerView, html, 2000).show();
+            }
 
+            @Override
+            public void onItemDismissed(int position, Object o) {
+                Person object = (Person) o;
+                Spanned html = Html.fromHtml("将 <font color=\"#DC554C\">" + object.getName() + "</font> 从位置：" +  + position + " 删除了");
+                Snackbar.make(mRecyclerView, html, 2000).show();
+            }
+        });
+        mRecyclerView.setAdapter(mMultiTypeAdapter);
+        loadData();  //加载数据
+    }
 
+    private void loadData() {
+        //模拟从网络获取数据。
+        DataHelper.getInstance().getManAndWoman().subscribe(new Action1<People>() {
+            @Override
+            public void call(People people) {
+                ItemAdapter<Integer> titleAdapter; //用来加载显示头的子适配器。
+                ItemAdapter<Person> personAdapter; //用来显示条目的适配器
+                //创建女生的头的子适配器。
+                titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getWomanListImage());
+                //创建用来显示女生列表的子适配器。
+                personAdapter = new ItemAdapter<Person>(people.getWomanList(), 2, DragManHolder.class);
+                //将两个子适配器添加到多类型适配器中。
+                mMultiTypeAdapter.addAdapter(titleAdapter, personAdapter);
 
+                //在创建一个男生的头的子适配器。
+                titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getManListImage());
+                //在创建一个用来显示男生列表的子适配器。
+                personAdapter = new ItemAdapter<Person>(people.getManList(), 1, DragManHolder2.class);
+                //将两个子适配器添加到多类型适配器中。
+                mMultiTypeAdapter.addAdapter(titleAdapter, personAdapter);
+
+                //刷新列表
+                mMultiTypeAdapter.notifyRefresh();
+            }
+        });
+    }
+```
+
+* * *
 ### License
 ```
 MIT License

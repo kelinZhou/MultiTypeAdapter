@@ -12,11 +12,10 @@ import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.Person;
 import com.kelin.multitypeadapterdemo.holder.ClassHolder;
 import com.kelin.multitypeadapterdemo.holder.ManHolder;
+import com.kelin.recycleradapter.FloatItemAdapter;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
-import com.kelin.recycleradapter.FloatLayout;
-import com.kelin.recycleradapter.holder.ItemViewHolder;
-import com.kelin.recycleradapter.holder.ViewHelper;
+import com.kelin.recycleradapter.SuperItemAdapter;
 
 import java.util.List;
 
@@ -30,10 +29,6 @@ import rx.functions.Action1;
  */
 public class FloatListActivity extends BaseActivity {
 
-    private MultiTypeAdapter mMultiTypeAdapter;
-    private RecyclerView mRecyclerView;
-    private FloatLayout mFloatLayout;
-
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
      *
@@ -43,52 +38,43 @@ public class FloatListActivity extends BaseActivity {
         activityContext.startActivity(new Intent(activityContext, FloatListActivity.class));
     }
 
+
+    private MultiTypeAdapter mMultiTypeAdapter;
+    private RecyclerView mRecyclerView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("悬浮条列表");
 
         setContentView(R.layout.activity_float_list);
-
-        mFloatLayout = (FloatLayout) findViewById(R.id.fl_float_layout);
-        mFloatLayout.setOnBindEventListener(new FloatLayout.OnBindEventListener() {
-
-            @Override
-            public void onBindEvent(ItemViewHolder curHolder, final ItemAdapter itemAdapter, ViewHelper viewHelper, final int position) {
-                View.OnClickListener l = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (v.getId() == mFloatLayout.getId()) {
-                            Snackbar.make(mRecyclerView, "悬浮条目被点击：position=" + position + "|class=" + ((Classs) mMultiTypeAdapter.getObject(position)).getClassName(), 2000).show();
-                        } else if (v.getId() == R.id.tv_show_more) {
-                            Snackbar.make(mRecyclerView, "您点击了悬浮条目的更多：position=" + position + "|class=" + ((Classs) mMultiTypeAdapter.getObject(position)).getClassName(), 2000).show();
-                        }
-                    }
-                };
-                viewHelper.getRootView().setOnClickListener(l);
-                viewHelper.getView(R.id.tv_show_more).setOnClickListener(l);
-            }
-        });
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView);
-        mMultiTypeAdapter.setFloatLayout(mFloatLayout);
         mRecyclerView.setAdapter(mMultiTypeAdapter);
         loadData();
     }
 
     private void loadData() {
+        //加载数据。
         DataHelper.getInstance().getClassList().subscribe(new Action1<List<Classs>>() {
             @Override
             public void call(List<Classs> classses) {
-                ItemAdapter<Classs> adapter;
+                FloatItemAdapter<Classs> adapter;
                 for (final Classs classs : classses) {
-                    adapter = new ItemAdapter<>(ClassHolder.class, classs);
-                    adapter.setItemEventListener(new ItemAdapter.OnItemEventListener<Classs>() {
+                    //构建一个用来显示班级的悬浮子Adapter。
+                    adapter = new FloatItemAdapter<Classs>(ClassHolder.class, classs);
+                    //设置条目事件监听。
+                    adapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Classs>() {
+                        //当条目被点击。
                         @Override
                         public void onItemClick(int position, Classs o, int adapterPosition) {
                             Snackbar.make(mRecyclerView, "条目被点击：position=" + position + "|class=" + o.getClassName(), 2000).show();
                         }
-
+                        //当条目被长按
+                        @Override
+                        public void onItemLongClick(int position, Classs o, int adapterPosition) {
+                            Snackbar.make(mRecyclerView, "条目被长按：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                        }
+                        //当条目中的子控件被点击
                         @Override
                         public void onItemChildClick(int position, Classs o, View view, int adapterPosition) {
                             if (view.getId() == R.id.tv_show_more) {
@@ -96,10 +82,10 @@ public class FloatListActivity extends BaseActivity {
                             }
                         }
                     });
-                    adapter.setFloatAble(true);
-                    mMultiTypeAdapter.addAdapter(adapter);
-                    mMultiTypeAdapter.addAdapter(new ItemAdapter<Person>(classs.getStudents(), ManHolder.class));
+                    //将子Adapter添加到多类型Adapter中。
+                    mMultiTypeAdapter.addAdapter(adapter, new ItemAdapter<Person>(classs.getStudents(), ManHolder.class));
                 }
+                //刷新列表
                 mMultiTypeAdapter.notifyRefresh();
             }
         });
