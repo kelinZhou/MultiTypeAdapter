@@ -7,7 +7,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.Spanned;
-
 import com.kelin.multitypeadapterdemo.data.DataHelper;
 import com.kelin.multitypeadapterdemo.data.People;
 import com.kelin.multitypeadapterdemo.data.Person;
@@ -17,7 +16,6 @@ import com.kelin.multitypeadapterdemo.holder.DragManHolder2;
 import com.kelin.recycleradapter.ItemAdapter;
 import com.kelin.recycleradapter.MultiTypeAdapter;
 import com.kelin.recycleradapter.callback.ItemDragResultListener;
-
 import rx.functions.Action1;
 
 /**
@@ -42,7 +40,7 @@ public class DragListActivity extends BaseActivity {
         setContentView(R.layout.include_common_list_layout);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView, 2);  //构建一个最多可将屏幕分为两份的多类型适配器。
+        mMultiTypeAdapter = new MultiTypeAdapter(mRecyclerView, 3);  //构建一个最多可将屏幕分为两份的多类型适配器。
         //设置move和swiped可用，并监听拖拽结果。
         mMultiTypeAdapter.setItemDragEnable(true, true, new ItemDragResultListener<Object>() {
             @Override
@@ -73,7 +71,7 @@ public class DragListActivity extends BaseActivity {
                 //创建女生的头的子适配器。
                 titleAdapter = new ItemAdapter<Integer>(CommonImageHolder.class, people.getWomanListImage());
                 //创建用来显示女生列表的子适配器。
-                personAdapter = new ItemAdapter<Person>(people.getWomanList(), 2, DragManHolder.class);
+                personAdapter = new ItemAdapter<Person>(people.getWomanList(), 3, DragManHolder.class);
                 //将两个子适配器添加到多类型适配器中。
                 mMultiTypeAdapter.addAdapter(titleAdapter, personAdapter);
 

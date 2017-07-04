@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.kelin.recycleradapter.SuperItemAdapter;
 import com.kelin.recycleradapter.callback.NotifyCallback;
 import com.kelin.recycleradapter.interfaces.LayoutItem;
 import com.kelin.recycleradapter.interfaces.ViewOperation;
@@ -32,6 +33,7 @@ import java.util.List;
  */
 public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implements NotifyCallback<D>, ViewOperation, LayoutItem {
 
+    public SuperItemAdapter.OnItemEventListener<D> mEventListener;
     private final SparseArray<View> mViews;
 
     protected ItemViewHolder(View itemView) {

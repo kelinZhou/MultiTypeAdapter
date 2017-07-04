@@ -30,8 +30,7 @@ public class DragManHolder2 extends ItemViewHolder<Person> {
     @Override
     public void onBindData(int position, Person person) {
         setImageResource(R.id.iv_avatar, person.getAvatar());
-        setText(R.id.tv_name, String.format("姓名：%s", person.getName()));
-        setText(R.id.tv_age, String.format(Locale.CHINA, "年龄：%d 岁", person.getAge()));
+        setText(R.id.tv_name_and_age, String.format(Locale.CHINA, "%s  %d 岁", person.getName(), person.getAge()));
     }
 
     @Override
