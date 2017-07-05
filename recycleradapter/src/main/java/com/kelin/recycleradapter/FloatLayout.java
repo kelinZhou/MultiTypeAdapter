@@ -6,6 +6,8 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.SparseArray;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +24,12 @@ import com.kelin.recycleradapter.interfaces.LayoutItem;
 
 public class FloatLayout extends FrameLayout implements LayoutItem {
 
+    private static final String TAG = "FloatLayout";
     private ViewGroup mFloatLayout;
     private OnSizeChangedListener mOnSizeMeasuredCallback;
     private int mLayoutPosition;
+    private SparseArray<ViewGroup> contents = new SparseArray<>(2);
+    private int mCurFloatLayoutId;
 
     public FloatLayout(@NonNull Context context) {
         this(context, null);
@@ -49,20 +54,39 @@ public class FloatLayout extends FrameLayout implements LayoutItem {
         return mFloatLayout == null;
     }
 
-    void setFloatContent(@LayoutRes int floatContentId, OnSizeChangedListener callback) {
-        setFloatContent((ViewGroup) LayoutInflater.from(getContext()).inflate(floatContentId, this, false), callback);
+    void setOnSizeChangedListener(OnSizeChangedListener listener) {
+        mOnSizeMeasuredCallback = listener;
     }
 
-    void setFloatContent(ViewGroup floatContent, OnSizeChangedListener callback) {
-        if (floatContent != null) {
-            mOnSizeMeasuredCallback = callback;
-            removeAllViews();
-            ViewGroup parent = (ViewGroup) floatContent.getParent();
-            if (parent != null) parent.removeView(floatContent);
-            addView(floatContent);
-            floatContent.requestLayout();  //7.0上必须要调用这段代码，否则view不会被绘制。
-            mFloatLayout = floatContent;
+    void setFloatContent(@LayoutRes int floatContentId) {
+        ViewGroup floatContent = contents.get(floatContentId);
+        if (floatContent == null) {
+            floatContent = (ViewGroup) LayoutInflater.from(getContext()).inflate(floatContentId, this, false);
+            if (floatContent == null) {
+                throw new InflateException("the LayoutRes:" + floatContentId + " not found!");
+            } else {
+                contents.put(floatContentId, floatContent);
+            }
         }
+        if (isEmpty()) {  //如果当前是空布局则加入，否则可能一个屏幕内出现了两个可以悬浮的条目，则先不加入。
+            inflaterContent(floatContentId, floatContent);
+        }
+    }
+
+    void upDateContentView(int floatContentId) {
+        if (mCurFloatLayoutId != floatContentId) {
+            inflaterContent(floatContentId, contents.get(floatContentId));
+        }
+    }
+
+    private void inflaterContent(int floatContentId, ViewGroup floatContent) {
+        removeAllViews();
+        ViewGroup parent = (ViewGroup) floatContent.getParent();
+        if (parent != null) parent.removeView(floatContent);
+        addView(floatContent);
+        floatContent.requestLayout();  //7.0上必须要调用这段代码，否则view不会被绘制。
+        mFloatLayout = floatContent;
+        mCurFloatLayoutId = floatContentId;
     }
 
     @Override
@@ -72,6 +96,7 @@ public class FloatLayout extends FrameLayout implements LayoutItem {
 
     /**
      * 设置当前悬浮条的所在列表的布局位置。
+     *
      * @param layoutPosition 当前的布局位置。
      */
     void setLayoutPosition(int layoutPosition) {

@@ -73,6 +73,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * 子条目的对象池。
      */
     private ChildAdapterPool mPool = new ChildAdapterPool();
+    private FloatLayout.OnSizeChangedListener mFloatLayoutSizeChangedListener;
 
     /**
      * 构造方法。
@@ -166,7 +167,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         int swipeFlags = 0;
         int itemSpanSize = itemAdapter.getItemSpanSize();
         int totalSpanSize = getTotalSpanSize();
-        if (mDragEnable) {
+        if (mDragEnable && viewHolder.getDragEnable()) {
             dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
             if (itemSpanSize < totalSpanSize) {
                 dragFlags |= ItemTouchHelper.START | ItemTouchHelper.END;
@@ -214,7 +215,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      * @see #addAdapter(SuperItemAdapter[])
      */
     public SuperItemAdapter getChildAt(int index) {
-        return mPool.acquireAll().get(index);
+        return mPool.acquire(index);
     }
 
     /**
@@ -286,8 +287,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return remove;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public ItemViewHolder<Object> onCreateViewHolder(ViewGroup parent, int viewType) {
         if (viewType == TYPE_EMPTY_ITEM) {
             return new CommonNoDataViewHolder(getEmptyView());
@@ -306,26 +307,26 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             }
             return loadMoreViewHolder;
         }
-        ItemViewHolder holder = null;
-        for (SuperItemAdapter adapter : mPool.acquireAll()) {
-            if (adapter.getItemViewType() == viewType) {
-                holder = adapter.onCreateViewHolder(parent, viewType);
-                if (mFloatLayout != null && isFloatAdapter(adapter)) {
-                    mFloatLayout.setFloatContent(viewType, new FloatLayout.OnSizeChangedListener() {
+        SuperItemAdapter itemAdapter = mPool.acquireByType(viewType);
+        if (itemAdapter != null) {
+            ItemViewHolder holder = itemAdapter.onCreateViewHolder(parent, viewType);
+            if (mFloatLayout != null && isFloatAdapter(itemAdapter)) {
+                if (mFloatLayoutSizeChangedListener == null) {
+                    mFloatLayoutSizeChangedListener = new FloatLayout.OnSizeChangedListener() {
                         @Override
                         public void onSizeChanged(int width, int height) {
                             mFloatLayoutHeight = height;
                         }
-                    });
+                    };
+                    mFloatLayout.setOnSizeChangedListener(mFloatLayoutSizeChangedListener);
                 }
-                Class itemModelClass = adapter.getItemModelClass();
-                if (!mItemViewHolderMap.containsKey(itemModelClass)) {
-                    mItemViewHolderMap.put(itemModelClass, holder);
-                }
+                mFloatLayout.setFloatContent(viewType);
             }
-            if (holder != null) {
-                return holder;
+            Class itemModelClass = itemAdapter.getItemModelClass();
+            if (!mItemViewHolderMap.containsKey(itemModelClass)) {
+                mItemViewHolderMap.put(itemModelClass, holder);
             }
+            return holder;
         }
         throw new RuntimeException("the viewType: " + viewType + " not found !");
     }
@@ -414,16 +415,17 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 mFloatLayout.setY(-mFloatLayoutHeight);
             }
             mLastBindPosition = itemAdapter.firstItemPosition;
+            mFloatLayout.upDateContentView(itemAdapter.getItemViewType()); //更新悬浮布局。
             mFloatLayout.setLayoutPosition(mLastBindPosition);
             ((FloatItemAdapter) itemAdapter).onBindFloatViewData(mFloatViewHelper, getObject(mLastBindPosition));
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public void onBindViewHolder(ItemViewHolder<Object> holder, int position, List<Object> payloads) {
-        if (isEmptyItem(position)) return;
-        if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
+        //如果当前条目是LoadMoreItem或者是EmptyItem则不绑定数据。
+        if (isEmptyItem(position) || isLoadMoreItem(position)) return;
         SuperItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
         itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
         if (mFloatLayout != null && position == 0 && isFloatAdapter(itemAdapter)) {
@@ -467,8 +469,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return position - mPool.acquireFromLayoutPosition(position).firstItemPosition;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     protected boolean areItemsTheSame(Object oldItemData, Object newItemData) {
         if (oldItemData.getClass() != newItemData.getClass()) {
             return false;
@@ -477,8 +479,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return viewHolder == null || viewHolder.areItemsTheSame(oldItemData, newItemData);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     protected boolean areContentsTheSame(Object oldItemData, Object newItemData) {
         if (oldItemData.getClass() != newItemData.getClass()) {
             return false;
@@ -487,8 +489,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         return viewHolder == null || viewHolder.areContentsTheSame(oldItemData, newItemData);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     protected void getChangePayload(Object oldItemData, Object newItemData, Bundle bundle) {
         if (oldItemData.getClass() != newItemData.getClass()) {
             return;
@@ -678,6 +680,20 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
 
         /**
+         * 通过位置获取对象。
+         *
+         * @param type 要获取的对象的位置。
+         */
+        SuperItemAdapter acquireByType(int type) {
+            for (SuperItemAdapter adapter : adapters) {
+                if (adapter.getItemViewType() == type) {
+                    return adapter;
+                }
+            }
+            return null;
+        }
+
+        /**
          * 获取第一个可悬浮的子Adapter。
          */
         SuperItemAdapter acquireFirstFloatAbleChild() {
@@ -701,6 +717,13 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 }
             }
             throw new RuntimeException("SuperItemAdapter not found from layout position: " + layoutPosition);
+        }
+
+        /**
+         * 获取全部对象。
+         */
+        List<SuperItemAdapter> acquireAll() {
+            return adapters;
         }
 
         void release(SuperItemAdapter instance) {
@@ -730,13 +753,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
          */
         boolean remove(SuperItemAdapter instance) {
             return adapters.remove(instance);
-        }
-
-        /**
-         * 获取全部对象。
-         */
-        List<SuperItemAdapter> acquireAll() {
-            return adapters;
         }
     }
 }
