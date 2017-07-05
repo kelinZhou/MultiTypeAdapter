@@ -16,7 +16,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.callback.ItemDragResultListener;
-import com.kelin.recycleradapter.data.LoadMoreLayoutManager;
+import com.kelin.recycleradapter.helper.LoadMoreLayoutManager;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
