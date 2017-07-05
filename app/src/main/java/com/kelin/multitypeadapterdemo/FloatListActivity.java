@@ -29,6 +29,8 @@ import rx.functions.Action1;
  */
 public class FloatListActivity extends BaseActivity {
 
+    private SuperItemAdapter.OnItemEventListener<Classs> mItemEventListener;
+
     /**
      * 启动自身，可通过其他Activity调用此方法来启动MultiTypeListActivity。
      *
@@ -62,26 +64,31 @@ public class FloatListActivity extends BaseActivity {
                 for (final Classs classs : classses) {
                     //构建一个用来显示班级的悬浮子Adapter。
                     adapter = new FloatItemAdapter<Classs>(ClassHolder.class, classs);
-                    //设置条目事件监听。
-                    adapter.setItemEventListener(new SuperItemAdapter.OnItemEventListener<Classs>() {
-                        //当条目被点击。
-                        @Override
-                        public void onItemClick(int position, Classs o, int adapterPosition) {
-                            Snackbar.make(mRecyclerView, "条目被点击：position=" + position + "|class=" + o.getClassName(), 2000).show();
-                        }
-                        //当条目被长按
-                        @Override
-                        public void onItemLongClick(int position, Classs o, int adapterPosition) {
-                            Snackbar.make(mRecyclerView, "条目被长按：position=" + position + "|class=" + o.getClassName(), 2000).show();
-                        }
-                        //当条目中的子控件被点击
-                        @Override
-                        public void onItemChildClick(int position, Classs o, View view, int adapterPosition) {
-                            if (view.getId() == R.id.tv_show_more) {
-                                Snackbar.make(mRecyclerView, "您点击了显示更多：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                    if (mItemEventListener == null) {
+                        //设置条目事件监听。
+                        mItemEventListener = new SuperItemAdapter.OnItemEventListener<Classs>() {
+                            //当条目被点击。
+                            @Override
+                            public void onItemClick(int position, Classs o, int adapterPosition) {
+                                Snackbar.make(mRecyclerView, "条目被点击：position=" + position + "|class=" + o.getClassName(), 2000).show();
                             }
-                        }
-                    });
+
+                            //当条目被长按
+                            @Override
+                            public void onItemLongClick(int position, Classs o, int adapterPosition) {
+                                Snackbar.make(mRecyclerView, "条目被长按：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                            }
+
+                            //当条目中的子控件被点击
+                            @Override
+                            public void onItemChildClick(int position, Classs o, View view, int adapterPosition) {
+                                if (view.getId() == R.id.tv_show_more) {
+                                    Snackbar.make(mRecyclerView, "您点击了显示更多：position=" + position + "|class=" + o.getClassName(), 2000).show();
+                                }
+                            }
+                        };
+                    }
+                    adapter.setItemEventListener(mItemEventListener);
                     //将子Adapter添加到多类型Adapter中。
                     mMultiTypeAdapter.addAdapter(adapter, new ItemAdapter<Person>(classs.getStudents(), ManHolder.class));
                 }

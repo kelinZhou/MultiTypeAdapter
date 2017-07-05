@@ -1,4 +1,4 @@
-package com.kelin.recycleradapter.data;
+package com.kelin.recycleradapter.helper;
 
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Size;

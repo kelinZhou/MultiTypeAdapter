@@ -305,6 +305,20 @@ public abstract class ItemViewHolder<D> extends RecyclerView.ViewHolder implemen
         return true;
     }
 
+    /**
+     * 如果你通过 {@link com.kelin.recycleradapter.SuperAdapter#setItemDragEnable(boolean, boolean)} 方法设置了RecyclerView
+     * 可以拖拽的话，那么表示所有的条目都是可以被拖拽的。如果你有些条目不希望被拖拽，则可以从写该方法并返回false。
+     * @return 是否允许侧滑删除。
+     */
+    public boolean getDragEnable() {
+        return true;
+    }
+
+    /**
+     * 返回触发拖拽移动条目位置的控件Id。如果你只希望通过长按触发拖拽则不需要从写该方法，另外如果你重写了 {@link #getDragEnable()}
+     * 方法并返回的false，那么也不需要该方法。
+     * @return 返回触发拖拽的view的Id。
+     */
     @IdRes
     public int getDragHandleViewId() {
         return 0;

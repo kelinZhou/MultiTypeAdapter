@@ -16,7 +16,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.callback.ItemDragResultListener;
-import com.kelin.recycleradapter.data.LoadMoreLayoutManager;
+import com.kelin.recycleradapter.helper.LoadMoreLayoutManager;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
 
@@ -740,7 +740,6 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
 
         @Override
         public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
-            super.onSelectedChanged(viewHolder, actionState);
             //因为ACTION_STATE_IDLE这个状态时ViewHolder为null所以下面用switch，避免空指针。
             // 而且ACTION_STATE_IDLE状态是也不需要记录。否则clearView方法中就拿不到这个状态，因为这个方法是先于clearView方法执行的。
             switch (actionState) {
@@ -751,6 +750,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                     mLastActionState = actionState;
                     break;
             }
+            super.onSelectedChanged(viewHolder, actionState);
         }
 
         @Override

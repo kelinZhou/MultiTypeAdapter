@@ -171,7 +171,7 @@ public class DataHelper {
                 int location;
                 List<Person> list;
                 for (int i = 0; i < 20; i++) {
-                    count = mRandom.nextInt(10) + 10;
+                    count = mRandom.nextInt(10) + 5;
                     list = new ArrayList<Person>(count);
                     for (int x = 0; x < count; x++) {
                         location = mRandom.nextInt(icons.size());
