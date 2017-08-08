@@ -3,8 +3,6 @@ package com.kelin.recycleradapter.interfaces;
 import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 
-import com.kelin.recycleradapter.holder.ItemViewHolder;
-
 import java.util.Collection;
 
 /**
@@ -14,7 +12,7 @@ import java.util.Collection;
  * 版本 v 1.0.0
  */
 
-public interface AdapterEdit<D, VH extends ItemViewHolder<D>> {
+public interface AdapterEdit<D> {
 
     /**
      * 在列表的末尾处添加一个条目。
@@ -22,6 +20,14 @@ public interface AdapterEdit<D, VH extends ItemViewHolder<D>> {
      * @param object 要添加的对象。
      */
     void addItem(@NonNull D object);
+
+    /**
+     * 在列表的末尾处添加一个条目。
+     *
+     * @param object 要添加的对象。
+     * @param refresh  是否刷新列表。
+     */
+    void addItem(@NonNull D object, boolean refresh);
 
     /**
      * 在列表的指定位置添加一个条目。

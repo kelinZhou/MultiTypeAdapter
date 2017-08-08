@@ -145,6 +145,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
+                //处理loadMore
                 if (isLoadMoreUsable() && mLoadMoreLayoutManager.isLoadState()) {
                     if (mLoadMoreLayoutManager.isInTheLoadMore() || mLoadMoreLayoutManager.isNoMoreState())
                         return;
@@ -598,12 +599,25 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      *
      * @param list 数据集合。
      */
-    public void setDataList(List<D> list) {
+    public void setDataList(@NonNull List<D> list) {
+        setDataList(list, false);
+    }
+
+    /**
+     * 设置数据。
+     *
+     * @param list    数据集合。
+     * @param refresh 是否刷新列表。
+     */
+    public void setDataList(@NonNull List<D> list, boolean refresh) {
         mDataList = list;
         if (mTempList == null) {
             mTempList = new ArrayList<>();
         } else {
             mTempList.clear();
+        }
+        if (refresh) {
+            notifyRefresh();
         }
     }
 

@@ -19,7 +19,7 @@ import java.util.List;
  * 版本 v 1.0.0
  */
 
-public class ItemAdapter<D> extends SuperItemAdapter<D> implements AdapterEdit<D, ItemViewHolder<D>> {
+public class ItemAdapter<D> extends SuperItemAdapter<D> implements AdapterEdit<D> {
 
     /**
      * 用来记录条目的占屏比。
@@ -70,7 +70,18 @@ public class ItemAdapter<D> extends SuperItemAdapter<D> implements AdapterEdit<D
      */
     @Override
     public void addItem(@NonNull D object) {
-        addItem(getDataList().size(), object);
+        addItem(object, true);
+    }
+
+    /**
+     * 在列表的末尾处添加一个条目。
+     *
+     * @param object  要添加的对象。
+     * @param refresh 是否刷新列表。
+     */
+    @Override
+    public void addItem(@NonNull D object, boolean refresh) {
+        addItem(getDataList().size(), object, refresh);
     }
 
     /**
