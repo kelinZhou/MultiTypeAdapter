@@ -50,8 +50,7 @@ public class SingleTypeListActivity extends BaseActivity {
         DataHelper.getInstance().getPersons().subscribe(new Action1<List<Person>>() {
             @Override
             public void call(List<Person> persons) {
-                mAdapter.setDataList(persons);
-                mAdapter.notifyRefresh();
+                mAdapter.setDataList(persons, true);
             }
         });
     }
