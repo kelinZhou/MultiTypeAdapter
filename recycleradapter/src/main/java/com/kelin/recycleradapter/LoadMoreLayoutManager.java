@@ -42,6 +42,9 @@ final class LoadMoreLayoutManager {
      * 加载更多是否可用。
      */
     private boolean mIsUsable = true;
+    /**
+     * 用来存放所有的状态下对应的View。
+     */
     private SparseArray<View> mLayoutViews = new SparseArray<>(3);
 
     /**
@@ -70,31 +73,56 @@ final class LoadMoreLayoutManager {
         return mIsInTheLoadMore;
     }
 
+    /**
+     * 设置状态为加载失败，点击重试。
+     */
     void setRetryState() {
         mCurState = STATE_FAILED;
     }
 
+    /**
+     * 判断是否是加载失败点击重试状态。
+     * @return 返回true表示是，false表示不是。
+     */
     boolean isRetryState() {
         return mCurState == STATE_FAILED;
     }
 
+    /**
+     * 设置状态为没有更多数据。
+     */
     void setNoMoreState() {
         setInTheLoadMore(false);
         mCurState = STATE_NO_MORE;
     }
 
+    /**
+     * 判断是否是没有更多数据状态。
+     * @return 返回true表示是，false表示不是。
+     */
     boolean isNoMoreState() {
         return mCurState == STATE_NO_MORE;
     }
 
+    /**
+     * 设置状态为加载更多。
+     */
     void setLoadState() {
         mCurState = STATE_LOAD;
     }
 
+    /**
+     * 判断是否为加载更多状态。
+     * @return 返回true表示是，false表示不是。
+     */
     boolean isLoadState() {
         return mCurState == STATE_LOAD;
     }
 
+    /**
+     * 获取当前状态下的LayoutId。
+     * @return 返回当前状态下的LayoutId,如果没有找到对应状态则抛出异常。
+     */
     @LayoutRes int getCurStateLayoutId() {
         switch (mCurState) {
             case STATE_LOAD:
@@ -108,6 +136,12 @@ final class LoadMoreLayoutManager {
         }
     }
 
+    /**
+     * 获取某个状态下应当显示的View。
+     * @param layoutId 当前状态对应的LayoutId。如果当前的LayoutId不是当前状态下的Layout的ID则返回null。
+     * @param parent 当前的RecyclerView对象。
+     * @return 如果条件满足返回对应的View。否则返回null。
+     */
     View getLayoutView(@LayoutRes int layoutId, @NonNull ViewGroup parent) {
         if (layoutId == getCurStateLayoutId()) {
             View view = mLayoutViews.get(layoutId);
@@ -124,18 +158,33 @@ final class LoadMoreLayoutManager {
         }
     }
 
+    /**
+     * 判断是否没有正确的状态。
+     * @return 如果是返回true，否者返回false。
+     */
     boolean noCurStateLayoutId() {
         return getCurStateLayoutId() == 0;
     }
 
+    /**
+     * 获取加载更多触发时机的偏移值。
+     */
     int getLoadMoreOffset() {
         return mLoadMoreOffset;
     }
 
+    /**
+     * 设置加载更多是否可用。
+     * @param usable true表示可用，false表示不可用。默认为true。
+     */
     void setLoadMoreUsable(boolean usable) {
         mIsUsable = usable;
     }
 
+    /**
+     * 判断加载更多是否可用。
+     * @return 返回true表示可用，false表示不可用。
+     */
     boolean isUsable() {
         return mIsUsable;
     }
