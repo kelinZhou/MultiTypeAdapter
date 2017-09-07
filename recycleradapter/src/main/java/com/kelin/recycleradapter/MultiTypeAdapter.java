@@ -11,7 +11,6 @@ import android.support.annotation.Size;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -293,8 +292,9 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         if (viewType == TYPE_EMPTY_ITEM) {
             return new CommonNoDataViewHolder(getEmptyView());
         }
-        if (mLoadMoreLayoutManager != null && viewType == mLoadMoreLayoutManager.getCurStateLayoutId()) {
-            CommonNoDataViewHolder loadMoreViewHolder = new CommonNoDataViewHolder(LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false));
+        View itemView;
+        if (mLoadMoreLayoutManager != null && (itemView = mLoadMoreLayoutManager.getLayoutView(viewType, parent)) != null) {
+            CommonNoDataViewHolder loadMoreViewHolder = new CommonNoDataViewHolder(itemView);
             if (mLoadMoreLayoutManager.isRetryState()) {
                 if (mLoadMoreRetryClickListener == null) {
                     mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
