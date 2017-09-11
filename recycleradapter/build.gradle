@@ -1,5 +1,8 @@
 apply plugin: 'com.android.library'
 
+apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.kelinZhou'
+
 android {
     compileSdkVersion Integer.parseInt(ANDROID_COMPILE_SDK_VERSION)
     buildToolsVersion ANDROID_BUILD_TOOLS_VERSION
