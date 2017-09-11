@@ -16,9 +16,9 @@ import android.view.ViewGroup;
  */
 final class LoadMoreLayoutManager {
 
-    private static final int STATE_FAILED = 0X0000_00F0;
-    private static final int STATE_NO_MORE = 0X0000_00F1;
-    private static final int STATE_LOAD = 0X0000_00F2;
+    private static final int STATE_FAILED = 0x0000_00F0;
+    private static final int STATE_NO_MORE = 0x0000_00F1;
+    private static final int STATE_LOAD = 0x0000_00F2;
     private final int mLoadMoreOffset;
 
     private int mCurState = STATE_LOAD;
