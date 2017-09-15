@@ -6,7 +6,22 @@
 ## 简介
     针对RecyclerVeiw的适配器的封装，可以令你简单优雅的实现一些常用功能。
     例如：多条目列表、悬浮列表、分页加载等，以及各种针对条目的事件的监听。
-
+## 下载
+###### 第一步：添加 JitPack 仓库到你项目根目录的 gradle 文件中。
+```
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+###### 第二步：添加这个依赖。
+```
+	dependencies {
+        compile 'com.github.kelinZhou:MultiTypeAdapter:1.0.0'
+	}
+```
 ## 效果 & 实现
 #### 单条目列表
 ![loadMore](materials/gif_single_type_list.gif)
