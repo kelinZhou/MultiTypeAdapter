@@ -31,9 +31,4 @@ public class ManHolder extends ItemViewHolder<Person> {
         setText(R.id.tv_weight, String.format(Locale.CHINA, "体重：%d Kg", person.getWeight()));
         setText(R.id.tv_country, String.format("国家：%s", person.getCountry()));
     }
-
-    @Override
-    public boolean areContentsTheSame(Person oldItemData, Person newItemDate) {
-        return oldItemData.equals(newItemDate);
-    }
 }

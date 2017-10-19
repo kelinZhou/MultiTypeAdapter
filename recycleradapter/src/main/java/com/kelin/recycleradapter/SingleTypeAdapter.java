@@ -33,6 +33,10 @@ public class SingleTypeAdapter<D, H extends ItemViewHolder<D>> extends EditSuper
         this(recyclerView, 1, 1, list, holderClass);
     }
 
+    public SingleTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Size(min = 1, max = 100) int spanSize, Class<? extends H> holderClass) {
+        this(recyclerView, totalSpanSize, spanSize, LinearLayout.VERTICAL, null, holderClass);
+    }
+
     public SingleTypeAdapter(@NonNull RecyclerView recyclerView, @Size(min = 1, max = 100) int totalSpanSize, @Size(min = 1, max = 100) int spanSize, List<D> list, Class<? extends H> holderClass) {
         this(recyclerView, totalSpanSize, spanSize, LinearLayout.VERTICAL, list, holderClass);
     }
