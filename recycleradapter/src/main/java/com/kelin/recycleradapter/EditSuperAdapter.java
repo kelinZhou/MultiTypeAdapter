@@ -165,7 +165,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
 
     @Override
     protected int getItemSpan(int position) {
-        if ((mLoadMoreLayoutManager != null && position == getItemCount() - 1)) return getTotalSpanSize();
+        if ((mLMM != null && position == getItemCount() - 1)) return getTotalSpanSize();
         return getItemSpanSize(position);
     }
 

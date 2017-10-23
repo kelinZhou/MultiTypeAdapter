@@ -71,7 +71,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     /**
      * 加载更多的布局信息对象。
      */
-    LoadMoreLayoutManager mLoadMoreLayoutManager;
+    LoadMoreLayoutManager mLMM;
     /**
      * 列表为空时的布局。
      */
@@ -145,12 +145,13 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
                 //处理loadMore
-                if (isLoadMoreUsable() && mLoadMoreLayoutManager.isLoadState()) {
-                    if (mLoadMoreLayoutManager.isInTheLoadMore() || mLoadMoreLayoutManager.isNoMoreState())
+                if (isLoadMoreUsable() && mLMM.isLoadState()) {
+                    if (mLMM.isInTheLoadMore() || mLMM.isNoMoreState())
                         return;
                     int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
-                    int targetPosition = getDataList().size() - mLoadMoreLayoutManager.getLoadMoreOffset();
-                    if (targetPosition == 0 || lastVisibleItemPosition == targetPosition) {
+                    int size = getDataList().size();
+                    int targetPosition = size - mLMM.getLoadMoreOffset();
+                    if (targetPosition <= 0 || lastVisibleItemPosition == targetPosition || lastVisibleItemPosition == size) {
                         startLoadMore();
                     }
                 }
@@ -286,8 +287,8 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * @param usable true表示可用，false表示不可用。
      */
     public void setLoadMoreUsable(boolean usable) {
-        if (mLoadMoreLayoutManager != null) {
-            mLoadMoreLayoutManager.setLoadMoreUsable(usable);
+        if (mLMM != null) {
+            mLMM.setLoadMoreUsable(usable);
         }
     }
 
@@ -295,7 +296,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 加载更多是否可用。
      */
     private boolean isLoadMoreUsable() {
-        return mLoadMoreLayoutManager != null && mLoadMoreLayoutManager.isUsable();
+        return mLMM != null && mLMM.isUsable();
     }
 
     /**
@@ -325,7 +326,8 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                 public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
                     try {
                         super.onLayoutChildren(recycler, state);
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        Log.e(TAG, "onLayoutChildren: ", e);
                     }
                 }
             };
@@ -402,7 +404,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * @param listener   加载更多被触发的监听。
      */
     public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull OnLoadMoreListener listener) {
-        mLoadMoreLayoutManager = layoutInfo;
+        mLMM = layoutInfo;
         mLoadMoreListener = listener;
     }
 
@@ -464,7 +466,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     private void startLoadMore() {
         if (mLoadMoreListener != null) {
             Log.i("MultiTypeAdapter", "开始加载更多");
-            mLoadMoreLayoutManager.setInTheLoadMore(true);
+            mLMM.setInTheLoadMore(true);
             mLoadMoreListener.onLoadMore();
         }
     }
@@ -474,8 +476,8 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     private void reloadMore() {
         if (mLoadMoreListener != null) {
-            Log.i("MultiTypeAdapter", "开始加载更多");
-            mLoadMoreLayoutManager.setInTheLoadMore(true);
+            Log.i("MultiTypeAdapter", "重新开始加载更多");
+            mLMM.setInTheLoadMore(true);
             mLoadMoreListener.onReloadMore();
         }
     }
@@ -484,7 +486,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 当加载更多完成后要调用此方法，否则不会触发下一次LoadMore事件。
      */
     public void setLoadMoreFinished() {
-        mLoadMoreLayoutManager.setInTheLoadMore(false);
+        mLMM.setInTheLoadMore(false);
         Log.i("MultiTypeAdapter", "加载完成");
     }
 
@@ -494,7 +496,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     public void setLoadMoreFailed() {
         checkLoadMoreAvailable();
         int position = getItemCount() - 1;
-        mLoadMoreLayoutManager.setRetryState();
+        mLMM.setRetryState();
         notifyItemChanged(position);
         Log.i("MultiTypeAdapter", "加载完成");
     }
@@ -505,12 +507,12 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     public void setNoMoreData() {
         checkLoadMoreAvailable();
         int position = getItemCount() - 1;
-        mLoadMoreLayoutManager.setNoMoreState();
+        mLMM.setNoMoreState();
         notifyItemChanged(position);
     }
 
     private void checkLoadMoreAvailable() {
-        if (mLoadMoreLayoutManager == null) {
+        if (mLMM == null) {
             throw new RuntimeException("You are not set to load more View, you can call the setLoadMoreView() method.");
         }
     }
@@ -518,13 +520,13 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     @Override
     public int getItemCount() {
         int size = getDataList().size();
-        return size == 0 ? mEmptyLayout == null ? 0 : 1 : size + (!isLoadMoreUsable() || mLoadMoreLayoutManager.noCurStateLayoutId() ? 0 : 1);
+        return size == 0 ? mEmptyLayout == null ? 0 : 1 : size + (!isLoadMoreUsable() || mLMM.noCurStateLayoutId() ? 0 : 1);
     }
 
     @Override
     public final int getItemViewType(int position) {
         if (isEmptyItem(position)) return TYPE_EMPTY_ITEM;
-        if (isLoadMoreItem(position)) return mLoadMoreLayoutManager.getCurStateLayoutId();
+        if (isLoadMoreItem(position)) return mLMM.getCurStateLayoutId();
         return getItemType(position);
     }
 
@@ -533,7 +535,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     boolean isLoadMoreItem(int position) {
-        return isLoadMoreUsable() && !mLoadMoreLayoutManager.noCurStateLayoutId() && position == getItemCount() - 1;
+        return isLoadMoreUsable() && !mLMM.noCurStateLayoutId() && position == getItemCount() - 1;
     }
 
     protected abstract int getItemType(int position);
@@ -627,7 +629,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     void addDataList(List<D> list) {
         getDataList().addAll(list);
-        if (mLoadMoreLayoutManager == null || !mLoadMoreLayoutManager.isInTheLoadMore()) {
+        if (mLMM == null || !mLMM.isInTheLoadMore()) {
             mTempList.addAll(list);
         }
     }
@@ -639,7 +641,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     void addData(D d) {
         getDataList().add(d);
-        if (mLoadMoreLayoutManager == null || !mLoadMoreLayoutManager.isInTheLoadMore()) {
+        if (mLMM == null || !mLMM.isInTheLoadMore()) {
             mTempList.add(d);
         }
     }
@@ -725,7 +727,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     class LoadMoreRetryClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            mLoadMoreLayoutManager.setLoadState();
+            mLMM.setLoadState();
             notifyItemChanged(getItemCount() - 1);
             reloadMore();
         }

@@ -293,9 +293,9 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             return new CommonNoDataViewHolder(getEmptyView());
         }
         View itemView;
-        if (mLoadMoreLayoutManager != null && (itemView = mLoadMoreLayoutManager.getLayoutView(viewType, parent)) != null) {
+        if (mLMM != null && (itemView = mLMM.getLayoutView(viewType, parent)) != null) {
             CommonNoDataViewHolder loadMoreViewHolder = new CommonNoDataViewHolder(itemView);
-            if (mLoadMoreLayoutManager.isRetryState()) {
+            if (mLMM.isRetryState()) {
                 if (mLoadMoreRetryClickListener == null) {
                     mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
                 }
@@ -331,6 +331,14 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         throw new RuntimeException("the viewType: " + viewType + " not found !");
     }
 
+    private ViewGroup.MarginLayoutParams getMarginLayoutParams(@NonNull View view) {
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
+        if (lp instanceof ViewGroup.MarginLayoutParams) {
+            return (ViewGroup.MarginLayoutParams) lp;
+        }
+        return null;
+    }
+
     private boolean isFloatAdapter(SuperItemAdapter adapter) {
         return adapter instanceof FloatItemAdapter;
     }
@@ -360,10 +368,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
                 } else {
                     if (view.getTop() <= (isFloatLayoutShowing() ? mFloatLayoutHeight : 0)) {
                         setFloatLayoutVisibility(true);
-                        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
                         int marginTop = 0;
-                        if (layoutParams instanceof ViewGroup.MarginLayoutParams) {
-                            marginTop = ((ViewGroup.MarginLayoutParams) layoutParams).topMargin;
+                        ViewGroup.MarginLayoutParams lp = getMarginLayoutParams(view);
+                        if (lp != null) {
+                            marginTop = lp.topMargin;
+
                         }
                         if (view.getTop() - marginTop <= 0) {
                             mFloatLayout.setY(0);
