@@ -53,6 +53,9 @@ final class LoadMoreLayoutManager {
      * 加载更多是否可用。
      */
     private boolean mIsUsable = true;
+    /**
+     * 用来承载所有状态下视图的容器，LoadMore条目的根布局。
+     */
     private ViewGroup mRootView;
     /**
      * 用来切换到没有更多数据的视图的任务。
@@ -167,24 +170,19 @@ final class LoadMoreLayoutManager {
     /**
      * 获取某个状态下应当显示的View。
      *
-     * @param layoutId 当前状态对应的LayoutId。如果当前的LayoutId不是当前状态下的Layout的ID则返回null。
      * @param parent   当前的RecyclerView对象。
      * @return 如果条件满足返回对应的View。否则返回null。
      */
-    View getLayoutView(@LayoutRes int layoutId, @NonNull ViewGroup parent, View.OnClickListener retryClickListener) {
-        if (layoutId == getItemLayoutId()) {
-            LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            mRootView = (ViewGroup) inflater.inflate(layoutId, parent, false);
-            mLoadMoreLayout = addView(mLoadMoreLayoutId, mRootView, inflater, true, View.VISIBLE);
-            mRetryLayout = addView(mRetryLayoutId, mRootView, inflater, false, View.GONE);
-            if (mRetryLayout != null) {
-                mRetryLayout.setOnClickListener(retryClickListener);
-            }
-            mNoMoreDataLayout = addView(mNoMoreDataLayoutId, mRootView, inflater, false, View.GONE);
-            return mRootView;
-        } else {
-            return null;
+    View getLayoutView(@NonNull ViewGroup parent, View.OnClickListener retryClickListener) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        mRootView = (ViewGroup) inflater.inflate(getItemLayoutId(), parent, false);
+        mLoadMoreLayout = addView(mLoadMoreLayoutId, mRootView, inflater, true, View.VISIBLE);
+        mRetryLayout = addView(mRetryLayoutId, mRootView, inflater, false, View.GONE);
+        if (mRetryLayout != null) {
+            mRetryLayout.setOnClickListener(retryClickListener);
         }
+        mNoMoreDataLayout = addView(mNoMoreDataLayoutId, mRootView, inflater, false, View.GONE);
+        return mRootView;
     }
 
     /**

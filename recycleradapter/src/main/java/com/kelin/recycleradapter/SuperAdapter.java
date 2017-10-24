@@ -96,7 +96,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     /**
      * 加载更多失败时，点击重试的监听。
      */
-    LoadMoreRetryClickListener mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
+    private LoadMoreRetryClickListener mLoadMoreRetryListener;
 
     /**
      * 构造方法。
@@ -218,6 +218,17 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     int findLastVisibleItemPosition() {
         return mLm.findLastVisibleItemPosition();
+    }
+
+    /**
+     * 获取加载更多失败重试的点击监听。
+     * @return 返回LoadMoreRetryClickListener对象。
+     */
+    public LoadMoreRetryClickListener getLoadMoreRetryClickListener() {
+        if (mLoadMoreRetryListener == null) {
+            mLoadMoreRetryListener = new LoadMoreRetryClickListener();
+        }
+        return mLoadMoreRetryListener;
     }
 
     /**
@@ -383,7 +394,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     protected abstract int getItemSpanSize(int position);
 
     /**
-     * 设置加载更多时显示的布局。
+     * 设置加载更多时显示的布局。所有布局资源的宽高应当一样。
      *
      * @param loadMoreLayoutId 加载更多时显示的布局的资源ID。
      * @param retryLayoutId    加载更多失败时显示的布局。
@@ -394,7 +405,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     /**
-     * 设置加载更多时显示的布局。
+     * 设置加载更多时显示的布局。所有布局资源的宽高应当一样。
      *
      * @param loadMoreLayoutId   加载更多时显示的布局的资源ID。
      * @param retryLayoutId      加载更多失败时显示的布局。
@@ -406,7 +417,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     /**
-     * 设置加载更多时显示的布局。
+     * 设置加载更多时显示的布局。所有布局资源的宽高应当一样。
      *
      * @param loadMoreLayoutId   加载更多时显示的布局的资源ID。
      * @param retryLayoutId      加载更多失败时显示的布局。

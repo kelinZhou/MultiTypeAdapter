@@ -89,7 +89,7 @@ public abstract class EditSuperAdapter<D, VH extends ItemViewHolder<D>> extends 
     @Override
     public VH onCreateViewHolder(ViewGroup parent, int viewType) {
         VH holder;
-        View itemView = viewType == TYPE_EMPTY_ITEM ? getEmptyView() : LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);
+        View itemView = viewType == TYPE_EMPTY_ITEM ? getEmptyView() : mLMM != null && viewType == mLMM.getItemLayoutId() ? mLMM.getLayoutView(parent, getLoadMoreRetryClickListener()) : LayoutInflater.from(parent.getContext()).inflate(viewType, parent, false);
         try {
             Constructor<? extends VH> constructor = mHolderClass.getDeclaredConstructor(View.class);
             constructor.setAccessible(true);

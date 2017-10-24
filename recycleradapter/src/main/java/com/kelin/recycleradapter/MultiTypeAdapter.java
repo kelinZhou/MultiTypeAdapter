@@ -288,8 +288,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         if (viewType == TYPE_EMPTY_ITEM) {
             return new CommonNoDataViewHolder(getEmptyView());
         }
-        View itemView;
-        if (mLMM != null && (itemView = mLMM.getLayoutView(viewType, parent, mLoadMoreRetryClickListener)) != null) {
+        View itemView = mLMM != null && viewType == mLMM.getItemLayoutId() ? mLMM.getLayoutView(parent, getLoadMoreRetryClickListener()) : null;
+        if (itemView != null) {
             return new CommonNoDataViewHolder(itemView);
         }
         SuperItemAdapter itemAdapter = mPool.acquireByType(viewType);
