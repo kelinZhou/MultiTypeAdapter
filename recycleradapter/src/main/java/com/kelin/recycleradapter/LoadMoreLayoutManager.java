@@ -53,6 +53,16 @@ final class LoadMoreLayoutManager {
      * 加载更多是否可用。
      */
     private boolean mIsUsable = true;
+    private ViewGroup mRootView;
+    /**
+     * 用来切换到没有更多数据的视图的任务。
+     */
+    private Runnable mNoMoreDataStateChangeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setVisible(mNoMoreDataLayout, mRetryLayout, mLoadMoreLayout);
+        }
+    };
 
     /**
      * 构建一个加载更多的布局信息对象。
@@ -104,7 +114,9 @@ final class LoadMoreLayoutManager {
     void setNoMoreState() {
         setInTheLoadMore(false);
         mCurState = STATE_NO_MORE;
-        setVisible(mNoMoreDataLayout, mRetryLayout, mLoadMoreLayout);
+        //这里做延迟是为了将新数据加载完成之后才切换视图，为了避免新数据还没有插入就已经看到了没有更多数据的提示。
+        //如果不在乎这个细节可以不延时。
+        mRootView.postDelayed(mNoMoreDataStateChangeRunnable, 200);
     }
 
     /**
@@ -125,9 +137,13 @@ final class LoadMoreLayoutManager {
     }
 
     private void setVisible(View visible, View... goneViews) {
-        visible.setVisibility(View.VISIBLE);
+        if (visible != null) {
+            visible.setVisibility(View.VISIBLE);
+        }
         for (View view : goneViews) {
-            view.setVisibility(View.GONE);
+            if (view != null) {
+                view.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -158,14 +174,14 @@ final class LoadMoreLayoutManager {
     View getLayoutView(@LayoutRes int layoutId, @NonNull ViewGroup parent, View.OnClickListener retryClickListener) {
         if (layoutId == getItemLayoutId()) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            ViewGroup contentView = (ViewGroup) inflater.inflate(layoutId, parent, false);
-            mLoadMoreLayout = addView(mLoadMoreLayoutId, contentView, inflater, true, View.VISIBLE);
-            mRetryLayout = addView(mRetryLayoutId, contentView, inflater, false, View.GONE);
+            mRootView = (ViewGroup) inflater.inflate(layoutId, parent, false);
+            mLoadMoreLayout = addView(mLoadMoreLayoutId, mRootView, inflater, true, View.VISIBLE);
+            mRetryLayout = addView(mRetryLayoutId, mRootView, inflater, false, View.GONE);
             if (mRetryLayout != null) {
                 mRetryLayout.setOnClickListener(retryClickListener);
             }
-            mNoMoreDataLayout = addView(mNoMoreDataLayoutId, contentView, inflater, false, View.GONE);
-            return contentView;
+            mNoMoreDataLayout = addView(mNoMoreDataLayoutId, mRootView, inflater, false, View.GONE);
+            return mRootView;
         } else {
             return null;
         }
