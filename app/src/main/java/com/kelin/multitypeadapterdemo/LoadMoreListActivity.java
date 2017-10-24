@@ -36,7 +36,7 @@ public class LoadMoreListActivity extends BaseActivity {
     /**
      * 定义每页的数量。
      */
-    public static final int PAGE_SIZE = 2;
+    public static final int PAGE_SIZE = 10;
     /**
      * 记录当前需要加载的页数。
      */
