@@ -93,6 +93,10 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     private ItemDragResultListener<D> mItemDragResultListener;
     private ItemTouchHelper mItemTouchHelper;
+    /**
+     * 加载更多失败时，点击重试的监听。
+     */
+    LoadMoreRetryClickListener mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
 
     /**
      * 构造方法。
@@ -143,7 +147,6 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
                 //处理loadMore
                 if (isLoadMoreUsable() && mLMM.isLoadState()) {
                     if (mLMM.isInTheLoadMore() || mLMM.isNoMoreState())
@@ -155,6 +158,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                         startLoadMore();
                     }
                 }
+                SuperAdapter.this.onRecyclerViewScrolled(recyclerView, dx, dy, mLm);
             }
         });
 
@@ -196,6 +200,24 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                 return bundle.size() == 0 ? null : bundle;
             }
         };
+    }
+
+    /**
+     * 寻找首个可见的条目。
+     *
+     * @return 返回首个可见的条目所在的索引位置。
+     */
+    int findFirstVisibleItemPosition() {
+        return mLm.findFirstVisibleItemPosition();
+    }
+
+    /**
+     * 寻找最后一个可见的条目。
+     *
+     * @return 返回最后一个可见的条目所在的索引位置。
+     */
+    int findLastVisibleItemPosition() {
+        return mLm.findLastVisibleItemPosition();
     }
 
     /**
@@ -403,7 +425,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * @param layoutInfo LoadMore布局信息对象。
      * @param listener   加载更多被触发的监听。
      */
-    public void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull OnLoadMoreListener listener) {
+    private void setLoadMoreView(@NonNull LoadMoreLayoutManager layoutInfo, @NonNull OnLoadMoreListener listener) {
         mLMM = layoutInfo;
         mLoadMoreListener = listener;
     }
@@ -495,9 +517,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     public void setLoadMoreFailed() {
         checkLoadMoreAvailable();
-        int position = getItemCount() - 1;
         mLMM.setRetryState();
-        notifyItemChanged(position);
         Log.i("MultiTypeAdapter", "加载完成");
     }
 
@@ -506,9 +526,8 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      */
     public void setNoMoreData() {
         checkLoadMoreAvailable();
-        int position = getItemCount() - 1;
         mLMM.setNoMoreState();
-        notifyItemChanged(position);
+        Log.i("MultiTypeAdapter", "加载完成");
     }
 
     private void checkLoadMoreAvailable() {
@@ -526,7 +545,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     @Override
     public final int getItemViewType(int position) {
         if (isEmptyItem(position)) return TYPE_EMPTY_ITEM;
-        if (isLoadMoreItem(position)) return mLMM.getCurStateLayoutId();
+        if (isLoadMoreItem(position)) return mLMM.getItemLayoutId();
         return getItemType(position);
     }
 
@@ -546,8 +565,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
 
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
-        if (isEmptyItem(position)) return;
-        if (isLoadMoreItem(position)) return; //如果当前条目是LoadMoreItem则不绑定数据。
+        if (isEmptyItem(position) || isLoadMoreItem(position)) return;
         holder.onBindPartData(position, getObject(position), payloads);
     }
 
@@ -724,11 +742,10 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
         }
     }
 
-    class LoadMoreRetryClickListener implements View.OnClickListener {
+    private class LoadMoreRetryClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             mLMM.setLoadState();
-            notifyItemChanged(getItemCount() - 1);
             reloadMore();
         }
     }

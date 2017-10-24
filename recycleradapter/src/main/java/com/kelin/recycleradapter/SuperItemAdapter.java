@@ -6,12 +6,12 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+
 import com.kelin.recycleradapter.holder.ItemLayout;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
@@ -75,10 +75,6 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      */
     List<D> mDataList;
     /**
-     * 用来记录当前子Adapter是否在屏幕内。
-     */
-    private boolean isVisible;
-    /**
      * 用来拦截事件绑定的拦截器。
      */
     private EventBindInterceptor mEventInterceptor;
@@ -90,6 +86,10 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
      * 用来记录是否已经被添加。
      */
     boolean isAdded;
+    /**
+     * 用来记录显示在屏幕中的条目的个数。
+     */
+    private int mVisibleCount;
 
     public SuperItemAdapter(@NonNull Class<? extends ItemViewHolder<D>> holderClass) {
         this(holderClass, null);
@@ -128,6 +128,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
 
     /**
      * 是否已经被添加到 {@link MultiTypeAdapter} 中了。
+     *
      * @return 返回true表示当前依然在 {@link MultiTypeAdapter} 中，false表示已经从 {@link MultiTypeAdapter} 中移除了。
      * 通常情况下如果被移除了说明这个子Adapter中已经没有了数据。
      */
@@ -136,21 +137,12 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     }
 
     /**
-     * 设置当前是否可见。
-     *
-     * @param visible true表示可见，false表示不可见。
-     */
-    private void setVisibleState(boolean visible) {
-        isVisible = visible;
-    }
-
-    /**
      * 判断当前适配器是否可见。
      *
      * @return 可见返回true, 不可见返回false。
      */
     public boolean isVisible() {
-        return isVisible;
+        return mVisibleCount == getItemCount();
     }
 
     /**
@@ -223,12 +215,9 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     }
 
     public void onBindViewHolder(ItemViewHolder<D> holder, int position, List<Object> payloads) {
-        if (position == 0) {
-            setVisibleState(true);
-            Log.i(TAG, "onViewRecycled: 条目被显示并绑定数据。AdapterPosition=" + position);
-        }
         holder.mEventListener = mItemEventListener;
         holder.onBindPartData(position, getObject(position), payloads);
+        mVisibleCount++;
     }
 
     /**
@@ -264,7 +253,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (viewHolder.mEventListener != null){
+                if (viewHolder.mEventListener != null) {
                     int position = item.getLayoutPosition();
                     SuperItemAdapter<D> itemAdapter = mParentAdapter.getChildAdapterByPosition(position);
                     int adapterPosition = position - itemAdapter.firstItemPosition;
@@ -433,15 +422,12 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     /**
      * 当当前Adapter中视图中消失的时候调用。
      *
-     * @param holder   当前的ViewHolder对象。
-     * @param position 当前的索引。
+     * @param holder 当前的ViewHolder对象。
      */
     @CallSuper
-    void onViewRecycled(ItemViewHolder holder, int position) {
-        if (position == getItemCount() - 1) {
-            setVisibleState(false);
-            Log.i(TAG, "onViewRecycled: 条目被释放。AdapterPosition=" + position);
-        }
+    void onViewRecycled(ItemViewHolder holder) {
+        holder.onViewRecycled();
+        mVisibleCount--;
     }
 
     /**
@@ -557,9 +543,10 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
 
         /**
          * 列表中的数据位置被移动。
+         *
          * @param fromPosition 移动前的位置。
-         * @param toPosition 移动后的位置。
-         * @param adapter  当前被观察的Adapter对象。
+         * @param toPosition   移动后的位置。
+         * @param adapter      当前被观察的Adapter对象。
          */
         void move(int fromPosition, int toPosition, SuperItemAdapter adapter);
     }

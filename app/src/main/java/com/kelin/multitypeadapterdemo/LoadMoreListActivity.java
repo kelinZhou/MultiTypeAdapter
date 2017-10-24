@@ -61,7 +61,7 @@ public class LoadMoreListActivity extends BaseActivity {
         mMultiTypeAdapter.addAdapter(mItemAdapter);
         //设置加载更多的布局，有重载方法。这里用的是五个参数的，前三个分别是 加载中、点击重试和没有更多数据时显示的布局文件。
         //第四个参数是偏移值，就是在最后一个条目之前的第几个条目被显示时触发加载更多，最后一个是加载更多的回调。
-        mMultiTypeAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_load_more_failed, R.layout.layout_no_more_data, 3, new MultiTypeAdapter.OnLoadMoreListener() {
+        mMultiTypeAdapter.setLoadMoreView(R.layout.layout_load_more, R.layout.layout_load_more_failed, R.layout.layout_no_more_data, new MultiTypeAdapter.OnLoadMoreListener() {
 
             @Override
             public void onLoadMore() {

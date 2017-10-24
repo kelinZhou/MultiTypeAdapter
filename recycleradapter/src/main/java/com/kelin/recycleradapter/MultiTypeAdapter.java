@@ -45,10 +45,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
      */
     private ItemAdapterDataObserver mAdapterDataObserver = new ItemAdapterDataObserver();
     /**
-     * 加载更多失败时，点击重试的监听。
-     */
-    private LoadMoreRetryClickListener mLoadMoreRetryClickListener;
-    /**
      * 用来展示悬浮窗的布局容器。
      */
     private FloatLayout mFloatLayout;
@@ -293,19 +289,8 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             return new CommonNoDataViewHolder(getEmptyView());
         }
         View itemView;
-        if (mLMM != null && (itemView = mLMM.getLayoutView(viewType, parent)) != null) {
-            CommonNoDataViewHolder loadMoreViewHolder = new CommonNoDataViewHolder(itemView);
-            if (mLMM.isRetryState()) {
-                if (mLoadMoreRetryClickListener == null) {
-                    mLoadMoreRetryClickListener = new LoadMoreRetryClickListener();
-                }
-                View clickView = loadMoreViewHolder.getView(loadMoreViewHolder.getItemClickViewId());
-                if (clickView == null) {
-                    clickView = loadMoreViewHolder.itemView;
-                }
-                clickView.setOnClickListener(mLoadMoreRetryClickListener);
-            }
-            return loadMoreViewHolder;
+        if (mLMM != null && (itemView = mLMM.getLayoutView(viewType, parent, mLoadMoreRetryClickListener)) != null) {
+            return new CommonNoDataViewHolder(itemView);
         }
         SuperItemAdapter itemAdapter = mPool.acquireByType(viewType);
         if (itemAdapter != null) {
@@ -353,7 +338,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
             return;
         }
         SuperItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
-        itemAdapter.onViewRecycled(holder, position - itemAdapter.firstItemPosition);
+        itemAdapter.onViewRecycled(holder);
     }
 
     @Override
