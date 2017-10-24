@@ -40,7 +40,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     /**
      * 表示当前的条目是占满屏幕的。
      */
-    public static final int SPAN_SIZE_FULL_SCREEN = SuperAdapter.SPAN_SIZE_FULL_SCREEN;
+    static final int SPAN_SIZE_FULL_SCREEN = SuperAdapter.SPAN_SIZE_FULL_SCREEN;
     /**
      * {@link MultiTypeAdapter} 对象。也是当前Adapter的父级Adapter，是输入RecyclerView的Adapter。
      */

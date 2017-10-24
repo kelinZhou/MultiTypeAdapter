@@ -13,6 +13,7 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.kelin.recycleradapter.callback.ItemDragResultListener;
@@ -35,7 +36,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     /**
      * 表示当前的条目是占满屏幕的。
      */
-    public static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
+    static final int SPAN_SIZE_FULL_SCREEN = 0x0000_0010;
     /**
      * 列表为空时的条目类型。
      */
@@ -151,7 +152,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                 if (isLoadMoreUsable() && mLMM.isLoadState()) {
                     if (mLMM.isInTheLoadMore() || mLMM.isNoMoreState())
                         return;
-                    int lastVisibleItemPosition = mLm.findLastVisibleItemPosition();
+                    int lastVisibleItemPosition = findLastVisibleItemPosition();
                     int size = getDataList().size();
                     int targetPosition = size - mLMM.getLoadMoreOffset();
                     if (targetPosition <= 0 || lastVisibleItemPosition == targetPosition || lastVisibleItemPosition == size) {
@@ -200,6 +201,14 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                 return bundle.size() == 0 ? null : bundle;
             }
         };
+    }
+
+    ViewGroup.MarginLayoutParams getMarginLayoutParams(@NonNull View view) {
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
+        if (lp instanceof ViewGroup.MarginLayoutParams) {
+            return (ViewGroup.MarginLayoutParams) lp;
+        }
+        return null;
     }
 
     /**

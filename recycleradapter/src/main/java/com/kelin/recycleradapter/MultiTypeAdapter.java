@@ -316,14 +316,6 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         throw new RuntimeException("the viewType: " + viewType + " not found !");
     }
 
-    private ViewGroup.MarginLayoutParams getMarginLayoutParams(@NonNull View view) {
-        ViewGroup.LayoutParams lp = view.getLayoutParams();
-        if (lp instanceof ViewGroup.MarginLayoutParams) {
-            return (ViewGroup.MarginLayoutParams) lp;
-        }
-        return null;
-    }
-
     private boolean isFloatAdapter(SuperItemAdapter adapter) {
         return adapter instanceof FloatItemAdapter;
     }
@@ -374,7 +366,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         }
 
         //当速度快到一定程度的时候这个position可能会有间隔。而间隔的条目在极端情况下可能是最后一个需要绑定悬浮数据的条目。
-        int first = lm.findFirstVisibleItemPosition();
+        int first = findFirstVisibleItemPosition();
         if (mCurPosition != first) {
             int max = Math.max(mCurPosition, first);
             int min = Math.min(mCurPosition, first);
