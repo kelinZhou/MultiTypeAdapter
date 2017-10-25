@@ -470,7 +470,7 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
     /**
      * 当前适配器的数据改变被观察者。
      */
-    protected class AdapterDataObservable extends Observable<AdapterDataObserver> {
+    class AdapterDataObservable extends Observable<AdapterDataObserver> {
 
         void add(int position, Object object) {
             for (int i = mObservers.size() - 1; i >= 0; i--) {

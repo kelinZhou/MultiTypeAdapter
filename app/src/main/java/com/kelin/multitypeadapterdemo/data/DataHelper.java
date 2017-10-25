@@ -96,8 +96,8 @@ public class DataHelper {
         return Observable.create(new Observable.OnSubscribe<List<Person>>() {
             @Override
             public void call(Subscriber<? super List<Person>> subscriber) {
-                List<Person> list = new ArrayList<Person>(1000);
-                for (int i = 0; i < 1000; i++) {
+                List<Person> list = new ArrayList<Person>(100);
+                for (int i = 0; i < 100; i++) {
                     list.add(new Person(icons.get(mRandom.nextInt(icons.size())), names.get(mRandom.nextInt(names.size())), countryList.get(mRandom.nextInt(countryList.size())), mRandom.nextInt(10) + 20, mRandom.nextInt(30) + 150, mRandom.nextInt(40) + 45, Person.Sex.UNKNOWN));
                 }
                 subscriber.onStart();

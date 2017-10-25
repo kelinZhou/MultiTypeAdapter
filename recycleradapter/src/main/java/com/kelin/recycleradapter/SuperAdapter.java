@@ -1,6 +1,9 @@
 package com.kelin.recycleradapter;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,6 +26,8 @@ import com.kelin.recycleradapter.interfaces.Orientation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 描述 {@link android.support.v7.widget.RecyclerView} 的适配器的基类。
@@ -41,6 +46,10 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 列表为空时的条目类型。
      */
     static final int TYPE_EMPTY_ITEM = 0x0000_00f0;
+    /**
+     * 当DiffUtil工作完成后所发送的消息标识。
+     */
+    private static final int MSG_DISPATCH_UPDATES = 0x0000_0021;
     /**
      * 当前页面的数据集。
      */
@@ -98,6 +107,33 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 加载更多失败时，点击重试的监听。
      */
     private LoadMoreRetryClickListener mLoadMoreRetryListener;
+    /**
+     * 用来执行DiffUtil任务的单线程执行器。
+     */
+    private ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+    /**
+     * 用来在主线程处理DiffUtil任务的工具。
+     */
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            DiffUtil.DiffResult diffResult = (DiffUtil.DiffResult) msg.obj;
+            diffResult.dispatchUpdatesTo(SuperAdapter.this);
+            // 通知刷新了之后，要更新副本数据到最新
+            mTempList.clear();
+            mTempList.addAll(mDataList);
+        }
+    };
+    /**
+     * DiffUtil的检索列表数据变化的任务。
+     */
+    private Runnable mRefreshRunnable = new Runnable() {
+        @Override
+        public void run() {
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(mDiffUtilCallback);
+            mHandler.sendMessage(Message.obtain(mHandler, MSG_DISPATCH_UPDATES, diffResult));
+        }
+    };
 
     /**
      * 构造方法。
@@ -231,6 +267,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
 
     /**
      * 获取加载更多失败重试的点击监听。
+     *
      * @return 返回LoadMoreRetryClickListener对象。
      */
     public LoadMoreRetryClickListener getLoadMoreRetryClickListener() {
@@ -351,7 +388,8 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                 public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
                     try {
                         super.onLayoutChildren(recycler, state);
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             };
@@ -369,7 +407,7 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
                     try {
                         super.onLayoutChildren(recycler, state);
                     } catch (Exception e) {
-                        Log.e(TAG, "onLayoutChildren: ", e);
+                        e.printStackTrace();
                     }
                 }
             };
@@ -626,11 +664,13 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 通过Google提供的 {@link DiffUtil} 工具类进行数据比较然后映射到对应的 notifyItem***() 方法的。
      */
     public void notifyRefresh() {
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(mDiffUtilCallback);
-        diffResult.dispatchUpdatesTo(this);
-        // 通知刷新了之后，要更新副本数据到最新
-        mTempList.clear();
-        mTempList.addAll(mDataList);
+        mExecutor.execute(mRefreshRunnable);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        mExecutor.shutdown();
+        mHandler.removeCallbacksAndMessages(null);
     }
 
     /**
