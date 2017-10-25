@@ -18,11 +18,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
 import com.kelin.recycleradapter.callback.ItemDragResultListener;
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.interfaces.Orientation;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -102,6 +100,9 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
      * 条目拖拽完成后的监听。
      */
     private ItemDragResultListener<D> mItemDragResultListener;
+    /**
+     * 条目拖拽帮助对象。
+     */
     private ItemTouchHelper mItemTouchHelper;
     /**
      * 加载更多失败时，点击重试的监听。
