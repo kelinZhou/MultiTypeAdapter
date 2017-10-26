@@ -1,11 +1,10 @@
 package com.kelin.recycleradapter;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.kelin.recycleradapter.holder.ItemViewHolder;
 import com.kelin.recycleradapter.holder.ViewHelper;
-
-import java.util.List;
 
 /**
  * 描述 悬浮条目的子适配器。<p>使用了该类并不一定就会有悬浮吸顶效果，您还要在布局文件中添加  {@link FloatLayout} 控件，
@@ -48,7 +47,7 @@ public class FloatItemAdapter<D> extends SuperItemAdapter<D> {
     }
 
     @Override
-    public void onBindViewHolder(ItemViewHolder<D> holder, int position, List<Object> payloads) {
+    public void onBindViewHolder(ItemViewHolder<D> holder, int position, Bundle payloads) {
         super.onBindViewHolder(holder, position, payloads);
         if (mFloatLayoutBinder == null) {
             mFloatLayoutBinder = holder;

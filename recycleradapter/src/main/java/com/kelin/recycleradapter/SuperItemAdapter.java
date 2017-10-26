@@ -1,6 +1,7 @@
 package com.kelin.recycleradapter;
 
 import android.database.Observable;
+import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -214,9 +215,13 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         }
     }
 
-    public void onBindViewHolder(ItemViewHolder<D> holder, int position, List<Object> payloads) {
+    public void onBindViewHolder(ItemViewHolder<D> holder, int position, Bundle payloads) {
         holder.mEventListener = mItemEventListener;
-        holder.onBindPartData(position, getObject(position), payloads);
+        if (payloads == null) {
+            holder.onBindData(position, getObject(position));
+        } else {
+            holder.onBindPartData(position, getObject(position), payloads);
+        }
         mVisibleCount++;
     }
 

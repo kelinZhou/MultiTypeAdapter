@@ -625,7 +625,16 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     @Override
     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
         if (isEmptyItem(position) || isLoadMoreItem(position)) return;
-        holder.onBindPartData(position, getObject(position), payloads);
+        if (payloads == null || payloads.isEmpty()) {
+            holder.onBindData(position, getObject(position));
+        } else {
+            Object o = payloads.get(0);
+            if (o instanceof Bundle) {
+                holder.onBindPartData(position, getObject(position), (Bundle) o);
+            } else {
+                holder.onBindData(position, getObject(position));
+            }
+        }
     }
 
     @Override

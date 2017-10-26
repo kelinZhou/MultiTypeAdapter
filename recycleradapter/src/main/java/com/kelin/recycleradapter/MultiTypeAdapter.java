@@ -413,7 +413,11 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
         //如果当前条目是LoadMoreItem或者是EmptyItem则不绑定数据。
         if (isEmptyItem(position) || isLoadMoreItem(position)) return;
         SuperItemAdapter itemAdapter = mPool.acquireFromLayoutPosition(position);
-        itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, payloads);
+        if (payloads != null && !payloads.isEmpty() && payloads.get(0) instanceof Bundle) {
+            itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, (Bundle) payloads.get(0));
+        } else {
+            itemAdapter.onBindViewHolder(holder, position - itemAdapter.firstItemPosition, null);
+        }
         if (mFloatLayout != null && position == 0 && isFloatAdapter(itemAdapter)) {
             mFloatLayout.setLayoutPosition(position);
             setFloatLayoutVisibility(true);
