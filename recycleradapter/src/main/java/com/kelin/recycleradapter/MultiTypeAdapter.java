@@ -367,7 +367,7 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
 
         //当速度快到一定程度的时候这个position可能会有间隔。而间隔的条目在极端情况下可能是最后一个需要绑定悬浮数据的条目。
         int first = findFirstVisibleItemPosition();
-        if (mCurPosition != first) {
+        if (first > 0 && mCurPosition != first) {
             int max = Math.max(mCurPosition, first);
             int min = Math.min(mCurPosition, first);
             //如果本次的位置和上一次的位置不是相邻的，那么就循环将跳过的位置进行更新。否则直接更新。
