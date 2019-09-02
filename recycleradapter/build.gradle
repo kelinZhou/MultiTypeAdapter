@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 
 apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.kelinZhou'
@@ -32,6 +34,7 @@ dependencies {
 //    compile "com.android.support:appcompat-v7:${ANDROID_SUPPORT_LIB_VERSION}"
     compile "com.android.support:recyclerview-v7:${ANDROID_SUPPORT_LIB_VERSION}"
     testCompile 'junit:junit:4.12'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 // 指定编码
@@ -61,4 +64,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourcesJar
     archives javadocJar
+}
+repositories {
+    mavenCentral()
 }
