@@ -6,6 +6,12 @@
 ## 简介
     针对RecyclerVeiw的适配器的封装，可以令你简单优雅的实现一些常用功能。
     例如：多条目列表、悬浮列表、分页加载等，以及各种针对条目的事件的监听。
+    
+## 体验
+[点击下载](https://fir.im/mxr6)或扫码下载DemoApk
+
+![DemoApk](materials/demo_apk_download.png)
+
 ## 下载
 ###### 第一步：添加 JitPack 仓库到你项目根目录的 gradle 文件中。
 ```
