@@ -1,8 +1,6 @@
 package com.kelin.recycleradapter.holder
 
 import android.support.annotation.LayoutRes
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
 
 /**
  * 描述 用来获取跟布局资源文件 [LayoutRes] 的注解。
@@ -10,7 +8,7 @@ import java.lang.annotation.RetentionPolicy
  * 创建时间 2017/3/27  下午1:57
  * 版本 v 1.0.0
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 annotation class ItemLayout(
         /**

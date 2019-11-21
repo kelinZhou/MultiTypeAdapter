@@ -342,11 +342,13 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
         }
     }
 
-    protected void onItemDismiss(int position) {
+    protected D onItemDismiss(int position) {
+        D d = null;
         if (mSwipedEnable) {
-            mDataList.remove(position);
+            d = mDataList.remove(position);
             notifyItemRemoved(position);
         }
+        return d;
     }
 
     public RecyclerView getRecyclerView() {
@@ -490,12 +492,12 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     /**
-     * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder#ItemViewHolder(View)} 构造方法，
+     * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder(View)} 构造方法，
      * 否则会出错。
      *
      * @param emptyLayout 列表为空时的布局ID。
      * @return 返回这个布局ID被Inflater后的View。
-     * @see ItemViewHolder#ItemViewHolder(View)
+     * @see ItemViewHolder(View)
      */
     public View setEmptyView(@LayoutRes int emptyLayout) {
         View emptyView = LayoutInflater.from(mRecyclerView.getContext()).inflate(emptyLayout, mRecyclerView, false);
@@ -504,11 +506,11 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     /**
-     * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder#ItemViewHolder(View)} 构造方法，
+     * 设置列表为空时显示的布局。如果你使用了该方法，则必须为你的ViewHolder提供 {@link ItemViewHolder(View)} 构造方法，
      * 否则会出错。
      *
      * @param emptyLayout 列表为空时的布局。
-     * @see ItemViewHolder#ItemViewHolder(View)
+     * @see ItemViewHolder(View)
      */
     public void setEmptyView(View emptyLayout) {
         mEmptyLayout = emptyLayout;
@@ -821,23 +823,22 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
     }
 
     private class ItemTouchCallback extends ItemTouchHelper.Callback {
-        private D mD;
         private int mLastActionPosition;
         private int mLastActionState;
-
+        private D mD;
         @Override
         public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
             return getItemMovementFlags(recyclerView, (ItemViewHolder) viewHolder);
         }
 
         @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
             return onItemMove(viewHolder.getLayoutPosition(), target.getLayoutPosition());
         }
 
         @Override
-        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-            onItemDismiss(viewHolder.getLayoutPosition());
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            mD = onItemDismiss(viewHolder.getLayoutPosition());
         }
 
         @Override
@@ -846,7 +847,6 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
             // 而且ACTION_STATE_IDLE状态是也不需要记录。否则clearView方法中就拿不到这个状态，因为这个方法是先于clearView方法执行的。
             switch (actionState) {
                 case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
-                    mD = getObject(mLastActionPosition);
                 case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
                     mLastActionPosition = viewHolder.getLayoutPosition();
                     mLastActionState = actionState;
@@ -856,19 +856,23 @@ public abstract class SuperAdapter<D, VH extends ItemViewHolder<D>> extends Recy
         }
 
         @Override
-        public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-            super.clearView(recyclerView, viewHolder);
-            if (mItemDragResultListener != null && mLastActionPosition != viewHolder.getLayoutPosition()) {
+        public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+            int layoutPosition = viewHolder.getLayoutPosition();
+            if (mItemDragResultListener != null && mLastActionPosition != layoutPosition) {
                 switch (mLastActionState) {
                     case ItemTouchHelper.ACTION_STATE_DRAG://拖拽，将要移动条目。
-                        mItemDragResultListener.onItemMoved(mLastActionPosition, viewHolder.getLayoutPosition(), getObject(viewHolder.getLayoutPosition()));
+                        mItemDragResultListener.onItemMoved(mLastActionPosition, layoutPosition, getObject(layoutPosition));
                         break;
                     case ItemTouchHelper.ACTION_STATE_SWIPE://侧滑，将要删除条目。
                         //这个用mLastActionPosition这个参数是应为在这里获取的viewHolder.getLayoutPosition()跟原来的position不一样，有偏差，偏差为1。
-                        mItemDragResultListener.onItemDismissed(mLastActionPosition, mD);
+                        if (mD != null) {
+                            mItemDragResultListener.onItemDismissed(mLastActionPosition, mD);
+                            mD = null;
+                        }
                         break;
                 }
             }
+            super.clearView(recyclerView, viewHolder);
         }
     }
 }

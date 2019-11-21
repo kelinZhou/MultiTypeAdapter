@@ -185,10 +185,12 @@ public class MultiTypeAdapter extends SuperAdapter<Object, ItemViewHolder<Object
     }
 
     @Override
-    public void onItemDismiss(int position) {
+    protected Object onItemDismiss(int position) {
         if (mSwipedEnable) {
             SuperItemAdapter itemAdapter = getChildAdapterByPosition(position);
-            itemAdapter.onItemDismiss(position - itemAdapter.firstItemPosition);
+            return itemAdapter.onItemDismiss(position - itemAdapter.firstItemPosition);
+        } else {
+            return null;
         }
     }
 

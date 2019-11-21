@@ -464,11 +464,15 @@ public abstract class SuperItemAdapter<D> implements EventInterceptor {
         return true;
     }
 
-    void onItemDismiss(int position) {
+    D onItemDismiss(int position) {
         boolean remove = mDataList.size() > position;
         if (remove) {
-            mAdapterDataObservable.remove(mDataList.remove(position));
+            D d = mDataList.remove(position);
+            mAdapterDataObservable.remove(d);
             mapNotifyItemRemoved(position);
+            return d;
+        } else {
+            return null;
         }
     }
 
