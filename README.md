@@ -25,7 +25,7 @@ allprojects {
 ###### 第二步：添加这个依赖。
 ```
 dependencies {
-    compile 'com.github.kelinZhou:MultiTypeAdapter:1.0.1'
+    implementation 'com.github.kelinZhou:MultiTypeAdapter:1.0.2'
 }
 ```
 ## 效果 & 实现
